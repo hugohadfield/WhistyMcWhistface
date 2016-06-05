@@ -53,7 +53,6 @@ class Game():
 
         self.processScore()
         self.endRound()
-
             
     def endRound(self):
         # Increment the round number and the dealer number
@@ -81,7 +80,7 @@ class Game():
             self.bids[bidno] = player.make_bid( self.trumpsuit )
 
     def resetRound(self):
-         # Empty the tricks and the bids
+        # Empty the tricks and the bids
         self.bids = []
         self.tricksWon = []
         self.turnProgress = 0
@@ -112,6 +111,7 @@ class Game():
             playerNumber = playerNumber + 1
 
     def playFullTrick(self):
+        print " "
         print "########### Beggining full trick ############"
         self.turnProgress = 0
         self.pile = []

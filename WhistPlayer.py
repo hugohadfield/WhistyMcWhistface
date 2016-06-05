@@ -15,10 +15,15 @@ class Player():
         self.playerNumber = playerNumber
 
     def remove_possible(self, cards):
-        for card in cards:
-            cleanCard = card.rstrip()
+        if type(cards) is str:
+            cleanCard = cards.rstrip()
             if cleanCard in self.possiblehand:
                 self.possiblehand.remove(cleanCard)
+        else:
+            for card in cards:
+                cleanCard = card.rstrip()
+                if cleanCard in self.possiblehand:
+                    self.possiblehand.remove(cleanCard)
                 
     def play_card(self, card):
         cleanCard = card.rstrip()
