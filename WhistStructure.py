@@ -11,13 +11,14 @@ class Game():
         self.players = []
         self.resetGame()
 
-    def playRound(self):
+    def playFullRound(self):
         # How many cards are in this round
         cardsinround = self.cardnumbers[self.roundnumber]
         
         # Deal all the cards
-        self.dealAllCards(cardsinround)
-        
+        strategyList = ["manual","random","random"]
+        self.dealAllCards(cardsinround,strategyList)
+
         # Reset the game variables
         self.resetRound()
 
@@ -31,10 +32,24 @@ class Game():
         self.turn = (self.dealer + 1)% self.numberofplayers
         for trick in range(0,cardsinround):
             self.playFullTrick()
+            self.turnProgress = trick
 
         self.processScore()
         print(self.scores)
         self.endRound()
+
+    def playPartialRound(self):
+         # How many cards are in this round
+        cardsinround = self.cardnumbers[self.roundnumber]
+        
+        # Play the remaining tricks
+        for trick in range(self.turnProgress,cardsinround):
+            self.playFullTrick()
+            self.turnProgress = trick
+
+        self.processScore()
+        self.endRound()
+
             
     def endRound(self):
         # Increment the round number and the dealer number
@@ -50,6 +65,7 @@ class Game():
         self.tricksWon[winningPlayerIndex] = self.tricksWon[winningPlayerIndex] + 1
 
     def incrementTurn(self):
+        self.turnProgress = self.turnProgress + 1
         self.turn = ( self.turn + 1) % self.numberofplayers
 
     def getPlayerBids(self):
@@ -64,6 +80,7 @@ class Game():
          # Empty the tricks and the bids
         self.bids = []
         self.tricksWon = []
+        self.turnProgress = 0
         for i in range(0,self.numberofplayers):
             self.bids.append(-1)
             self.tricksWon.append(0)
@@ -78,18 +95,44 @@ class Game():
         self.dealer = 0
         self.trumpsuit = 'h'
         self.roundnumber = 0
+        self.turnProgress = 0
 
-    def dealAllCards(self,cardsinround):
-         # Deal the cards
+    def dealAllCards(self,cardsinround,strategyList):
+        # Deal the cards
         playerhands = generate_random_deal(cardsinround,self.numberofplayers)
         self.players = []
+        playerNumber = 0
         for hand in playerhands:
-            thisplayer = Player( hand )
+            thisplayer = Player( playerNumber, hand, strategyList[playerNumber])
             self.players.append(copy.deepcopy(thisplayer))
+            playerNumber = playerNumber + 1
 
     def playFullTrick(self):
+        self.turnProgress = 0
         self.pile = []
         for n in range(0,self.numberofplayers):
+            player = self.players[ self.turn ]
+            # Each player makes their move
+            cardPlayed = player.make_move( self.pile, self.trumpsuit)
+            self.pile.append( cardPlayed )
+            print "Player: ", n, " played: ",
+            print cardPlayed
+            self.incrementTurn()
+
+        # See who has won and move on
+        winningplay = self.extractTrickWinner()
+        self.updateTricksWon(winningplay)
+
+    def playPartialTrick(self,specificCard):
+        player = self.players[ self.turn ]
+        if player.play_card(specificCard):
+            self.pile.append(specificCard)
+            self.incrementTurn()
+        else:
+            print "Error"
+
+        startingPoint = self.turnProgress
+        for n in range(startingPoint,self.numberofplayers):
             player = self.players[ self.turn ]
             # Each player makes their move
             self.pile.append( player.make_move( self.pile) )

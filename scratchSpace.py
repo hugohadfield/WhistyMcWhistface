@@ -1,0 +1,3 @@
+
+if None:
+	print "lol"

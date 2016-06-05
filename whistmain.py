@@ -4,7 +4,7 @@ from WhistLib import *
             
 def dakestest():
      # Run some fuckin code
-     for i in range(0,10):
+    for i in range(0,10):
         hand = generate_random_hand(7)
         print(hand)
         print(picktrump(hand))
@@ -17,14 +17,9 @@ def gametest():
     thisgame = Game()
     for i in range(0,len(thisgame.cardnumbers)):
         print("Round number: ", i+1)
-        thisgame.playRound()
+        thisgame.playFullRound()
 
 if __name__ == "__main__":
     #dakestest()
     gametest()
-        
-        
-        
-    
-    
     

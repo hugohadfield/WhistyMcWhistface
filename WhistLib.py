@@ -142,7 +142,7 @@ def probability_player_leads_suit(player, suit):
 
 
 def max_and_index(listin):
-    index, value = max(enumerate(my_list), key=operator.itemgetter(1))
+    index, value = max(enumerate(listin), key=operator.itemgetter(1))
     return value, index
 
 
