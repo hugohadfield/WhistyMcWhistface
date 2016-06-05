@@ -14,6 +14,8 @@ class Game():
     def playFullRound(self):
         # How many cards are in this round
         cardsinround = self.cardnumbers[self.roundnumber]
+        print "Cards in round: ",
+        print cardsinround
         
         # Deal all the cards
         strategyList = ["manual","random","random"]
@@ -41,6 +43,8 @@ class Game():
     def playPartialRound(self):
          # How many cards are in this round
         cardsinround = self.cardnumbers[self.roundnumber]
+        print "Cards in round: ",
+        print cardsinround
         
         # Play the remaining tricks
         for trick in range(self.turnProgress,cardsinround):
@@ -108,6 +112,7 @@ class Game():
             playerNumber = playerNumber + 1
 
     def playFullTrick(self):
+        print "########### Beggining full trick ############"
         self.turnProgress = 0
         self.pile = []
         for n in range(0,self.numberofplayers):

@@ -12,15 +12,19 @@ class Player():
             self.possiblehand += [ str(x) + 's' for x in range( 2, 15 )]
         else:
             self.possiblehand = specificcards
+        self.playerNumber = playerNumber
 
     def remove_possible(self, cards):
         for card in cards:
-            if card in self.possiblehand:
-                self.possiblehand.remove(card)
+            cleanCard = card.rstrip()
+            if cleanCard in self.possiblehand:
+                self.possiblehand.remove(cleanCard)
                 
     def play_card(self, card):
-        if card in self.possiblehand:
-            self.remove_possible(card)
+        cleanCard = card.rstrip()
+        print ["Removing: ", cleanCard]
+        if cleanCard in self.possiblehand:
+            self.remove_possible(cleanCard)
             return 1
         else:
             return 0
