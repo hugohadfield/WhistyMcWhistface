@@ -1,88 +1,7 @@
 
 import copy
-import TrumpPicker
 from WhistLib import *
-
-class Player():
-    def __init__(self, specificcards = []):
-        self.strategy = "random"
-        if not specificcards:
-            self.possiblehand = [ str(x) + 'h' for x in range( 2, 15 )]
-            self.possiblehand += [ str(x) + 'd' for x in range( 2, 15 )]
-            self.possiblehand += [ str(x) + 'c' for x in range( 2, 15 )]
-            self.possiblehand += [ str(x) + 's' for x in range( 2, 15 )]
-        else:
-            self.possiblehand = specificcards
-
-    def remove_possible(self, cards):
-        for card in cards:
-            if card in self.possiblehand:
-                self.possiblehand.remove(card)
-                
-    def play_card(self, card):
-        if card in self.possiblehand:
-            self.remove_possible(card)
-            return 1
-        else:
-            return 0
-    
-    def make_move(self, pile):
-        if self.strategy == "random":
-            if len(pile) > 0:
-                thisuitcards = cards_of_suit(self.possiblehand , pile[0][-1])
-                if len(thisuitcards) > 0:
-                    card = random.choice(thisuitcards)
-                else:
-                    card = random.choice(self.possiblehand)
-            else:
-                card = random.choice(self.possiblehand)
-            if self.play_card(card):
-                return card
-
-        if self.strategy == "basic":
-            if len(pile) > 0:
-                thisuitcards = cards_of_suit(self.possiblehand , pile[0][-1])
-                if len(thisuitcards) > 0:
-                    card = random.choice(thisuitcards)
-                else:
-                    card = random.choice(self.possiblehand)
-            else:
-                card = random.choice(self.possiblehand)
-            if self.play_card(card):
-                return card
-    
-    def make_bid(self, trumpsuit):
-        thisbid = 11
-        self.bid = thisbid
-        return thisbid
-        
-    def pick_trumps(self):
-        return TrumpPicker.picktrump(self.possiblehand)
-
-
-class BotModel():
-    def __init__(self, thisplayercards):
-
-        # Game related variables
-        self.numberofplayers = 3
-        self.round = 0
-        self.cardsplayed = 0
-        self.dealer = 0
-        self.trumps = 'h'
-        self.players = []
-
-        # The player we play as
-        thisplayer = Player(thisplayercards)
-        self.players.append(copy.deepcopy(thisplayer))
-        
-        # The other players
-        for i in range(0,self.numberofplayers-1):
-            thisplayer = Player()
-            thisplayer.remove_possible(thisplayercards)
-            self.players.append(copy.deepcopy(thisplayer))
-
-
-
+from WhistPlayer import *
 
 class Game():
     def __init__(self):
@@ -112,7 +31,9 @@ class Game():
         self.turn = (self.dealer + 1)% self.numberofplayers
         for trick in range(0,cardsinround):
             self.playFullTrick()
-            print(self.tricksWon)
+
+        self.processScore()
+        print(self.scores)
         self.endRound()
             
     def endRound(self):
@@ -122,9 +43,11 @@ class Game():
 
     def extractTrickWinner(self):
         winningplay = analyse_pile(self.pile, self.trumpsuit)
+        return winningplay
 
     def updateTricksWon(self, winningplay):
-        self.tricksWon[(self.dealer + 1 + winningplay)% self.numberofplayers] += 1
+        winningPlayerIndex = (self.dealer + 1 + winningplay)% self.numberofplayers
+        self.tricksWon[winningPlayerIndex] = self.tricksWon[winningPlayerIndex] + 1
 
     def incrementTurn(self):
         self.turn = ( self.turn + 1) % self.numberofplayers
@@ -149,6 +72,9 @@ class Game():
         # Transient per round
         self.pile = []
         self.bids = []
+        self.scores = []
+        for pIt in range(0,self.numberofplayers):
+            self.scores.append(0)
         self.dealer = 0
         self.trumpsuit = 'h'
         self.roundnumber = 0
@@ -161,7 +87,6 @@ class Game():
             thisplayer = Player( hand )
             self.players.append(copy.deepcopy(thisplayer))
 
-
     def playFullTrick(self):
         self.pile = []
         for n in range(0,self.numberofplayers):
@@ -171,8 +96,8 @@ class Game():
             self.incrementTurn()
 
         # See who has won and move on
-        winningplay = extractTrickWinner()
-        updateTricksWon(winningplay)
+        winningplay = self.extractTrickWinner()
+        self.updateTricksWon(winningplay)
 
     def tricksToScore(self,bid,trickNo):
         playerScore = trickNo
@@ -186,12 +111,8 @@ class Game():
         for playerIterator in range(0,self.numberofplayers):
             thisTrickCount = self.tricksWon[playerIterator]
             thisBid = self.bids[playerIterator]
-            thisPlayerScore = tricksToScore(thisBid,thisTrickCount)
-
-
-
-
-
+            thisPlayerScore = self.tricksToScore(thisBid,thisTrickCount)
+            self.scores[playerIterator] = thisPlayerScore
 
 
 
