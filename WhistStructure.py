@@ -14,15 +14,19 @@ class Game():
     def playFullRound(self):
         # How many cards are in this round
         cardsinround = self.cardnumbers[self.roundnumber]
+        print " "
+        print " "
+        print "------------------------------------------------"
         print "Cards in round: ",
         print cardsinround
-        
-        # Deal all the cards
-        strategyList = ["manual","random","random"]
-        self.dealAllCards(cardsinround,strategyList)
 
         # Reset the game variables
         self.resetRound()
+        
+        # Deal all the cards
+        strategyList = ["advanced","randomUncontrolled","randomUncontrolled"]
+        # self.dealAllCards(cardsinround,strategyList)
+        self.manualDeal(cardsinround,strategyList)
 
         # The dealer picks trumps
         self.trumpsuit = self.players[self.dealer].pick_trumps()
@@ -34,7 +38,6 @@ class Game():
         self.turn = (self.dealer + 1)% self.numberofplayers
         for trick in range(0,cardsinround):
             self.playFullTrick()
-            self.turnProgress = trick
 
         self.processScore()
         print(self.scores)
@@ -47,15 +50,17 @@ class Game():
         print cardsinround
         
         # Play the remaining tricks
-        for trick in range(self.turnProgress,cardsinround):
+        startingTurn = copy.deepcopy( self.trickNumber )
+        for trick in range(startingTurn,cardsinround):
             self.playFullTrick()
-            self.turnProgress = trick
 
         self.processScore()
+        print(self.scores)
         self.endRound()
             
     def endRound(self):
         # Increment the round number and the dealer number
+        self.trickNumber = 0
         self.roundnumber = self.roundnumber + 1
         self.dealer = (self.dealer + 1) % self.numberofplayers
 
@@ -68,8 +73,11 @@ class Game():
         self.tricksWon[winningPlayerIndex] = self.tricksWon[winningPlayerIndex] + 1
 
     def incrementTurn(self):
-        self.turnProgress = self.turnProgress + 1
         self.turn = ( self.turn + 1) % self.numberofplayers
+        print "------------------------------------------"
+        print "############   ", self.trickNumber
+        print "############   ", self.turn
+        print "------------------------------------------"
 
     def getPlayerBids(self):
         # Let the players make their bid
@@ -83,7 +91,7 @@ class Game():
         # Empty the tricks and the bids
         self.bids = []
         self.tricksWon = []
-        self.turnProgress = 0
+        self.trickNumber = 0
         for i in range(0,self.numberofplayers):
             self.bids.append(-1)
             self.tricksWon.append(0)
@@ -98,7 +106,7 @@ class Game():
         self.dealer = 0
         self.trumpsuit = 'h'
         self.roundnumber = 0
-        self.turnProgress = 0
+        self.trickNumber = 0
 
     def dealAllCards(self,cardsinround,strategyList):
         # Deal the cards
@@ -106,27 +114,61 @@ class Game():
         self.players = []
         playerNumber = 0
         for hand in playerhands:
-            thisplayer = Player( playerNumber, hand, strategyList[playerNumber])
+            thisplayer = Player( playerNumber, hand, strategy= strategyList[playerNumber])
             self.players.append(copy.deepcopy(thisplayer))
             playerNumber = playerNumber + 1
 
+    def manualDeal(self,cardsinround,strategyList):
+        # Deal the cards for player 1
+        player1hand = generate_random_deal(cardsinround,2)[1]
+        self.players = [ copy.deepcopy( Player( 0, player1hand, strategy= strategyList[0])) ]
+
+        # Everyone else gets random stuff
+        for playerNumber in range(1,self.numberofplayers):
+            thisplayer = Player( playerNumber, strategy= strategyList[playerNumber])
+            thisplayer.remove_possible(player1hand)
+            self.players.append(copy.deepcopy(thisplayer))
+
     def playFullTrick(self):
         print " "
+        print " "
         print "########### Beggining full trick ############"
-        self.turnProgress = 0
+        print self.bids
+        print "#############################################"
         self.pile = []
         for n in range(0,self.numberofplayers):
             player = self.players[ self.turn ]
-            # Each player makes their move
-            cardPlayed = player.make_move( self.pile, self.trumpsuit)
+
+            # Player makes their move
+            if player.strategy != "advanced":
+                cardPlayed = player.make_move( self.pile, self.trumpsuit)
+            else:
+                cardPlayed = player.make_move( self.pile, self.trumpsuit, self)
+
             self.pile.append( cardPlayed )
-            print "Player: ", n, " played: ",
+            print "Player: ", player.playerNumber, " played: ",
             print cardPlayed
+
+            # If the player makes a move that is not the same as is led
+            # remove that suit from their possible hand
+            if n != 0:
+                if cardPlayed[-1] != self.pile[0][-1]:
+                    player.remove_suit(self.pile[0][-1])
+                    print "Removing all of suit: ", self.pile[0][-1]
+
+            # If a player plays a card remove it from all other players hands
+            for playerTag in self.players:
+                playerTag.remove_possible(cardPlayed)
+
             self.incrementTurn()
 
         # See who has won and move on
         winningplay = self.extractTrickWinner()
         self.updateTricksWon(winningplay)
+        print "#############################################"
+        self.trickNumber = self.trickNumber + 1
+        print self.tricksWon
+        print "############### End of trick ################"
 
     def playPartialTrick(self,specificCard):
         player = self.players[ self.turn ]
@@ -136,16 +178,57 @@ class Game():
         else:
             print "Error"
 
-        startingPoint = self.turnProgress
+        print "Player: ", player.playerNumber, " played: ",
+        print specificCard
+
+        # If the player makes a move that is not the same as is led
+        # remove that suit from their possible hand
+        if len(self.pile) > 0:
+            if specificCard[-1] != self.pile[0][-1]:
+                player.remove_suit(self.pile[0][-1])
+                print "Removing all of suit: ", self.pile[0][-1]
+
+        # If a player plays a card remove it from all other players hands
+        for playerTag in self.players:
+            playerTag.remove_possible(specificCard)
+
+        # Restart the trick
+        startingPoint = len(self.pile)
         for n in range(startingPoint,self.numberofplayers):
             player = self.players[ self.turn ]
             # Each player makes their move
-            self.pile.append( player.make_move( self.pile) )
+            
+            # Player makes their move
+            if player.strategy != "advanced":
+                cardPlayed = player.make_move( self.pile, self.trumpsuit)
+            else:
+                cardPlayed = player.make_move( self.pile, self.trumpsuit, self)
+
+            self.pile.append( cardPlayed )
+
+            print "Player: ", player.playerNumber, " played: ",
+            print cardPlayed
+
+             # If the player makes a move that is not the same as is led
+            # remove that suit from their possible hand
+            if len(self.pile) > 0:
+                if cardPlayed[-1] != self.pile[0][-1]:
+                    player.remove_suit(self.pile[0][-1])
+                    print "Removing all of suit: ", self.pile[0][-1]
+
+            # If a player plays a card remove it from all other players hands
+            for playerTag in self.players:
+                playerTag.remove_possible(cardPlayed)
+
             self.incrementTurn()
 
         # See who has won and move on
         winningplay = self.extractTrickWinner()
         self.updateTricksWon(winningplay)
+        print "#############################################"
+        self.trickNumber = self.trickNumber + 1
+        print self.tricksWon
+        print "############### End of trick ################"
 
     def tricksToScore(self,bid,trickNo):
         playerScore = trickNo
@@ -161,7 +244,4 @@ class Game():
             thisBid = self.bids[playerIterator]
             thisPlayerScore = self.tricksToScore(thisBid,thisTrickCount)
             self.scores[playerIterator] = thisPlayerScore
-
-
-
 

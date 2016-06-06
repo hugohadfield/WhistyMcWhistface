@@ -1,5 +1,11 @@
 
 import random
+import StringIO
+import operator
+
+class NullIO(StringIO.StringIO):
+    def write(self, txt):
+       pass
 
 def intersect(a, b):
     # returns the intersection of two lists
@@ -101,12 +107,12 @@ def card_beating_list(card, trumpsuit):
         cardlist = cardlist + alltrumps
     return cardlist
 
-def player_beating_list(card, trumpsuit,player):
+def player_beating_list(card, trumpsuit, player):
     # This is a list of the possible cards that a specific player can play that would beat your card
     cardlist = card_beating_list(card, trumpsuit)
     return intersect(player.possiblehand, cardlist)
 
-def player_beating_probability(card,trumpsuit,player):
+def player_beating_probability(card, trumpsuit, player):
     # This is the probability that a specific player can beat your card
     numer = len( player_beating_list(card,  trumpsuit , player) )
     denom = len( player.possiblehand )
@@ -144,8 +150,6 @@ def probability_player_leads_suit(player, suit):
 def max_and_index(listin):
     index, value = max(enumerate(listin), key=operator.itemgetter(1))
     return value, index
-
-
 
 
 # Round specific funcs
