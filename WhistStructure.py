@@ -82,11 +82,14 @@ class Game():
     def getPlayerBids(self):
         # Let the players make their bid
         bidno = self.dealer
+        currentBids = []
         for n in range(0,self.numberofplayers):
             bidno = (bidno + 1) % self.numberofplayers
             player = self.players[bidno]
             ncards = self.cardnumbers[self.roundnumber]
-            self.bids[bidno] = player.make_bid( self.numberofplayers,ncards,self.trumpsuit )
+            thisPlayerBid = player.make_bid( self.numberofplayers,ncards,self.trumpsuit,currentBids)
+            currentBids.append(thisPlayerBid)
+            self.bids[bidno] = thisPlayerBid
 
     def resetRound(self):
         # Empty the tricks and the bids

@@ -198,11 +198,46 @@ class Player():
         for i in range(0,tempGame.numberofplayers):
             averageScores[i] = (1/float(monteCarloNumber - errorCounter))*averageScores[i]
         return averageScores, errorCounter
-    
-    def make_bid(self, nplayers, ncards, trumpsuit):
-        thisbid = int(round(ncards/float(nplayers)))
-        self.bid = thisbid
-        return thisbid
-        
+
     def pick_trumps(self):
         return TrumpPicker.picktrump(self.possiblehand)
+
+    def make_bid(self, nplayers, ncards, trumpsuit, previousbids):
+
+        if self.strategy == "randomControlled":
+            thisbid = self.makeAverageBid(nplayers,ncards)
+        elif self.strategy == "randomUncontrolled":
+            thisbid = self.makeAverageBid(nplayers,ncards)
+        elif self.strategy == "basic":
+            thisbid = self.makeAverageBid(nplayers,ncards)
+        elif self.strategy == "manualUncontrolled":
+            thisbid = self.makeManualBid()
+        elif self.strategy =="advanced":
+            thisbid = self.makeAdvancedBid( nplayers, ncards, trumpsuit, previousbids)
+        self.bid = thisbid
+        return thisbid
+    
+    def makeAverageBid(self,nplayers,ncards):
+        thisbid = int(round(ncards/float(nplayers)))
+        return thisbid
+
+    def makeManualBid(self):
+        thisbid = int(raw_input())
+        return thisbid
+    
+    def makeAdvancedBid(self, nplayers, ncards, trumpsuit, previousbids):
+        cardsInHand = self.possiblehand
+        vicProbList = self.computeProbability1CardVictory(nplayers, cardsInHand, ncards, trumpsuit)
+        bidPDF = monte_carlo_pdfify(vicProbList,5000)
+        [confidence, thisbid] = max_and_index(bidPDF)
+        print "Bid confidence: ", confidence
+        return thisbid
+
+    def computeProbability1CardVictory(self, nplayers, cardsInHand, ncards, trumpsuit):
+        # I know this is wrong, but not very wrong, needs some sampling without replacement stuff...
+        outputProbs = []
+        for card in cardsInHand:
+            probabilityOfWin1v1 = 1 - ( len(  card_beating_list(card, trumpsuit)  ) / float(52-1) )
+            probabilityTotalVictory = probabilityOfWin1v1**nplayers
+            outputProbs.append( probabilityTotalVictory )
+        return outputProbs

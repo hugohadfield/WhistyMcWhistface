@@ -2,6 +2,7 @@
 import random
 import StringIO
 import operator
+from operator import mul
 
 class NullIO(StringIO.StringIO):
     def write(self, txt):
@@ -152,13 +153,17 @@ def max_and_index(listin):
     return value, index
 
 
-# Round specific funcs
-def uniform_(card, trumpsuit, oppositionplayers):
-    # This is the probability that any one of the opposition has a card that will beat yours
-    # TODO double check this maths...
-    # Also the probability of losing the last trick given that you are leading it
-    oppositionbeatingcards = all_players_beating_list(card,trumpsuit,oppositionplayers)
-    alloppositioncards = list_all_possible_cards(oppositionplayers)
-    numer = len( oppositionbeatingcards )
-    denom = len( alloppositioncards  )
-    return float(numer)/denom
+def monte_carlo_pdfify(problist, mcnumber):
+    ncards = len(problist)
+    pdfout = []
+    for i in range(0,ncards+1):
+        pdfout.append(0.0)
+    for mcIterator in range(0,mcnumber):
+        accumulator = 0
+        for cardIt in range(0,ncards):
+            if random.random() < problist[cardIt]:
+                accumulator = accumulator + 1
+        pdfout[accumulator] = pdfout[accumulator] + 1
+    for i in range(0,ncards+1):
+        pdfout[i] = pdfout[i]/float(mcnumber)
+    return pdfout
