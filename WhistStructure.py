@@ -6,7 +6,7 @@ from WhistPlayer import *
 class Game():
     def __init__(self):
         # Game related variables
-        self.numberofplayers = 3
+        self.numberofplayers = 2
         self.cardnumbers = [7,6,5,4,3,2,1,2,3,4,5,6,7]
         self.players = []
         self.resetGame()
@@ -24,18 +24,19 @@ class Game():
         self.resetRound()
         
         # Deal all the cards
-        strategyList = ["advanced","randomUncontrolled","randomUncontrolled"]
+        strategyList = ["advanced","manualUncontrolled"]
         # self.dealAllCards(cardsinround,strategyList)
         self.manualDeal(cardsinround,strategyList)
 
         # The dealer picks trumps
         self.trumpsuit = self.players[self.dealer].pick_trumps()
+        print "Trumps: ", self.trumpsuit
         
         # Get all the bids
         self.getPlayerBids()
         
         # Play all the tricks
-        self.turn = (self.dealer + 1)% self.numberofplayers
+        self.turn = self.leader
         for trick in range(0,cardsinround):
             self.playFullTrick()
 
@@ -57,81 +58,7 @@ class Game():
         self.processScore()
         print(self.scores)
         self.endRound()
-            
-    def endRound(self):
-        # Increment the round number and the dealer number
-        self.trickNumber = 0
-        self.roundnumber = self.roundnumber + 1
-        self.dealer = (self.dealer + 1) % self.numberofplayers
 
-    def extractTrickWinner(self):
-        winningplay = analyse_pile(self.pile, self.trumpsuit)
-        return winningplay
-
-    def updateTricksWon(self, winningplay):
-        winningPlayerIndex = (self.dealer + 1 + winningplay)% self.numberofplayers
-        self.tricksWon[winningPlayerIndex] = self.tricksWon[winningPlayerIndex] + 1
-
-    def incrementTurn(self):
-        self.turn = ( self.turn + 1) % self.numberofplayers
-        print "------------------------------------------"
-        print "############   ", self.trickNumber
-        print "############   ", self.turn
-        print "------------------------------------------"
-
-    def getPlayerBids(self):
-        # Let the players make their bid
-        bidno = self.dealer
-        currentBids = []
-        for n in range(0,self.numberofplayers):
-            bidno = (bidno + 1) % self.numberofplayers
-            player = self.players[bidno]
-            ncards = self.cardnumbers[self.roundnumber]
-            thisPlayerBid = player.make_bid( self.numberofplayers,ncards,self.trumpsuit,currentBids)
-            currentBids.append(thisPlayerBid)
-            self.bids[bidno] = thisPlayerBid
-
-    def resetRound(self):
-        # Empty the tricks and the bids
-        self.bids = []
-        self.tricksWon = []
-        self.trickNumber = 0
-        for i in range(0,self.numberofplayers):
-            self.bids.append(-1)
-            self.tricksWon.append(0)
-
-    def resetGame(self):
-        # Transient per round
-        self.pile = []
-        self.bids = []
-        self.scores = []
-        for pIt in range(0,self.numberofplayers):
-            self.scores.append(0)
-        self.dealer = 0
-        self.trumpsuit = 'h'
-        self.roundnumber = 0
-        self.trickNumber = 0
-
-    def dealAllCards(self,cardsinround,strategyList):
-        # Deal the cards
-        playerhands = generate_random_deal(cardsinround,self.numberofplayers)
-        self.players = []
-        playerNumber = 0
-        for hand in playerhands:
-            thisplayer = Player( playerNumber, hand, strategy= strategyList[playerNumber])
-            self.players.append(copy.deepcopy(thisplayer))
-            playerNumber = playerNumber + 1
-
-    def manualDeal(self,cardsinround,strategyList):
-        # Deal the cards for player 1
-        player1hand = generate_random_deal(cardsinround,2)[1]
-        self.players = [ copy.deepcopy( Player( 0, player1hand, strategy= strategyList[0])) ]
-
-        # Everyone else gets random stuff
-        for playerNumber in range(1,self.numberofplayers):
-            thisplayer = Player( playerNumber, strategy= strategyList[playerNumber])
-            thisplayer.remove_possible(player1hand)
-            self.players.append(copy.deepcopy(thisplayer))
 
     def playFullTrick(self):
         print " "
@@ -170,6 +97,7 @@ class Game():
         winningplay = self.extractTrickWinner()
         self.updateTricksWon(winningplay)
         print "#############################################"
+        self.setTurnToWinner()
         self.trickNumber = self.trickNumber + 1
         print self.tricksWon
         print "############### End of trick ################"
@@ -227,12 +155,97 @@ class Game():
             self.incrementTurn()
 
         # See who has won and move on
-        winningplay = self.extractTrickWinner()
-        self.updateTricksWon(winningplay)
+        self.updateTricksWon(self.extractTrickWinner())
         print "#############################################"
+        self.setTurnToWinner()
         self.trickNumber = self.trickNumber + 1
         print self.tricksWon
         print "############### End of trick ################"
+
+    def setTurnToWinner(self):
+        winningplay = self.extractTrickWinner()
+        winningPlayerIndex = (self.leader + winningplay)% self.numberofplayers
+        print "Player: ", winningPlayerIndex, " won the trick with so it is now: ", winningPlayerIndex, "'s' go"
+        self.leader = winningPlayerIndex
+        self.turn = self.leader
+
+
+    def endRound(self):
+        # Increment the round number and the dealer number
+        self.trickNumber = 0
+        self.roundnumber = self.roundnumber + 1
+        self.dealer = (self.dealer + 1) % self.numberofplayers
+        self.leader = (self.dealer + 1) % self.numberofplayers
+
+    def extractTrickWinner(self):
+        winningplay = analyse_pile(self.pile, self.trumpsuit)
+        return winningplay
+
+    def updateTricksWon(self, winningplay):
+        winningPlayerIndex = (self.leader + winningplay)% self.numberofplayers
+        self.tricksWon[winningPlayerIndex] = self.tricksWon[winningPlayerIndex] + 1
+
+    def incrementTurn(self):
+        self.turn = ( self.turn + 1) % self.numberofplayers
+        print "------------------------------------------"
+        print "############   ", self.trickNumber
+        print "############   ", self.turn
+        print "------------------------------------------"
+
+    def getPlayerBids(self):
+        # Let the players make their bid
+        bidno = self.dealer
+        currentBids = []
+        for n in range(0,self.numberofplayers):
+            bidno = (bidno + 1) % self.numberofplayers
+            player = self.players[bidno]
+            ncards = self.cardnumbers[self.roundnumber]
+            thisPlayerBid = player.make_bid( self.numberofplayers,ncards,self.trumpsuit,currentBids)
+            currentBids.append(thisPlayerBid)
+            self.bids[bidno] = thisPlayerBid
+
+    def resetRound(self):
+        # Empty the tricks and the bids
+        self.bids = []
+        self.tricksWon = []
+        self.trickNumber = 0
+        for i in range(0,self.numberofplayers):
+            self.bids.append(-1)
+            self.tricksWon.append(0)
+
+    def resetGame(self):
+        # Transient per round
+        self.pile = []
+        self.bids = []
+        self.scores = []
+        for pIt in range(0,self.numberofplayers):
+            self.scores.append(0)
+        self.dealer = 0
+        self.leader = (self.dealer + 1) % self.numberofplayers
+        self.trumpsuit = 'h'
+        self.roundnumber = 0
+        self.trickNumber = 0
+
+    def dealAllCards(self,cardsinround,strategyList):
+        # Deal the cards
+        playerhands = generate_random_deal(cardsinround,self.numberofplayers)
+        self.players = []
+        playerNumber = 0
+        for hand in playerhands:
+            thisplayer = Player( playerNumber, hand, strategy= strategyList[playerNumber])
+            self.players.append(copy.deepcopy(thisplayer))
+            playerNumber = playerNumber + 1
+
+    def manualDeal(self,cardsinround,strategyList):
+        # Deal the cards for player 1
+        player1hand = generate_manual_deal(cardsinround)
+        self.players = [ copy.deepcopy( Player( 0, player1hand, strategy= strategyList[0])) ]
+
+        # Generate all other possibilities
+        for playerNumber in range(1,self.numberofplayers):
+            thisplayer = Player( playerNumber, strategy= strategyList[playerNumber])
+            thisplayer.remove_possible(player1hand)
+            self.players.append(copy.deepcopy(thisplayer))
 
     def tricksToScore(self,bid,trickNo):
         playerScore = trickNo

@@ -200,7 +200,22 @@ class Player():
         return averageScores, errorCounter
 
     def pick_trumps(self):
-        return TrumpPicker.picktrump(self.possiblehand)
+        if self.strategy == "randomControlled":
+            thistrump = TrumpPicker.picktrump(self.possiblehand)
+        elif self.strategy == "randomUncontrolled":
+            thistrump = TrumpPicker.picktrump(self.possiblehand)
+        elif self.strategy == "basic":
+            thistrump = TrumpPicker.picktrump(self.possiblehand)
+        elif self.strategy == "manualUncontrolled":
+            thistrump = self.pickManualTrump()
+        elif self.strategy =="advanced":
+            thistrump = TrumpPicker.picktrump(self.possiblehand)
+        return thistrump
+
+    def pickManualTrump():
+        print "Enter trump: "
+        trump = raw_input().rstrip()
+        return trump
 
     def make_bid(self, nplayers, ncards, trumpsuit, previousbids):
 
@@ -222,6 +237,7 @@ class Player():
         return thisbid
 
     def makeManualBid(self):
+        print "Enter bid: "
         thisbid = int(raw_input())
         return thisbid
     
@@ -230,6 +246,7 @@ class Player():
         vicProbList = self.computeProbability1CardVictory(nplayers, cardsInHand, ncards, trumpsuit)
         bidPDF = monte_carlo_pdfify(vicProbList,5000)
         [confidence, thisbid] = max_and_index(bidPDF)
+        print "Bid: ", thisbid
         print "Bid confidence: ", confidence
         return thisbid
 

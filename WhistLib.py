@@ -4,6 +4,22 @@ import StringIO
 import operator
 from operator import mul
 
+
+def generate_manual_deal(cardsinround):
+    areYouSure = False
+    while not areYouSure:
+        print "Plead enter cards, 1 at a time: "
+        hand = []
+        for cIt in range(0,cardsinround):
+            card = raw_input().rstrip()
+            hand.append(card)
+        print hand
+        print "Are you sure? (y/n)"
+        if raw_input().rstrip() == "y":
+            areYouSure = True
+    return hand
+
+
 class NullIO(StringIO.StringIO):
     def write(self, txt):
        pass
@@ -119,7 +135,7 @@ def player_beating_probability(card, trumpsuit, player):
     denom = len( player.possiblehand )
     return float(numer)/denom
     
-def list_all_possible_cards(allplayers):
+def list_all_possible_player_cards(allplayers):
     allplayercards = []
     for thisp in allplayers:
         allplayercards = union(allplayercards, thisp.possiblehand)
@@ -128,7 +144,7 @@ def list_all_possible_cards(allplayers):
 def all_players_beating_list(card,trumpsuit,allplayers):
     # This returns a list of all of the cards that the opposition might hold that could beat your card
     cardlist = card_beating_list(card, trumpsuit)
-    allplayercards = list_all_possible_cards(allplayers)
+    allplayercards = list_all_possible_player_cards(allplayers)
     return intersect(cardlist, allplayercards)
 
 def all_players_beating_probability(card, trumpsuit, oppositionplayers):
@@ -136,7 +152,7 @@ def all_players_beating_probability(card, trumpsuit, oppositionplayers):
     # TODO double check this maths...
     # Also the probability of losing the last trick given that you are leading it
     oppositionbeatingcards = all_players_beating_list(card,trumpsuit,oppositionplayers)
-    alloppositioncards = list_all_possible_cards(oppositionplayers)
+    alloppositioncards = list_all_possible_player_cards(oppositionplayers)
     numer = len( oppositionbeatingcards )
     denom = len( alloppositioncards  )
     return float(numer)/denom
@@ -147,11 +163,9 @@ def probability_player_leads_suit(player, suit):
     denom = len(player.possiblehand)
     return float(numer)/denom
 
-
 def max_and_index(listin):
     index, value = max(enumerate(listin), key=operator.itemgetter(1))
     return value, index
-
 
 def monte_carlo_pdfify(problist, mcnumber):
     ncards = len(problist)
