@@ -45,17 +45,9 @@ class Player():
     def make_move(self, pile, trumpsuit, fullGameObject = None):
 
         if self.strategy == "randomControlled":
-            try:
-                card = self.makeRandomControlledMove(pile,trumpsuit)
-            except:
-                sys.stdout = sys.__stdout__
-                import pdb; pdb.set_trace();
+            card = self.makeRandomControlledMove(pile,trumpsuit)
         elif self.strategy == "randomUncontrolled":
-            try:
-                card = self.makeRandomUncontrolledMove(pile,trumpsuit)
-            except:
-                sys.stdout = sys.__stdout__
-                import pdb; pdb.set_trace();
+            card = self.makeRandomUncontrolledMove(pile,trumpsuit)
         elif self.strategy == "basic":
             card = self.makeBasicMove(pile,trumpsuit)
         elif self.strategy == "manualUncontrolled":
@@ -150,10 +142,11 @@ class Player():
                 for specificCard in currentPossibleMoves:
                     # We suppress the monte carlo chatter
                     sys.stdout = NullIO()
-                    outputScores = self.cardPlayMonteCarlo(specificCard,monteCarloNumber,fullGameObject)
+                    [outputScores, errorCounter] = self.cardPlayMonteCarlo(specificCard,monteCarloNumber,fullGameObject)
                     sys.stdout = sys.__stdout__
                     thisPlayerCardRanking.append( outputScores[self.playerNumber] )
-
+                    print errorCounter,
+                print " "
                 # Get the maximum value and expected point ranking
                 print thisPlayerCardRanking
                 [expectedPointGain, cardIndex] = max_and_index(thisPlayerCardRanking)
@@ -173,9 +166,15 @@ class Player():
         for i in range(0,fullGameObject.numberofplayers):
             averageScores.append( 0.0 )
 
+        # Keep track of any game errors and use them to correct score estimate
+        errorCounter = 0
         for monteIterator in range(0,monteCarloNumber): 
             # Make a copy of the current game object
             tempGame = copy.deepcopy( fullGameObject )
+
+            # Merge the score output 
+            for i in range(0,tempGame.numberofplayers):
+                tempGame.scores[i] = 0.0
 
             # Revert all players to random
             for p in tempGame.players:
@@ -184,21 +183,24 @@ class Player():
                 else:
                     p.strategy = "randomUncontrolled"
 
-            # Play the whole round
-            tempGame.playPartialTrick(specificCard)
-            tempGame.playPartialRound()
-            
-            # Merge the score output 
-            for i in range(0,tempGame.numberofplayers):
-                averageScores[i] = averageScores[i] + float(tempGame.scores[i])
+            try:
+                # Play the whole round
+                tempGame.playPartialTrick(specificCard)
+                tempGame.playPartialRound()
+                
+                # Merge the score output 
+                for i in range(0,tempGame.numberofplayers):
+                    averageScores[i] = averageScores[i] + float(tempGame.scores[i])
+            except:
+                errorCounter = errorCounter + 1
 
         # Convert to proper average
         for i in range(0,tempGame.numberofplayers):
-            averageScores[i] = (1/float(monteCarloNumber))*averageScores[i]
-        return averageScores
+            averageScores[i] = (1/float(monteCarloNumber - errorCounter))*averageScores[i]
+        return averageScores, errorCounter
     
-    def make_bid(self, trumpsuit):
-        thisbid = 1
+    def make_bid(self, nplayers, ncards, trumpsuit):
+        thisbid = int(round(ncards/float(nplayers)))
         self.bid = thisbid
         return thisbid
         

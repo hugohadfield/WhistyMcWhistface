@@ -85,7 +85,8 @@ class Game():
         for n in range(0,self.numberofplayers):
             bidno = (bidno + 1) % self.numberofplayers
             player = self.players[bidno]
-            self.bids[bidno] = player.make_bid( self.trumpsuit )
+            ncards = self.cardnumbers[self.roundnumber]
+            self.bids[bidno] = player.make_bid( self.numberofplayers,ncards,self.trumpsuit )
 
     def resetRound(self):
         # Empty the tricks and the bids
@@ -243,5 +244,5 @@ class Game():
             thisTrickCount = self.tricksWon[playerIterator]
             thisBid = self.bids[playerIterator]
             thisPlayerScore = self.tricksToScore(thisBid,thisTrickCount)
-            self.scores[playerIterator] = thisPlayerScore
+            self.scores[playerIterator] = self.scores[playerIterator] + thisPlayerScore
 

@@ -18,8 +18,11 @@ def gametest():
     for i in range(0,len(thisgame.cardnumbers)):
         print("Round number: ", i+1)
         thisgame.playFullRound()
+    return thisgame
 
 if __name__ == "__main__":
     #dakestest()
-    gametest()
+    finishedGame = gametest()
+    print finishedGame.scores
+    import pdb; pdb.set_trace();
     
