@@ -16,6 +16,8 @@ class Player():
         else:
             self.possiblehand = specificcards
         self.playerNumber = playerNumber
+        self.canBidZero = True
+        self.zeroCounter = 0
 
     def remove_possible(self, cards):
         if type(cards) is str:
@@ -141,9 +143,9 @@ class Player():
                 
                 for specificCard in currentPossibleMoves:
                     # We suppress the monte carlo chatter
-                    sys.stdout = NullIO()
+                    #sys.stdout = NullIO()
                     [outputScores, errorCounter] = self.cardPlayMonteCarlo(specificCard,monteCarloNumber,fullGameObject)
-                    sys.stdout = sys.__stdout__
+                    #sys.stdout = sys.__stdout__
                     thisPlayerCardRanking.append( outputScores[self.playerNumber] )
                     print errorCounter,
                 print " "
@@ -183,16 +185,16 @@ class Player():
                 else:
                     p.strategy = "randomUncontrolled"
 
-            try:
-                # Play the whole round
-                tempGame.playPartialTrick(specificCard)
-                tempGame.playPartialRound()
-                
-                # Merge the score output 
-                for i in range(0,tempGame.numberofplayers):
-                    averageScores[i] = averageScores[i] + float(tempGame.scores[i])
-            except:
-                errorCounter = errorCounter + 1
+            #try:
+            # Play the whole round
+            tempGame.playPartialTrick(specificCard)
+            tempGame.playPartialRound()
+            
+            # Merge the score output 
+            for i in range(0,tempGame.numberofplayers):
+                averageScores[i] = averageScores[i] + float(tempGame.scores[i])
+            #except:
+            #    errorCounter = errorCounter + 1
 
         # Convert to proper average
         for i in range(0,tempGame.numberofplayers):
@@ -220,21 +222,45 @@ class Player():
     def make_bid(self, nplayers, ncards, trumpsuit, previousbids):
 
         if self.strategy == "randomControlled":
-            thisbid = self.makeAverageBid(nplayers,ncards)
+            thisbid = self.makeAverageBid(nplayers, ncards, trumpsuit, previousbids)
         elif self.strategy == "randomUncontrolled":
-            thisbid = self.makeAverageBid(nplayers,ncards)
+            thisbid = self.makeAverageBid(nplayers, ncards, trumpsuit, previousbids)
         elif self.strategy == "basic":
-            thisbid = self.makeAverageBid(nplayers,ncards)
+            thisbid = self.makeAverageBid(nplayers, ncards, trumpsuit, previousbids)
         elif self.strategy == "manualUncontrolled":
             thisbid = self.makeManualBid()
         elif self.strategy =="advanced":
             thisbid = self.makeAdvancedBid( nplayers, ncards, trumpsuit, previousbids)
         self.bid = thisbid
         return thisbid
+
+    def checkValidBid(self,nplayers,ncards,bid,previousbids):
+        if self.canBidZero == False:
+            if bid == 0:
+                return False
+        if len(previousbids) < nplayers-1:
+            return True
+        else:
+            if len(previousbids) == nplayers -1:
+                if sum(previousbids) + bid == ncards:
+                    return False
+                else:
+                    return True
+
+    def getValidBidOptions(self,nplayers,ncards,previousbids):
+        validBids = []
+        for bid in range(0,ncards):
+            if self.checkValidBid(nplayers,ncards,bid,previousbids):
+                validBids.append(bid)
+        return validBids
     
-    def makeAverageBid(self,nplayers,ncards):
-        thisbid = int(round(ncards/float(nplayers)))
-        return thisbid
+    def makeAverageBid(self,nplayers, ncards, trumpsuit, previousbids):
+        originalbid = int(round(ncards/float(nplayers)))
+        validBids = self.getValidBidOptions(nplayers,ncards,previousbids)
+        for i in range(0,ncards):
+            thisbid = (originalbid + i) % ncards
+            if thisbid in validBids:
+                return thisbid
 
     def makeManualBid(self):
         print "Enter bid: "
@@ -245,6 +271,12 @@ class Player():
         cardsInHand = self.possiblehand
         vicProbList = self.computeProbability1CardVictory(nplayers, cardsInHand, ncards, trumpsuit)
         bidPDF = monte_carlo_pdfify(vicProbList,5000)
+
+        validBids = self.getValidBidOptions(nplayers,ncards,previousbids)
+        for i in range(0,ncards):
+            if i not in validBids:
+                bidPDF[i] = 0.00000
+
         [confidence, thisbid] = max_and_index(bidPDF)
         print "Bid: ", thisbid
         print "Bid confidence: ", confidence
@@ -258,3 +290,12 @@ class Player():
             probabilityTotalVictory = probabilityOfWin1v1**nplayers
             outputProbs.append( probabilityTotalVictory )
         return outputProbs
+
+    def advanceZeroCounter(self,bid):
+        if bid == 0:
+            self.zeroCounter = self.zeroCounter + 1
+            if self.zeroCounter == 2:
+                self.canBidZero = False
+        else:
+            self.zeroCounter = 0
+            self.canBidZero = True

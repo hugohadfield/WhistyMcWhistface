@@ -24,9 +24,9 @@ class Game():
         self.resetRound()
         
         # Deal all the cards
-        strategyList = ["advanced","manualUncontrolled"]
-        # self.dealAllCards(cardsinround,strategyList)
-        self.manualDeal(cardsinround,strategyList)
+        strategyList = ["advanced","randomUncontrolled"]
+        self.dealAllCards(cardsinround,strategyList)
+        #self.manualDeal(cardsinround,strategyList)
 
         # The dealer picks trumps
         self.trumpsuit = self.players[self.dealer].pick_trumps()
@@ -201,6 +201,7 @@ class Game():
             player = self.players[bidno]
             ncards = self.cardnumbers[self.roundnumber]
             thisPlayerBid = player.make_bid( self.numberofplayers,ncards,self.trumpsuit,currentBids)
+            player.advanceZeroCounter(thisPlayerBid)
             currentBids.append(thisPlayerBid)
             self.bids[bidno] = thisPlayerBid
 
