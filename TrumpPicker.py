@@ -1,4 +1,5 @@
 import numpy
+import random
 
 def picktrump(hand):
 
@@ -79,7 +80,7 @@ def picktrump(hand):
             trump = minisuit
         elif minisuit==minavsuit:
             trump = minisuit
-        elif len(minavsuit)<0.5*handsize:
+        elif len(minavsuit) < 0.5*handsize:
             trump = minavsuit
         else:
             trump = minisuit
@@ -88,7 +89,7 @@ def picktrump(hand):
     elif stance == 'safe':
         if numpy.mean(maxisuit)>9.9:
             trump = maxisuit
-        elif highsuit==maxisuit:
+        elif highsuit == maxisuit:
             trump = highsuit
         else:
             trump = maxavsuit
@@ -105,3 +106,6 @@ def picktrump(hand):
     else:
         print("Something has gone wrong picking the trump.")
     return trump
+
+def pickRandomTrump():
+    return random.choice(["h", "c", "d", "s"])

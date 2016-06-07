@@ -6,7 +6,7 @@ from WhistPlayer import *
 class Game():
     def __init__(self):
         # Game related variables
-        self.numberofplayers = 2
+        self.numberofplayers = 3
         self.cardnumbers = [7,6,5,4,3,2,1,2,3,4,5,6,7]
         self.players = []
         self.resetGame()
@@ -24,9 +24,9 @@ class Game():
         self.resetRound()
         
         # Deal all the cards
-        strategyList = ["advanced","randomUncontrolled"]
-        self.dealAllCards(cardsinround,strategyList)
-        #self.manualDeal(cardsinround,strategyList)
+        strategyList = ["advanced","randomUncontrolled","randomUncontrolled"]
+        #self.dealAllCards(cardsinround,strategyList)
+        self.manualDeal(cardsinround,strategyList)
 
         # The dealer picks trumps
         self.trumpsuit = self.players[self.dealer].pick_trumps()
@@ -63,8 +63,11 @@ class Game():
     def playFullTrick(self):
         print " "
         print " "
-        print "########### Beggining full trick ############"
-        print self.bids
+        print "########### Beggining full trick number, " , self.trickNumber ,"############"
+        print "Bids: ", self.bids
+        print "Player cards "
+        for p in self.players:
+            print p.possiblehand
         print "#############################################"
         self.pile = []
         for n in range(0,self.numberofplayers):
@@ -80,16 +83,7 @@ class Game():
             print "Player: ", player.playerNumber, " played: ",
             print cardPlayed
 
-            # If the player makes a move that is not the same as is led
-            # remove that suit from their possible hand
-            if n != 0:
-                if cardPlayed[-1] != self.pile[0][-1]:
-                    player.remove_suit(self.pile[0][-1])
-                    print "Removing all of suit: ", self.pile[0][-1]
-
-            # If a player plays a card remove it from all other players hands
-            for playerTag in self.players:
-                playerTag.remove_possible(cardPlayed)
+            self.cleanCardFromPlayers(cardPlayed)
 
             self.incrementTurn()
 
@@ -113,16 +107,7 @@ class Game():
         print "Player: ", player.playerNumber, " played: ",
         print specificCard
 
-        # If the player makes a move that is not the same as is led
-        # remove that suit from their possible hand
-        if len(self.pile) > 0:
-            if specificCard[-1] != self.pile[0][-1]:
-                player.remove_suit(self.pile[0][-1])
-                print "Removing all of suit: ", self.pile[0][-1]
-
-        # If a player plays a card remove it from all other players hands
-        for playerTag in self.players:
-            playerTag.remove_possible(specificCard)
+        self.cleanCardFromPlayers(specificCard)
 
         # Restart the trick
         startingPoint = len(self.pile)
@@ -141,17 +126,8 @@ class Game():
             print "Player: ", player.playerNumber, " played: ",
             print cardPlayed
 
-             # If the player makes a move that is not the same as is led
-            # remove that suit from their possible hand
-            if len(self.pile) > 0:
-                if cardPlayed[-1] != self.pile[0][-1]:
-                    player.remove_suit(self.pile[0][-1])
-                    print "Removing all of suit: ", self.pile[0][-1]
-
-            # If a player plays a card remove it from all other players hands
-            for playerTag in self.players:
-                playerTag.remove_possible(cardPlayed)
-
+            self.cleanCardFromPlayers(cardPlayed)
+            
             self.incrementTurn()
 
         # See who has won and move on
@@ -161,6 +137,11 @@ class Game():
         self.trickNumber = self.trickNumber + 1
         print self.tricksWon
         print "############### End of trick ################"
+
+    def cleanCardFromPlayers(self,card,playerToIgnore = 0):
+        for playerTag in self.players:
+            if playerTag.playerNumber != playerToIgnore:
+                playerTag.remove_possible(card)
 
     def setTurnToWinner(self):
         winningplay = self.extractTrickWinner()
@@ -186,10 +167,15 @@ class Game():
         self.tricksWon[winningPlayerIndex] = self.tricksWon[winningPlayerIndex] + 1
 
     def incrementTurn(self):
-        self.turn = ( self.turn + 1) % self.numberofplayers
+        
         print "------------------------------------------"
-        print "############   ", self.trickNumber
-        print "############   ", self.turn
+        print "Incrementing turn from ",
+        print self.turn,
+        self.turn = ( self.turn + 1) % self.numberofplayers
+        print " to ",
+        print self.turn
+        print "For tick number: ", self.trickNumber
+        
         print "------------------------------------------"
 
     def getPlayerBids(self):
@@ -201,7 +187,6 @@ class Game():
             player = self.players[bidno]
             ncards = self.cardnumbers[self.roundnumber]
             thisPlayerBid = player.make_bid( self.numberofplayers,ncards,self.trumpsuit,currentBids)
-            player.advanceZeroCounter(thisPlayerBid)
             currentBids.append(thisPlayerBid)
             self.bids[bidno] = thisPlayerBid
 
@@ -233,18 +218,23 @@ class Game():
         self.players = []
         playerNumber = 0
         for hand in playerhands:
-            thisplayer = Player( playerNumber, hand, strategy= strategyList[playerNumber])
+            thisplayer = Player( playerNumber,playerhands, strategy= strategyList[playerNumber])
+            thisplayer.cardsLeftInHand = cardsinround
             self.players.append(copy.deepcopy(thisplayer))
             playerNumber = playerNumber + 1
 
     def manualDeal(self,cardsinround,strategyList):
         # Deal the cards for player 1
         player1hand = generate_manual_deal(cardsinround)
-        self.players = [ copy.deepcopy( Player( 0, player1hand, strategy= strategyList[0])) ]
+        #player1hand = generate_random_deal(cardsinround,2)[0]
+        tempPlayer = Player( 0, player1hand, strategy= strategyList[0])
+        tempPlayer.cardsLeftInHand = cardsinround
+        self.players = [copy.deepcopy(  tempPlayer )]
 
         # Generate all other possibilities
         for playerNumber in range(1,self.numberofplayers):
             thisplayer = Player( playerNumber, strategy= strategyList[playerNumber])
+            thisplayer.cardsLeftInHand = cardsinround
             thisplayer.remove_possible(player1hand)
             self.players.append(copy.deepcopy(thisplayer))
 
@@ -263,3 +253,10 @@ class Game():
             thisPlayerScore = self.tricksToScore(thisBid,thisTrickCount)
             self.scores[playerIterator] = self.scores[playerIterator] + thisPlayerScore
 
+    def convertToDeterministicGame(self):
+        for thisPlayer in self.players:
+            hand = thisPlayer.convertToValidHand()
+            thisPlayer.possiblehand = copy.deepcopy( hand )
+            playerToIgnore = thisPlayer.playerNumber
+            for card in thisPlayer.possiblehand:
+                self.cleanCardFromPlayers(card, playerToIgnore)
