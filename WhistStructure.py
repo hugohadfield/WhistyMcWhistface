@@ -24,7 +24,7 @@ class Game():
         self.resetRound()
         
         # Deal all the cards
-        strategyList = ["advanced","randomUncontrolled","randomUncontrolled"]
+        strategyList = ["advanced", "manualUncontrolled", "manualUncontrolled"]
         #self.dealAllCards(cardsinround,strategyList)
         self.manualDeal(cardsinround,strategyList)
 
