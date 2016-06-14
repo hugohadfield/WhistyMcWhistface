@@ -4,6 +4,7 @@ from WhistLib import *
 import TrumpPicker
 import sys
 import traceback
+from operator import add
 
 class Player():
     def __init__(self, playerNumber, specificcards = [], strategy= "random"):
@@ -19,10 +20,11 @@ class Player():
         self.playerNumber = playerNumber
         self.canBidZero = True
         self.zeroCounter = 0
+        self.monteCarloNumber = 600
 
 
     def remove_possible(self, cards):
-        newHand = copy.deepcopy( self.possiblehand )
+        newHand = [i for i in self.possiblehand]
 
         if type(cards) is str:
             cleanCard = cards.rstrip()
@@ -57,15 +59,15 @@ class Player():
     def make_move(self, pile, trumpsuit, fullGameObject = None):
 
         if self.strategy == "randomControlled":
-            card = self.makeRandomControlledMove(pile,trumpsuit)
+            card = self.makeRandomControlledMove(pile, trumpsuit)
         elif self.strategy == "randomUncontrolled":
-            card = self.makeRandomUncontrolledMove(pile,trumpsuit)
+            card = self.makeRandomUncontrolledMove(pile, trumpsuit)
         elif self.strategy == "basic":
-            card = self.makeBasicMove(pile,trumpsuit)
+            card = self.makeBasicMove(pile, trumpsuit)
         elif self.strategy == "manualUncontrolled":
-            card = self.makeManualUnControlledMove(pile,trumpsuit)
+            card = self.makeManualUnControlledMove(pile, trumpsuit)
         elif self.strategy =="advanced":
-            card = self.makeAdvancedMove(pile,trumpsuit,fullGameObject)
+            card = self.makeAdvancedMove(pile, trumpsuit, fullGameObject)
         return card
 
     def getPossibleMoves(self,pile):
@@ -78,7 +80,7 @@ class Player():
         else:
             return self.possiblehand
 
-    def cardSuitCheck(self,pile,cardPlayed):
+    def cardSuitCheck(self, pile, cardPlayed):
          # If the player makes a move that is not the same as is led
         # remove that suit from their possible hand
         if len(pile) > 0:
@@ -86,7 +88,7 @@ class Player():
                 self.remove_suit(pile[0][-1])
                 print "Removing all of suit: ", pile[0][-1]
 
-    def makeRandomControlledMove(self,pile,trumpsuit):
+    def makeRandomControlledMove(self, pile, trumpsuit):
         possibleMoves = self.getPossibleMoves(pile)
         print " ------------ Player: ", self.playerNumber, " -----------"
         print "Trumps: ",
@@ -100,10 +102,10 @@ class Player():
         else:
             card = random.choice(possibleMoves)
         if self.play_card(card):
-            self.cardSuitCheck(pile,card)
+            self.cardSuitCheck(pile, card)
             return card
 
-    def makeRandomUncontrolledMove(self,pile,trumpsuit):
+    def makeRandomUncontrolledMove(self, pile, trumpsuit):
         print " ------------ Player: ", self.playerNumber, " -----------"
         print "Trumps: ",
         print trumpsuit
@@ -132,14 +134,14 @@ class Player():
             cardToPlay = raw_input('Enter your card choice: ').rstrip()
             if cardToPlay in self.getPossibleMoves(pile):
                 if self.play_card(cardToPlay):
-                    self.cardSuitCheck(pile,card)
+                    self.cardSuitCheck(pile, cardToPlay)
                     return cardToPlay
                 else:
                     print "Invalid card choice, try again"
             else:
                 print "Invalid card choice, try again"
 
-    def makeManualUnControlledMove(self,pile,trumpsuit):
+    def makeManualUnControlledMove(self, pile, trumpsuit):
         print " "
         print "Manual card choice required"
         while True:
@@ -151,13 +153,17 @@ class Player():
             print pile
             cardToPlay = raw_input('Enter your card choice: ').rstrip()
             if self.play_card(cardToPlay):
-                self.cardSuitCheck(pile,cardToPlay)
+                self.cardSuitCheck(pile, cardToPlay)
                 return cardToPlay
             else:
                 print "Invalid card choice, try again"
 
-    def makeBasicMove(self,pile,trumpsuit):
-        return makeRandomMove(pile,trumpsuit)
+    def makeBasicMove(self, pile, trumpsuit):
+        # This makes a basic move based on the cards in hand and the game
+
+        # If I have bid more than I have won then I need to play some higher cards
+
+        return makeRandomMove(pile, trumpsuit)
 
     def makeAdvancedMove(self,pile,trumpsuit,fullGameObject):
 
@@ -174,13 +180,12 @@ class Player():
         if currentPossibleMoves is not str:
             if len(currentPossibleMoves) > 1:
                 # Project n steps into the future and evaluate the quality of the move
-                monteCarloNumber = 200
                 thisPlayerCardRanking = []
                 
                 for specificCard in currentPossibleMoves:
                     # We suppress the monte carlo chatter
                     sys.stdout = NullIO()
-                    [outputScores, errorCounter] = self.cardPlayMonteCarlo(specificCard,monteCarloNumber,fullGameObject)
+                    [outputScores, errorCounter] = self.cardPlayMonteCarlo(specificCard,self.monteCarloNumber,fullGameObject)
                     sys.stdout = sys.__stdout__
                     thisPlayerCardRanking.append( outputScores[self.playerNumber] )
                     print errorCounter,
@@ -201,20 +206,18 @@ class Player():
 
     def cardPlayMonteCarlo(self,specificCard,monteCarloNumber,fullGameObject):
 
-        averageScores = []
-        for i in range(0,fullGameObject.numberofplayers):
-            averageScores.append( 0.0 )
+        playerRange = range(0, fullGameObject.numberofplayers)
+        averageScores = [0.0 for i in playerRange]
 
         # Keep track of any game errors and use them to correct score estimate
         errorCounter = 0
-        for monteIterator in range(0,monteCarloNumber): 
+        for monteIterator in xrange(0,monteCarloNumber): 
             # Make a copy of the current game object
             tempGame = copy.deepcopy( fullGameObject )
             tempGame.convertToDeterministicGame()
 
-            # Merge the score output 
-            for i in range(0,tempGame.numberofplayers):
-                tempGame.scores[i] = 0.0
+            # Reset scores for now
+            tempGame.scores = [0.0 for i in playerRange]
 
             # Revert all players to random
             for p in tempGame.players:
@@ -228,8 +231,9 @@ class Player():
                 tempGame.playPartialRound()
 
                 # Merge the score output
-                for i in range(0,tempGame.numberofplayers):
-                    averageScores[i] = averageScores[i] + float(tempGame.scores[i])
+                averageScores = map(add, averageScores, tempGame.scores)
+                #for i in range(0,tempGame.numberofplayers):
+                #    averageScores[i] = averageScores[i] + float(tempGame.scores[i])
             except:
                 tb = traceback.format_exc()
                 errorCounter = errorCounter + 1
@@ -353,6 +357,6 @@ class Player():
         if len( newHand ) < self.cardsLeftInHand:
             a = 1
             print "This is the bad bit"
-        self.possiblehand = copy.deepcopy( newHand )
+        self.possiblehand = [i for i in newHand]
 
         

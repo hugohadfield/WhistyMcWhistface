@@ -4,12 +4,14 @@ from WhistLib import *
 from WhistPlayer import *
 
 class Game():
-    def __init__(self):
+    def __init__(self, strategyList):
         # Game related variables
-        self.numberofplayers = 3
         self.cardnumbers = [7,6,5,4,3,2,1,2,3,4,5,6,7]
+        self.numberofplayers = len(strategyList)
         self.players = []
         self.resetGame()
+        self.strategyList = strategyList
+
 
     def playFullRound(self):
         # How many cards are in this round
@@ -24,9 +26,8 @@ class Game():
         self.resetRound()
         
         # Deal all the cards
-        strategyList = ["advanced", "manualUncontrolled", "manualUncontrolled"]
         #self.dealAllCards(cardsinround,strategyList)
-        self.manualDeal(cardsinround,strategyList)
+        self.manualDeal(cardsinround,self.strategyList)
 
         # The dealer picks trumps
         self.trumpsuit = self.players[self.dealer].pick_trumps()
@@ -226,7 +227,7 @@ class Game():
     def manualDeal(self,cardsinround,strategyList):
         # Deal the cards for player 1
         player1hand = generate_manual_deal(cardsinround)
-        #player1hand = generate_random_deal(cardsinround,2)[0]
+        # player1hand = generate_random_deal(cardsinround,2)[0]
         tempPlayer = Player( 0, player1hand, strategy= strategyList[0])
         tempPlayer.cardsLeftInHand = cardsinround
         self.players = [copy.deepcopy(  tempPlayer )]
@@ -256,7 +257,7 @@ class Game():
     def convertToDeterministicGame(self):
         for thisPlayer in self.players:
             hand = thisPlayer.convertToValidHand()
-            thisPlayer.possiblehand = copy.deepcopy( hand )
+            thisPlayer.setPossibleHand( hand )
             playerToIgnore = thisPlayer.playerNumber
             for card in thisPlayer.possiblehand:
                 self.cleanCardFromPlayers(card, playerToIgnore)
