@@ -285,14 +285,14 @@ class Player():
             return True
         else:
             if len(previousbids) == nplayers -1:
-                if sum(previousbids) + bid == ncards:
+                if ( sum(previousbids) + bid )== ncards:
                     return False
                 else:
                     return True
 
     def getValidBidOptions(self,nplayers,ncards,previousbids):
         validBids = []
-        for bid in range(0,ncards):
+        for bid in range(0,ncards+1):
             if self.checkValidBid(nplayers,ncards,bid,previousbids):
                 validBids.append(bid)
         return validBids
