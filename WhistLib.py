@@ -117,6 +117,8 @@ def cards_of_suit(cardlist, suit):
 
 def card_beating_list(card, trumpsuit):
     # This is a list of all the possible cards that beat a specific card
+    # All cards of the same suit that are larger than it and all trumps 
+    # if it is not a trump
     numberlist = range( int(card[0])+1, 15 )
     cardlist = [ str(x) + card[1] for x in numberlist]
     if card[-1] != trumpsuit:

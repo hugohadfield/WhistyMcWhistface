@@ -326,10 +326,17 @@ class Player():
         return thisbid
 
     def computeProbability1CardVictory(self, nplayers, cardsInHand, ncards, trumpsuit):
-        # I know this is wrong, but not very wrong, needs some sampling without replacement stuff...
         outputProbs = []
+        handSize = len(cardsInHand)
         for card in cardsInHand:
-            probabilityOfWin1v1 = 1 - ( len(  card_beating_list(card, trumpsuit)  ) / float(52-1) )
+            # All cards that beat this card, assuming this card leads
+            cardlist = card_beating_list(card, trumpsuit)
+            # All cards that beat this card and are not in my hand
+            possibleOppList = list( set(cardsInHand)^set(cardlist) )
+            # Probability that an opposition player does not have one of these cards
+            probabilityOfWin1v1 = 1 - ( len(  possibleOppList  ) / float(52 - handSize) )
+            # I know this is wrong, but not very wrong, needs some sampling without replacement stuff...
+            # Probability that no opposition players have one of these cards
             probabilityTotalVictory = probabilityOfWin1v1**( nplayers -1 )
             outputProbs.append( probabilityTotalVictory )
         return outputProbs
