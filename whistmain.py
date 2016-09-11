@@ -12,9 +12,12 @@ def gametest(strategyList):
 
 if __name__ == "__main__":
     #dakestest()
-    strategyList = ["advanced", "manualUncontrolled", "manualUncontrolled"]
+    strategyList = ["advanced", "randomUncontrolled", "randomUncontrolled"]
     scoreLog = []
-    #for i in range(0,5):
-    finishedGame = gametest(strategyList)
-    scoreLog.append( finishedGame.scores[0] )
-    print sum(scoreLog)
+    for i in range(0,5):
+        finishedGame = gametest(strategyList)
+        scoreLog.append( finishedGame.scores )
+
+    f = open('logfile', 'w')
+    print >> f, scoreLog
+    print '\n'

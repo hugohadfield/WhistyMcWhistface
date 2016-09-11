@@ -168,7 +168,6 @@ class Game():
         self.tricksWon[winningPlayerIndex] = self.tricksWon[winningPlayerIndex] + 1
 
     def incrementTurn(self):
-        
         print "------------------------------------------"
         print "Incrementing turn from ",
         print self.turn,
@@ -226,8 +225,8 @@ class Game():
 
     def manualDeal(self,cardsinround,strategyList):
         # Deal the cards for player 1
-        player1hand = generate_manual_deal(cardsinround)
-        # player1hand = generate_random_deal(cardsinround,2)[0]
+        #player1hand = generate_manual_deal(cardsinround)
+        player1hand = generate_random_deal(cardsinround,2)[0]
         tempPlayer = Player( 0, player1hand, strategy= strategyList[0])
         tempPlayer.cardsLeftInHand = cardsinround
         self.players = [copy.deepcopy(  tempPlayer )]
