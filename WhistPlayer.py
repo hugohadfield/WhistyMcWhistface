@@ -7,25 +7,31 @@ import traceback
 from operator import add
 
 class Player():
-    def __init__(self, playerNumber, specificcards = [], strategy= "random"):
+    def __init__(self, playerNumber, specificCards = [], strategy="random"):
         self.strategy = strategy
-        self.cardsLeftInHand = 7
-        if not specificcards:
-            self.possiblehand = [ str(x) + 'h' for x in range( 2, 15 )]
-            self.possiblehand += [ str(x) + 'd' for x in range( 2, 15 )]
-            self.possiblehand += [ str(x) + 'c' for x in range( 2, 15 )]
-            self.possiblehand += [ str(x) + 's' for x in range( 2, 15 )]
-        else:
-            self.possiblehand = specificcards
         self.playerNumber = playerNumber
-        self.canBidZero = True
-        self.zeroCounter = 0
+        self.resetZeroCounter()
+        self.cardsLeftInHand = 7
         self.monteCarloNumber = 600
+        if not specificCards:
+            self.possibleHand = self.getListOfAllPossibleHands()
+        else:
+            self.possibleHand = specificCards
+        self.realHand = specificCards
 
+    def resetZeroCounter(self):
+        self.canBidZero = True
+        self.zeroCounter = 0  
 
-    def remove_possible(self, cards):
-        newHand = [i for i in self.possiblehand]
+    def getListOfAllPossibleHands(self):
+        thisList = [ str(x) + 'h' for x in range( 2, 15 )]
+        thisList += [ str(x) + 'd' for x in range( 2, 15 )]
+        thisList += [ str(x) + 'c' for x in range( 2, 15 )]
+        thisList += [ str(x) + 's' for x in range( 2, 15 )]
+        return thisList
 
+    def removePossible(self, cards):
+        newHand = [i for i in self.possibleHand]
         if type(cards) is str:
             cleanCard = cards.rstrip()
             if cleanCard in newHand:
@@ -38,25 +44,25 @@ class Player():
                     self.setPossibleHand(newHand)
 
                 
-    def play_card(self, card):
+    def playCard(self, card):
         cleanCard = card.rstrip()
-        if cleanCard in self.possiblehand:
+        if cleanCard in self.possibleHand:
             print ["Removing: ", cleanCard]
             self.cardsLeftInHand = self.cardsLeftInHand - 1
-            self.remove_possible(cleanCard)
+            self.removePossible(cleanCard)
             return True
         else:
             print " Card is not in hand "
             print cleanCard
-            print self.possiblehand
+            print self.possibleHand
             return False
 
-    def remove_suit(self,card):
+    def removeSuit(self, card):
         suit = card[-1]
-        cardsToRemove = cards_of_suit(self.possiblehand, suit)
-        self.remove_possible(cardsToRemove)
+        cardsToRemove = cards_of_suit(self.possibleHand, suit)
+        self.removePossible(cardsToRemove)
     
-    def make_move(self, pile, trumpsuit, fullGameObject = None):
+    def makeMove(self, pile, trumpsuit, fullGameObject = None):
 
         if self.strategy == "randomControlled":
             card = self.makeRandomControlledMove(pile, trumpsuit)
@@ -72,20 +78,20 @@ class Player():
 
     def getPossibleMoves(self,pile):
         if len(pile) > 0:
-            ledCards = cards_of_suit(self.possiblehand, pile[0][-1])
+            ledCards = cards_of_suit(self.possibleHand, pile[0][-1])
             if len(ledCards) > 0:
                 return ledCards
             else:
-                return self.possiblehand
+                return self.possibleHand
         else:
-            return self.possiblehand
+            return self.possibleHand
 
     def cardSuitCheck(self, pile, cardPlayed):
          # If the player makes a move that is not the same as is led
         # remove that suit from their possible hand
         if len(pile) > 0:
             if cardPlayed[-1] != pile[0][-1]:
-                self.remove_suit(pile[0][-1])
+                self.removeSuit(pile[0][-1])
                 print "Removing all of suit: ", pile[0][-1]
 
     def makeRandomControlledMove(self, pile, trumpsuit):
@@ -101,7 +107,7 @@ class Player():
             card = possibleMoves
         else:
             card = random.choice(possibleMoves)
-        if self.play_card(card):
+        if self.playCard(card):
             self.cardSuitCheck(pile, card)
             return card
 
@@ -110,14 +116,14 @@ class Player():
         print "Trumps: ",
         print trumpsuit
         print "All Possible Moves: ",
-        print self.possiblehand
+        print self.possibleHand
         print "Cards in pile: ",
         print pile
-        if type(self.possiblehand) is str:
-            card = self.possiblehand
+        if type(self.possibleHand) is str:
+            card = self.possibleHand
         else:
-            card = random.choice(self.possiblehand)
-        if self.play_card(card):
+            card = random.choice(self.possibleHand)
+        if self.playCard(card):
             self.cardSuitCheck(pile,card)
             return card
 
@@ -133,7 +139,7 @@ class Player():
             print pile
             cardToPlay = raw_input('Enter your card choice: ').rstrip()
             if cardToPlay in self.getPossibleMoves(pile):
-                if self.play_card(cardToPlay):
+                if self.playCard(cardToPlay):
                     self.cardSuitCheck(pile, cardToPlay)
                     return cardToPlay
                 else:
@@ -148,11 +154,11 @@ class Player():
             print "Trumps: ",
             print trumpsuit
             print "All Possible Moves: ",
-            print self.possiblehand
+            print self.possibleHand
             print "Cards in pile: ",
             print pile
             cardToPlay = raw_input('Enter your card choice: ').rstrip()
-            if self.play_card(cardToPlay):
+            if self.playCard(cardToPlay):
                 self.cardSuitCheck(pile, cardToPlay)
                 return cardToPlay
             else:
@@ -172,7 +178,7 @@ class Player():
         print "Trumps: ",
         print trumpsuit
         print "All Cards In Hand: ",
-        print self.possiblehand
+        print self.possibleHand
         print "Legal Moves: ",
         print currentPossibleMoves
         print "Cards in pile: ",
@@ -200,7 +206,7 @@ class Player():
                 cardToPlay = currentPossibleMoves[0]
         else:
             cardToPlay = currentPossibleMoves
-        if self.play_card(cardToPlay):
+        if self.playCard(cardToPlay):
             self.cardSuitCheck(pile,cardToPlay)
             return cardToPlay
 
@@ -245,15 +251,15 @@ class Player():
 
     def pick_trumps(self):
         if self.strategy == "randomControlled":
-            thistrump = TrumpPicker.picktrump(self.possiblehand)
+            thistrump = TrumpPicker.picktrump(self.possibleHand)
         elif self.strategy == "randomUncontrolled":
-            thistrump = TrumpPicker.picktrump(self.possiblehand)
+            thistrump = TrumpPicker.picktrump(self.possibleHand)
         elif self.strategy == "basic":
-            thistrump = TrumpPicker.picktrump(self.possiblehand)
+            thistrump = TrumpPicker.picktrump(self.possibleHand)
         elif self.strategy == "manualUncontrolled":
             thistrump = self.pickManualTrump()
         elif self.strategy =="advanced":
-            thistrump = TrumpPicker.picktrump(self.possiblehand)
+            thistrump = TrumpPicker.picktrump(self.possibleHand)
         return thistrump
 
     def pickManualTrump(self):
@@ -261,7 +267,7 @@ class Player():
         trump = raw_input().rstrip()
         return trump
 
-    def make_bid(self, nplayers, ncards, trumpsuit, previousbids):
+    def makeBid(self, nplayers, ncards, trumpsuit, previousbids):
 
         if self.strategy == "randomControlled":
             thisbid = self.makeAverageBid(nplayers, ncards, trumpsuit, previousbids)
@@ -311,7 +317,7 @@ class Player():
         return thisbid
     
     def makeAdvancedBid(self, nplayers, ncards, trumpsuit, previousbids):
-        cardsInHand = self.possiblehand
+        cardsInHand = self.possibleHand
         vicProbList = self.computeProbability1CardVictory(nplayers, cardsInHand, ncards, trumpsuit)
         bidPDF = monte_carlo_pdfify(vicProbList,5000)
 
@@ -352,9 +358,9 @@ class Player():
             self.canBidZero = True
 
     def convertToValidHand(self):
-        print self.possiblehand, self.cardsLeftInHand
+        print self.possibleHand, self.cardsLeftInHand
         try:
-            newHand = random.sample(self.possiblehand,self.cardsLeftInHand)
+            newHand = random.sample(self.possibleHand, self.cardsLeftInHand)
         except:
             newHand = []
             print "error"
@@ -364,6 +370,6 @@ class Player():
         if len( newHand ) < self.cardsLeftInHand:
             a = 1
             print "This is the bad bit"
-        self.possiblehand = [i for i in newHand]
+        self.possibleHand = [i for i in newHand]
 
         

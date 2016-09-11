@@ -68,7 +68,7 @@ class Game():
         print "Bids: ", self.bids
         print "Player cards "
         for p in self.players:
-            print p.possiblehand
+            print p.possibleHand
         print "#############################################"
         self.pile = []
         for n in range(0,self.numberofplayers):
@@ -76,9 +76,9 @@ class Game():
 
             # Player makes their move
             if player.strategy != "advanced":
-                cardPlayed = player.make_move( self.pile, self.trumpsuit)
+                cardPlayed = player.makeMove(self.pile, self.trumpsuit)
             else:
-                cardPlayed = player.make_move( self.pile, self.trumpsuit, self)
+                cardPlayed = player.makeMove(self.pile, self.trumpsuit, self)
 
             self.pile.append( cardPlayed )
             print "Player: ", player.playerNumber, " played: ",
@@ -99,7 +99,7 @@ class Game():
 
     def playPartialTrick(self,specificCard):
         player = self.players[ self.turn ]
-        if player.play_card(specificCard):
+        if player.playCard(specificCard):
             self.pile.append(specificCard)
             self.incrementTurn()
         else:
@@ -118,9 +118,9 @@ class Game():
             
             # Player makes their move
             if player.strategy != "advanced":
-                cardPlayed = player.make_move( self.pile, self.trumpsuit)
+                cardPlayed = player.makeMove(self.pile, self.trumpsuit)
             else:
-                cardPlayed = player.make_move( self.pile, self.trumpsuit, self)
+                cardPlayed = player.makeMove(self.pile, self.trumpsuit, self)
 
             self.pile.append( cardPlayed )
 
@@ -142,7 +142,7 @@ class Game():
     def cleanCardFromPlayers(self,card,playerToIgnore = 0):
         for playerTag in self.players:
             if playerTag.playerNumber != playerToIgnore:
-                playerTag.remove_possible(card)
+                playerTag.removePossible(card)
 
     def setTurnToWinner(self):
         winningplay = self.extractTrickWinner()
@@ -186,7 +186,7 @@ class Game():
             bidno = (bidno + 1) % self.numberofplayers
             player = self.players[bidno]
             ncards = self.cardnumbers[self.roundnumber]
-            thisPlayerBid = player.make_bid( self.numberofplayers,ncards,self.trumpsuit,currentBids)
+            thisPlayerBid = player.makeBid(self.numberofplayers, ncards, self.trumpsuit, currentBids)
             currentBids.append(thisPlayerBid)
             self.bids[bidno] = thisPlayerBid
 
@@ -235,7 +235,7 @@ class Game():
         for playerNumber in range(1,self.numberofplayers):
             thisplayer = Player( playerNumber, strategy= strategyList[playerNumber])
             thisplayer.cardsLeftInHand = cardsinround
-            thisplayer.remove_possible(player1hand)
+            thisplayer.removePossible(player1hand)
             self.players.append(copy.deepcopy(thisplayer))
 
     def tricksToScore(self,bid,trickNo):
@@ -258,5 +258,5 @@ class Game():
             hand = thisPlayer.convertToValidHand()
             thisPlayer.setPossibleHand( hand )
             playerToIgnore = thisPlayer.playerNumber
-            for card in thisPlayer.possiblehand:
+            for card in thisPlayer.possibleHand:
                 self.cleanCardFromPlayers(card, playerToIgnore)
