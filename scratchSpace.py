@@ -1,3 +1,0 @@
-
-if None:
-	print "lol"
