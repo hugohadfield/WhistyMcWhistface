@@ -22,4 +22,11 @@ class ManualPlayer(Player):
     def makeBid(self, nplayers, ncards, trumpsuit, previousbids):
         print "Enter bid: "
         thisbid = int(raw_input())
+        self.bid = thisbid
+        self.advanceZeroCounter(thisbid)
         return thisbid
+
+    def pick_trumps(self):
+        print "Enter trump: "
+        trump = raw_input().rstrip()
+        return trump

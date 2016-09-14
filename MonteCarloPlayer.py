@@ -1,6 +1,15 @@
 from WhistPlayer import *
+from RandomPlayer import *
 
 class MonteCarloPlayer(Player):
+
+    def __init__(self, playerNumber, specificCards = []):
+        Player.__init__(self,playerNumber,specificCards)
+        self.monteCarloNumber = 5000
+
+    def pick_trumps(self):
+        thistrump = TrumpPicker.picktrump(self.possibleHand)
+        return thistrump
 
     def makeMove(self, pile, trumpsuit, fullGameObject=None):
         currentPossibleMoves = self.getPossibleMoves(pile)
@@ -39,6 +48,9 @@ class MonteCarloPlayer(Player):
         if self.playCard(cardToPlay):
             self.cardSuitCheck(pile, cardToPlay)
             return cardToPlay
+        else:
+            print "Card playing error"
+
 
     def cardPlayMonteCarlo(self, specificCard, monteCarloNumber, fullGameObject):
 
@@ -56,11 +68,10 @@ class MonteCarloPlayer(Player):
             tempGame.scores = [0.0 for i in playerRange]
 
             # Revert all players to random
+            newPlayers = []
             for p in tempGame.players:
-                if p.strategy == "advanced":
-                    p.strategy = "randomControlled"
-                else:
-                    p.strategy = "randomControlled"
+                newPlayers.append( p.generateModelPlayer() )
+            tempGame.players = [i for i in newPlayers]
 
             try:
                 tempGame.playPartialTrick(specificCard)
@@ -77,18 +88,13 @@ class MonteCarloPlayer(Player):
         # Convert to proper average
         for i in range(0, tempGame.numberofplayers):
             averageScores[i] = (1 / float(monteCarloNumber - errorCounter)) * averageScores[i]
-        return averageScores, errorCounter
 
+        return averageScores, errorCounter
 
     def makeBid(self, nplayers, ncards, trumpsuit, previousbids):
         thisbid = self.makeAdvancedBid(nplayers, ncards, trumpsuit, previousbids)
         self.bid = thisbid
         self.advanceZeroCounter(thisbid)
-        return thisbid
-
-    def makeManualBid(self):
-        print "Enter bid: "
-        thisbid = int(raw_input())
         return thisbid
 
     def makeAdvancedBid(self, nplayers, ncards, trumpsuit, previousbids):
@@ -121,3 +127,12 @@ class MonteCarloPlayer(Player):
             probabilityTotalVictory = probabilityOfWin1v1 ** (nplayers - 1)
             outputProbs.append(probabilityTotalVictory)
         return outputProbs
+
+    def generateModelPlayer(self):
+        modelPlayer = RandomPlayer(self.playerNumber, self.possibleHand)
+        modelPlayer.canBidZero = self.canBidZero
+        modelPlayer.zeroCounter = self.zeroCounter
+        modelPlayer.cardsLeftInHand = self.cardsLeftInHand
+        modelPlayer.monteCarloNumber = self.monteCarloNumber
+        modelPlayer.realHand = [i for i in self.realHand]
+        return copy.deepcopy(modelPlayer)

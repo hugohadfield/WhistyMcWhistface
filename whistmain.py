@@ -11,13 +11,11 @@ def gametest(strategyList):
     return thisgame
 
 if __name__ == "__main__":
-    #dakestest()
-    strategyList = ["advanced", "randomUncontrolled", "randomUncontrolled"]
+    playerList = ["MonteCarloPlayer", "RandomPlayer", "RandomPlayer"]
     scoreLog = []
     for i in range(0,5):
-        finishedGame = gametest(strategyList)
+        finishedGame = gametest(playerList)
         scoreLog.append( finishedGame.scores )
 
     f = open('logfile', 'w')
     print >> f, scoreLog
-    print '\n'

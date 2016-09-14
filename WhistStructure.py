@@ -4,14 +4,23 @@ from WhistLib import *
 from WhistPlayer import *
 
 class Game():
-    def __init__(self, strategyList):
+    def __init__(self, playerList):
         # Game related variables
         self.cardnumbers = [7,6,5,4,3,2,1,2,3,4,5,6,7]
-        self.numberofplayers = len(strategyList)
+        self.numberofplayers = len(playerList)
         self.players = []
         self.resetGame()
-        self.strategyList = strategyList
+        self.playerList = playerList
+        self.generatePlayersFromList(playerList)
 
+    def generatePlayersFromList(self, playerClassNameList):
+        n = 0
+        for playerClassName in playerClassNameList:
+            module = __import__(playerClassName)
+            class_ = getattr(module, playerClassName)
+            instance = class_(n)
+            self.players.append(instance)
+            n = n + 1
 
     def playFullRound(self):
         # How many cards are in this round
@@ -27,7 +36,7 @@ class Game():
         
         # Deal all the cards
         #self.dealAllCards(cardsinround,strategyList)
-        self.manualDeal(cardsinround,self.strategyList)
+        self.manualDeal(cardsinround)
 
         # The dealer picks trumps
         self.trumpsuit = self.players[self.dealer].pick_trumps()
@@ -75,10 +84,7 @@ class Game():
             player = self.players[ self.turn ]
 
             # Player makes their move
-            if player.strategy != "advanced":
-                cardPlayed = player.makeMove(self.pile, self.trumpsuit)
-            else:
-                cardPlayed = player.makeMove(self.pile, self.trumpsuit, self)
+            cardPlayed = player.makeMove(self.pile, self.trumpsuit, self)
 
             self.pile.append( cardPlayed )
             print "Player: ", player.playerNumber, " played: ",
@@ -117,10 +123,8 @@ class Game():
             # Each player makes their move
             
             # Player makes their move
-            if player.strategy != "advanced":
-                cardPlayed = player.makeMove(self.pile, self.trumpsuit)
-            else:
-                cardPlayed = player.makeMove(self.pile, self.trumpsuit, self)
+            cardPlayed = player.makeMove(self.pile, self.trumpsuit, self)
+
 
             self.pile.append( cardPlayed )
 
@@ -223,20 +227,20 @@ class Game():
             self.players.append(copy.deepcopy(thisplayer))
             playerNumber = playerNumber + 1
 
-    def manualDeal(self,cardsinround,strategyList):
-        # Deal the cards for player 1
+    def manualDeal(self,cardsinround):
         #player1hand = generate_manual_deal(cardsinround)
-        player1hand = generate_random_deal(cardsinround,2)[0]
-        tempPlayer = Player( 0, player1hand, strategy= strategyList[0])
-        tempPlayer.cardsLeftInHand = cardsinround
-        self.players = [copy.deepcopy(  tempPlayer )]
-
+        playerHands = generate_random_deal(cardsinround,self.numberofplayers)
+        playerOne = self.players[0]
+        playerOne.possibleHand = [i for i in playerHands[0]]
+        playerOne.realHand = [i for i in playerHands[0]]
+        playerOne.cardsLeftInHand = cardsinround
         # Generate all other possibilities
         for playerNumber in range(1,self.numberofplayers):
-            thisplayer = Player( playerNumber, strategy= strategyList[playerNumber])
+            thisplayer = self.players[playerNumber]
             thisplayer.cardsLeftInHand = cardsinround
-            thisplayer.removePossible(player1hand)
-            self.players.append(copy.deepcopy(thisplayer))
+            thisplayer.setPossibleHand(thisplayer.getListOfAllPossibleHands())
+            thisplayer.removePossible(playerHands[0])
+            thisplayer.realHand = [i for i in playerHands[playerNumber]]
 
     def tricksToScore(self,bid,trickNo):
         playerScore = trickNo
@@ -257,6 +261,7 @@ class Game():
         for thisPlayer in self.players:
             hand = thisPlayer.convertToValidHand()
             thisPlayer.setPossibleHand( hand )
+            thisPlayer.setRealHand( hand )
             playerToIgnore = thisPlayer.playerNumber
             for card in thisPlayer.possibleHand:
                 self.cleanCardFromPlayers(card, playerToIgnore)
