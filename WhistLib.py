@@ -126,6 +126,23 @@ def card_beating_list(card, trumpsuit):
         cardlist = cardlist + alltrumps
     return cardlist
 
+def card_following_list(card, leadsuit, trumpsuit):
+    # This is a list of all the possible cards that beat a specific card assuming that it is not leading
+    # All cards of the lead suit, all cards that are larger than it of the lead suit and all trumps
+    # if it is not a trump
+    cardlist = []
+    if card[-1] == leadsuit:
+        numberlist = range( int(card[0])+1, 15 )
+        cardlist = [ str(x) + card[1] for x in numberlist]
+    else:
+        if leadsuit != trumpsuit:
+            alllead = [str(x) + leadsuit for x in range(2, 15)]
+            cardlist = cardlist + alllead
+    if card[-1] != trumpsuit:
+        alltrumps = [ str(x) + trumpsuit for x in range( 2, 15 )]
+        cardlist = cardlist + alltrumps
+    return cardlist
+
 def player_beating_list(card, trumpsuit, player):
     # This is a list of the possible cards that a specific player can play that would beat your card
     cardlist = card_beating_list(card, trumpsuit)
@@ -182,4 +199,37 @@ def monte_carlo_pdfify(problist, mcnumber):
         pdfout[accumulator] = pdfout[accumulator] + 1
     for i in range(0,ncards+1):
         pdfout[i] = pdfout[i]/float(mcnumber)
+    return pdfout
+
+
+def mini_monte_sim(leadingProbList, followingProbList, bidPosition, mcnumber):
+
+    ncards = len(leadingProbList)
+    pdfout = []
+    for i in range(0, ncards + 1):
+        pdfout.append(0.0)
+
+    if bidPosition== 0:
+        startleading = True
+    else:
+        startleading = False
+    for mcIterator in range(0, mcnumber):
+        leading = startleading
+        accumulator = 0
+        leadCopy = [i for i in leadingProbList]
+        followCopy = [i for i in followingProbList]
+        for cardIterator in range(0,ncards):
+            cardIndex = random.choice(range(0,len(leadCopy)))
+            leadProb = leadCopy.pop(cardIndex)
+            followProb = followCopy.pop(cardIndex)
+            randomVal = random.random()
+            if leading:
+                if randomVal < leadProb:
+                    accumulator = accumulator + 1
+            else:
+                if randomVal < followProb:
+                    accumulator = accumulator + 1
+        pdfout[accumulator] = pdfout[accumulator] + 1
+    for i in range(0, ncards + 1):
+        pdfout[i] = pdfout[i] / float(mcnumber)
     return pdfout

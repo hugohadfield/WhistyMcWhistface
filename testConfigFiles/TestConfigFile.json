@@ -1,0 +1,23 @@
+{"TestList":[
+  {"TestName":"./testConfigFiles/ThreePlayerMonte50.json","OutputFileName":"./Logs/ThreePlayerMonte50.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte100.json","OutputFileName":"./Logs/ThreePlayerMonte100.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte150.json","OutputFileName":"./Logs/ThreePlayerMonte150.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte200.json","OutputFileName":"./Logs/ThreePlayerMonte200.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte250.json","OutputFileName":"./Logs/ThreePlayerMonte250.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte300.json","OutputFileName":"./Logs/ThreePlayerMonte300.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte450.json","OutputFileName":"./Logs/ThreePlayerMonte450.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte500.json","OutputFileName":"./Logs/ThreePlayerMonte500.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte600.json","OutputFileName":"./Logs/ThreePlayerMonte600.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte700.json","OutputFileName":"./Logs/ThreePlayerMonte700.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte800.json","OutputFileName":"./Logs/ThreePlayerMonte800.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte900.json","OutputFileName":"./Logs/ThreePlayerMonte900.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte1000.json","OutputFileName":"./Logs/ThreePlayerMonte1000.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte1500.json","OutputFileName":"./Logs/ThreePlayerMonte1500.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte2000.json","OutputFileName":"./Logs/ThreePlayerMonte2000.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte2500.json","OutputFileName":"./Logs/ThreePlayerMonte2500.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte3000.json","OutputFileName":"./Logs/ThreePlayerMonte3000.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte3500.json","OutputFileName":"./Logs/ThreePlayerMonte3500.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte4000.json","OutputFileName":"./Logs/ThreePlayerMonte4000.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte4500.json","OutputFileName":"./Logs/ThreePlayerMonte4500.log"},
+	{"TestName":"./testConfigFiles/ThreePlayerMonte5000.json","OutputFileName":"./Logs/ThreePlayerMonte5000.log"}
+]}

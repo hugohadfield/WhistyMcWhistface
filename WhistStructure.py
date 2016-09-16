@@ -2,16 +2,38 @@
 import copy
 from WhistLib import *
 from WhistPlayer import *
+import json
 
 class Game():
-    def __init__(self, playerList):
+    def __init__(self, playerConfigFileName):
         # Game related variables
         self.cardnumbers = [7,6,5,4,3,2,1,2,3,4,5,6,7]
-        self.numberofplayers = len(playerList)
+        self.playerConfigFileName = ""
+        self.playerConfigFileName = playerConfigFileName
+        self.numberofplayers = 0
         self.players = []
+        self.generatePlayersFromConfigFile(self.playerConfigFileName)
         self.resetGame()
-        self.playerList = playerList
-        self.generatePlayersFromList(playerList)
+
+    def parseGameConfigFile(self, configFileName):
+        with open(configFileName) as data_file:
+            jsonFileData = json.load(data_file)
+            for parameterCollection in jsonFileData["GameParameters"]:
+                playerConfigName = parameterCollection["PlayerConfigFile"]
+                self.playerConfigFileName = playerConfigName
+
+    def generatePlayersFromConfigFile(self,configFileName):
+        with open(configFileName) as data_file:
+            jsonFileData = json.load(data_file)
+            for player in jsonFileData["Players"]:
+                playerClassName = player["class"]
+                playerNumber = player["playerNumber"]
+
+                module = __import__(playerClassName)
+                class_ = getattr(module, playerClassName)
+                instance = class_(int(playerNumber), additionalParameters=player["additionalParameters"])
+                self.players.append(instance)
+        self.numberofplayers = len(self.players)
 
     def generatePlayersFromList(self, playerClassNameList):
         n = 0
@@ -21,6 +43,11 @@ class Game():
             instance = class_(n)
             self.players.append(instance)
             n = n + 1
+
+    def playFullGame(self):
+        for i in range(0, len(self.cardnumbers)):
+            print("Round number: ", i + 1)
+            self.playFullRound()
 
     def playFullRound(self):
         # How many cards are in this round
@@ -39,7 +66,7 @@ class Game():
         self.manualDeal(cardsinround)
 
         # The dealer picks trumps
-        self.trumpsuit = self.players[self.dealer].pick_trumps()
+        self.trumpsuit = self.players[self.dealer].pick_trumps(self.numberofplayers)
         print "Trumps: ", self.trumpsuit
         
         # Get all the bids

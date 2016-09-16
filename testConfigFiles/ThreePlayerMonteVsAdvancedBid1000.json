@@ -1,0 +1,5 @@
+{"Players":[
+    {"class":"MonteCarloPlayer","playerNumber":"0", "additionalParameters":{"monteCarloNumber":"1000"}},
+    {"class":"RandomWithAdvancedBidPlayer","playerNumber":"1","additionalParameters":{}},
+    {"class":"RandomWithAdvancedBidPlayer","playerNumber":"2","additionalParameters":{}}
+]}

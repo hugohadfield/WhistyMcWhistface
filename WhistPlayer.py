@@ -7,7 +7,7 @@ import traceback
 from operator import add
 
 class Player():
-    def __init__(self, playerNumber, specificCards = []):
+    def __init__(self, playerNumber, specificCards = [], additionalParameters=[]):
         self.playerNumber = playerNumber
         self.resetZeroCounter()
         self.cardsLeftInHand = 7
@@ -15,7 +15,12 @@ class Player():
             self.possibleHand = [i for i in self.getListOfAllPossibleHands()]
         else:
             self.possibleHand = [i for i in specificCards]
+        if additionalParameters:
+            self.handleAdditionalParamaters(additionalParameters)
         self.realHand = [i for i in specificCards]
+
+    def handleAdditionalParamaters(self,parameters):
+        return True
 
     def resetZeroCounter(self):
         self.canBidZero = True
@@ -43,8 +48,7 @@ class Player():
                         newHand.remove(cleanCard)
                         self.setPossibleHand(newHand)
         except:
-            i = 1
-            i = i+1
+            print "Card removal error"
 
     def removeReal(self, cards):
         newHand = [i for i in self.realHand]
@@ -107,8 +111,8 @@ class Player():
                 self.removeSuit(pile[0][-1])
                 print "Removing all of suit: ", pile[0][-1]
 
-    def pick_trumps(self):
-        thistrump = TrumpPicker.picktrump(self.possibleHand)
+    def pick_trumps(self, nplayers):
+        thistrump = TrumpPicker.picktrump(self.realHand)
         return thistrump
 
     def checkValidBid(self,nplayers,ncards,bid,previousbids):
