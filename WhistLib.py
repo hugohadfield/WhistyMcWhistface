@@ -233,3 +233,44 @@ def mini_monte_sim(leadingProbList, followingProbList, bidPosition, mcnumber):
     for i in range(0, ncards + 1):
         pdfout[i] = pdfout[i] / float(mcnumber)
     return pdfout
+
+
+def mini_monte_reward_function(cardIndex, pile, leadingProbList, followingProbList, bidPosition, mcnumber):
+
+    copiedLeadList = [ i for i in leadingProbList]
+    leadLoss = copiedLeadList.pop(cardIndex)
+
+    copiedFollowList = [i for i in followingProbList]
+    followLoss = copiedFollowList.pop(cardIndex)
+    mini_monte_sim(, followingProbList, bidPosition, mcnumber)
+    mini_monte_sim()
+
+    ncards = len(leadingProbList)
+    pdfout = []
+    for i in range(0, ncards + 1):
+        pdfout.append(0.0)
+
+    if bidPosition== 0:
+        startleading = True
+    else:
+        startleading = False
+    for mcIterator in range(0, mcnumber):
+        leading = startleading
+        accumulator = 0
+        leadCopy = [i for i in leadingProbList]
+        followCopy = [i for i in followingProbList]
+        for cardIterator in range(0,ncards):
+            cardIndex = random.choice(range(0,len(leadCopy)))
+            leadProb = leadCopy.pop(cardIndex)
+            followProb = followCopy.pop(cardIndex)
+            randomVal = random.random()
+            if leading:
+                if randomVal < leadProb:
+                    accumulator = accumulator + 1
+            else:
+                if randomVal < followProb:
+                    accumulator = accumulator + 1
+        pdfout[accumulator] = pdfout[accumulator] + 1
+    for i in range(0, ncards + 1):
+        pdfout[i] = pdfout[i] / float(mcnumber)
+    return pdfout
