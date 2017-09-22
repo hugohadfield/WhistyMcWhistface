@@ -3,7 +3,7 @@ import copy
 
 class RandomPlayer(Player):
 
-    def pick_trumps(self):
+    def pick_trumps(self, numberOfPlayers):
         thistrump = TrumpPicker.picktrump(self.possibleHand)
         return thistrump
 

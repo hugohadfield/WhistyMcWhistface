@@ -1,0 +1,2616 @@
+('Round number: ', 1)
+ 
+ 
+------------------------------------------------
+Cards in round:  7
+Trumps:  h
+Bid:  1
+Bid confidence:  0.3232
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [1, 2, 2]
+Player cards 
+['3s', '5c', '2s', '2c', '10s', '6h', '11h']
+['2h', '3h', '4h', '5h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '4c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '4s', '5s', '6s', '7s', '8s', '9s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '4c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '4s', '5s', '6s', '7s', '8s', '9s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['2d', '4h', '14h', '5d', '5h', '6s', '2h']
+Cards in pile:  []
+['Removing: ', '4h']
+Player:  1  played:  4h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['8d', '9s', '4c', '7c', '10c', '6c', '14d']
+Cards in pile:  ['4h']
+['Removing: ', '4c']
+Removing all of suit:  h
+Player:  2  played:  4c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['3s', '5c', '2s', '2c', '10s', '6h', '11h']
+Legal Moves:  ['6h', '11h']
+Cards in pile:  ['4h', '4c']
+0 0  
+[3.5695, 5.29]
+['Removing: ', '11h']
+Player:  0  played:  11h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[1, 0, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [1, 2, 2]
+Player cards 
+['3s', '5c', '2s', '2c', '10s', '6h']
+['2h', '3h', '5h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '4s', '5s', '6s', '7s', '8s', '9s', '11s', '12s', '13s', '14s']
+['2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '4s', '5s', '6s', '7s', '8s', '9s', '11s', '12s', '13s', '14s']
+#############################################
+Trumps:  h
+All Cards In Hand:  ['3s', '5c', '2s', '2c', '10s', '6h']
+Legal Moves:  ['3s', '5c', '2s', '2c', '10s', '6h']
+Cards in pile:  []
+0 0 0 0 0 0  
+[5.1635, 5.1555, 5.2245, 5.1035, 4.5815, 6.449]
+['Removing: ', '6h']
+Player:  0  played:  6h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['14h', '5h', '2h']
+Cards in pile:  ['6h']
+['Removing: ', '2h']
+Player:  1  played:  2h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['8d', '9s', '7c', '10c', '6c', '14d']
+Cards in pile:  ['6h', '2h']
+['Removing: ', '6c']
+Removing all of suit:  h
+Player:  2  played:  6c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[2, 0, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  2 ############
+Bids:  [1, 2, 2]
+Player cards 
+['3s', '5c', '2s', '2c', '10s']
+['3h', '5h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '4s', '5s', '6s', '7s', '8s', '9s', '11s', '12s', '13s', '14s']
+['2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '4s', '5s', '6s', '7s', '8s', '9s', '11s', '12s', '13s', '14s']
+#############################################
+Trumps:  h
+All Cards In Hand:  ['3s', '5c', '2s', '2c', '10s']
+Legal Moves:  ['3s', '5c', '2s', '2c', '10s']
+Cards in pile:  []
+0 0 0 0 0  
+[2.1915, 2.255, 2.191, 2.241, 2.4635000000000002]
+['Removing: ', '10s']
+Player:  0  played:  10s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  2
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['6s']
+Cards in pile:  ['10s']
+['Removing: ', '6s']
+Player:  1  played:  6s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  2
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['9s']
+Cards in pile:  ['10s', '6s']
+['Removing: ', '9s']
+Player:  2  played:  9s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  2
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[3, 0, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  3 ############
+Bids:  [1, 2, 2]
+Player cards 
+['3s', '5c', '2s', '2c']
+['3h', '5h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '4s', '5s', '7s', '8s', '11s', '12s', '13s', '14s']
+['2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '4s', '5s', '7s', '8s', '11s', '12s', '13s', '14s']
+#############################################
+Trumps:  h
+All Cards In Hand:  ['3s', '5c', '2s', '2c']
+Legal Moves:  ['3s', '5c', '2s', '2c']
+Cards in pile:  []
+0 0 0 0  
+[3.1015, 3.093, 3.1135, 3.071]
+['Removing: ', '2s']
+Player:  0  played:  2s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  3
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['2d', '14h', '5d', '5h']
+Cards in pile:  ['2s']
+['Removing: ', '2d']
+Removing all of suit:  s
+Player:  1  played:  2d
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  3
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['8d', '7c', '10c', '14d']
+Cards in pile:  ['2s', '2d']
+['Removing: ', '7c']
+Removing all of suit:  s
+Player:  2  played:  7c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  3
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[4, 0, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  4 ############
+Bids:  [1, 2, 2]
+Player cards 
+['3s', '5c', '2c']
+['3h', '5h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '8c', '9c', '10c', '11c', '12c', '13c', '14c']
+['3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '8c', '9c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+Trumps:  h
+All Cards In Hand:  ['3s', '5c', '2c']
+Legal Moves:  ['3s', '5c', '2c']
+Cards in pile:  []
+0 0 0  
+[4.806, 4.1355, 4.0760000000000005]
+['Removing: ', '3s']
+Player:  0  played:  3s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  4
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['14h', '5d', '5h']
+Cards in pile:  ['3s']
+['Removing: ', '14h']
+Removing all of suit:  s
+Player:  1  played:  14h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  4
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['8d', '10c', '14d']
+Cards in pile:  ['3s', '14h']
+['Removing: ', '8d']
+Removing all of suit:  s
+Player:  2  played:  8d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  4
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[4, 1, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  5 ############
+Bids:  [1, 2, 2]
+Player cards 
+['5c', '2c']
+['3h', '5h', '7h', '8h', '9h', '10h', '12h', '13h', '3d', '4d', '5d', '6d', '7d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '8c', '9c', '10c', '11c', '12c', '13c', '14c']
+['3d', '4d', '5d', '6d', '7d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '8c', '9c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['5d', '5h']
+Cards in pile:  []
+['Removing: ', '5h']
+Player:  1  played:  5h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  5
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['10c', '14d']
+Cards in pile:  ['5h']
+['Removing: ', '10c']
+Removing all of suit:  h
+Player:  2  played:  10c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  5
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['5c', '2c']
+Legal Moves:  ['5c', '2c']
+Cards in pile:  ['5h', '10c']
+0 0  
+[4.0, 4.021]
+['Removing: ', '2c']
+Removing all of suit:  h
+Player:  0  played:  2c
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  5
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[4, 2, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  6 ############
+Bids:  [1, 2, 2]
+Player cards 
+['5c']
+['3h', '7h', '8h', '9h', '10h', '12h', '13h', '3d', '4d', '5d', '6d', '7d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '8c', '9c', '11c', '12c', '13c', '14c']
+['3d', '4d', '5d', '6d', '7d', '9d', '10d', '11d', '12d', '13d', '14d', '3c', '8c', '9c', '11c', '12c', '13c', '14c']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['5d']
+Cards in pile:  []
+['Removing: ', '5d']
+Player:  1  played:  5d
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  6
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['14d']
+Cards in pile:  ['5d']
+['Removing: ', '14d']
+Player:  2  played:  14d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  6
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['5c']
+Legal Moves:  ['5c']
+Cards in pile:  ['5d', '14d']
+['Removing: ', '5c']
+Removing all of suit:  d
+Player:  0  played:  5c
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  6
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[4, 2, 1]
+############### End of trick ################
+[4, 12, 1]
+('Round number: ', 2)
+ 
+ 
+------------------------------------------------
+Cards in round:  6
+Trumps:  h
+Bid:  0
+Bid confidence:  0.4192
+Zero counter:  0
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [0, 2, 2]
+Player cards 
+['3c', '12s', '2c', '14s', '6s', '2d']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '10s', '11s', '13s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '10s', '11s', '13s']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['5c', '8h', '14c', '5h', '14d', '3h']
+Cards in pile:  []
+['Removing: ', '14d']
+Player:  2  played:  14d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['3c', '12s', '2c', '14s', '6s', '2d']
+Legal Moves:  ['2d']
+Cards in pile:  ['14d']
+['Removing: ', '2d']
+Player:  0  played:  2d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['4d']
+Cards in pile:  ['14d', '2d']
+['Removing: ', '4d']
+Player:  1  played:  4d
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 0, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [0, 2, 2]
+Player cards 
+['3c', '12s', '2c', '14s', '6s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '3d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '10s', '11s', '13s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '3d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '10s', '11s', '13s']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['5c', '8h', '14c', '5h', '3h']
+Cards in pile:  []
+['Removing: ', '8h']
+Player:  2  played:  8h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['3c', '12s', '2c', '14s', '6s']
+Legal Moves:  ['3c', '12s', '2c', '14s', '6s']
+Cards in pile:  ['8h']
+0 0 0 0 0  
+[5.6595, 6.3985, 5.8935, 6.8575, 4.8825]
+['Removing: ', '14s']
+Removing all of suit:  h
+Player:  0  played:  14s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['9h']
+Cards in pile:  ['8h', '14s']
+['Removing: ', '9h']
+Player:  1  played:  9h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[0, 1, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  2 ############
+Bids:  [0, 2, 2]
+Player cards 
+['3c', '12s', '2c', '6s']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '12h', '13h', '14h', '3d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '10s', '11s', '13s']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '12h', '13h', '14h', '3d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '10s', '11s', '13s']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['11s', '8s', '3s', '10c']
+Cards in pile:  []
+['Removing: ', '10c']
+Player:  1  played:  10c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  2
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['5c', '14c']
+Cards in pile:  ['10c']
+['Removing: ', '5c']
+Player:  2  played:  5c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  2
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['3c', '12s', '2c', '6s']
+Legal Moves:  ['3c', '2c']
+Cards in pile:  ['10c', '5c']
+0 0  
+[7.428, 7.5005]
+['Removing: ', '2c']
+Player:  0  played:  2c
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  2
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[0, 2, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  3 ############
+Bids:  [0, 2, 2]
+Player cards 
+['3c', '12s', '6s']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '12h', '13h', '14h', '3d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '4c', '6c', '7c', '8c', '9c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '10s', '11s', '13s']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '12h', '13h', '14h', '3d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '4c', '6c', '7c', '8c', '9c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '10s', '11s', '13s']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['11s', '8s', '3s']
+Cards in pile:  []
+['Removing: ', '11s']
+Player:  1  played:  11s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  3
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['14c', '5h', '3h']
+Cards in pile:  ['11s']
+['Removing: ', '3h']
+Removing all of suit:  s
+Player:  2  played:  3h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  3
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['3c', '12s', '6s']
+Legal Moves:  ['12s', '6s']
+Cards in pile:  ['11s', '3h']
+0 0  
+[9.838000000000001, 9.712]
+['Removing: ', '12s']
+Player:  0  played:  12s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  3
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 2, 2]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  4 ############
+Bids:  [0, 2, 2]
+Player cards 
+['3c', '6s']
+['2h', '4h', '5h', '6h', '7h', '10h', '11h', '12h', '13h', '14h', '3d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '4c', '6c', '7c', '8c', '9c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '10s', '13s']
+['2h', '4h', '5h', '6h', '7h', '10h', '11h', '12h', '13h', '14h', '3d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '4c', '6c', '7c', '8c', '9c', '11c', '12c', '13c', '14c']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['14c', '5h']
+Cards in pile:  []
+['Removing: ', '14c']
+Player:  2  played:  14c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  4
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['3c', '6s']
+Legal Moves:  ['3c']
+Cards in pile:  ['14c']
+['Removing: ', '3c']
+Player:  0  played:  3c
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  4
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['8s', '3s']
+Cards in pile:  ['14c', '3c']
+['Removing: ', '8s']
+Removing all of suit:  c
+Player:  1  played:  8s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  4
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 2, 3]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  5 ############
+Bids:  [0, 2, 2]
+Player cards 
+['6s']
+['2h', '4h', '5h', '6h', '7h', '10h', '11h', '12h', '13h', '14h', '3d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '2s', '3s', '4s', '5s', '7s', '9s', '10s', '13s']
+['2h', '4h', '5h', '6h', '7h', '10h', '11h', '12h', '13h', '14h', '3d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '4c', '6c', '7c', '8c', '9c', '11c', '12c', '13c']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['5h']
+Cards in pile:  []
+['Removing: ', '5h']
+Player:  2  played:  5h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  5
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['6s']
+Legal Moves:  ['6s']
+Cards in pile:  ['5h']
+['Removing: ', '6s']
+Removing all of suit:  h
+Player:  0  played:  6s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  5
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['3s']
+Cards in pile:  ['5h', '6s']
+['Removing: ', '3s']
+Removing all of suit:  h
+Player:  1  played:  3s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  5
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 2, 4]
+############### End of trick ################
+[14, 24, 5]
+('Round number: ', 3)
+ 
+ 
+------------------------------------------------
+Cards in round:  5
+Trumps:  d
+Bid:  2
+Bid confidence:  0.3492
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [2, 2, 2]
+Player cards 
+['8c', '3d', '10h', '13c', '4d']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '11h', '12h', '13h', '14h', '2d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '9c', '10c', '11c', '12c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '11h', '12h', '13h', '14h', '2d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '9c', '10c', '11c', '12c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+Trumps:  d
+All Cards In Hand:  ['8c', '3d', '10h', '13c', '4d']
+Legal Moves:  ['8c', '3d', '10h', '13c', '4d']
+Cards in pile:  []
+0 0 0 0 0  
+[4.9845, 4.8445, 5.194, 5.582, 4.617]
+['Removing: ', '13c']
+Player:  0  played:  13c
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['2d', '7h', '8s', '9h', '12h']
+Cards in pile:  ['13c']
+['Removing: ', '2d']
+Removing all of suit:  c
+Player:  1  played:  2d
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['13s', '7s', '6s', '4s', '2h']
+Cards in pile:  ['13c', '2d']
+['Removing: ', '7s']
+Removing all of suit:  c
+Player:  2  played:  7s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[0, 1, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [2, 2, 2]
+Player cards 
+['8c', '3d', '10h', '4d']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '11h', '12h', '13h', '14h', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2s', '3s', '4s', '5s', '6s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '11h', '12h', '13h', '14h', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2s', '3s', '4s', '5s', '6s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['7h', '8s', '9h', '12h']
+Cards in pile:  []
+['Removing: ', '9h']
+Player:  1  played:  9h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['2h']
+Cards in pile:  ['9h']
+['Removing: ', '2h']
+Player:  2  played:  2h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+Trumps:  d
+All Cards In Hand:  ['8c', '3d', '10h', '4d']
+Legal Moves:  ['10h']
+Cards in pile:  ['9h', '2h']
+['Removing: ', '10h']
+Player:  0  played:  10h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[1, 1, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  2 ############
+Bids:  [2, 2, 2]
+Player cards 
+['8c', '3d', '4d']
+['3h', '4h', '5h', '6h', '7h', '8h', '11h', '12h', '13h', '14h', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2s', '3s', '4s', '5s', '6s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['3h', '4h', '5h', '6h', '7h', '8h', '11h', '12h', '13h', '14h', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2s', '3s', '4s', '5s', '6s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+Trumps:  d
+All Cards In Hand:  ['8c', '3d', '4d']
+Legal Moves:  ['8c', '3d', '4d']
+Cards in pile:  []
+0 0 0  
+[6.5955, 5.745, 5.821]
+['Removing: ', '8c']
+Player:  0  played:  8c
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  2
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['7h', '8s', '12h']
+Cards in pile:  ['8c']
+['Removing: ', '8s']
+Removing all of suit:  c
+Player:  1  played:  8s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  2
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['13s', '6s', '4s']
+Cards in pile:  ['8c', '8s']
+['Removing: ', '6s']
+Removing all of suit:  c
+Player:  2  played:  6s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  2
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[2, 1, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  3 ############
+Bids:  [2, 2, 2]
+Player cards 
+['3d', '4d']
+['3h', '4h', '5h', '6h', '7h', '8h', '11h', '12h', '13h', '14h', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2s', '3s', '4s', '5s', '9s', '10s', '11s', '12s', '13s', '14s']
+['3h', '4h', '5h', '6h', '7h', '8h', '11h', '12h', '13h', '14h', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2s', '3s', '4s', '5s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+Trumps:  d
+All Cards In Hand:  ['3d', '4d']
+Legal Moves:  ['3d', '4d']
+Cards in pile:  []
+0 0  
+[5.0365, 4.936]
+['Removing: ', '3d']
+Player:  0  played:  3d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  3
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['7h', '12h']
+Cards in pile:  ['3d']
+['Removing: ', '7h']
+Removing all of suit:  d
+Player:  1  played:  7h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  3
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['13s', '4s']
+Cards in pile:  ['3d', '7h']
+['Removing: ', '13s']
+Removing all of suit:  d
+Player:  2  played:  13s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  3
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[3, 1, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  4 ############
+Bids:  [2, 2, 2]
+Player cards 
+['4d']
+['3h', '4h', '5h', '6h', '8h', '11h', '12h', '13h', '14h', '2s', '3s', '4s', '5s', '9s', '10s', '11s', '12s', '14s']
+['3h', '4h', '5h', '6h', '8h', '11h', '12h', '13h', '14h', '2s', '3s', '4s', '5s', '9s', '10s', '11s', '12s', '14s']
+#############################################
+Trumps:  d
+All Cards In Hand:  ['4d']
+Legal Moves:  ['4d']
+Cards in pile:  []
+['Removing: ', '4d']
+Player:  0  played:  4d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  4
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['12h']
+Cards in pile:  ['4d']
+['Removing: ', '12h']
+Removing all of suit:  d
+Player:  1  played:  12h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  4
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['4s']
+Cards in pile:  ['4d', '12h']
+['Removing: ', '4s']
+Removing all of suit:  d
+Player:  2  played:  4s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  4
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[4, 1, 0]
+############### End of trick ################
+[18, 25, 5]
+('Round number: ', 4)
+ 
+ 
+------------------------------------------------
+Cards in round:  4
+Trumps:  d
+Bid:  1
+Bid confidence:  0.3626
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [1, 1, 1]
+Player cards 
+['8d', '12d', '11h', '2h']
+['3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '9d', '10d', '11d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '9d', '10d', '11d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['10c', '6c', '13s', '12s']
+Cards in pile:  []
+['Removing: ', '13s']
+Player:  1  played:  13s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['5s']
+Cards in pile:  ['13s']
+['Removing: ', '5s']
+Player:  2  played:  5s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+Trumps:  d
+All Cards In Hand:  ['8d', '12d', '11h', '2h']
+Legal Moves:  ['8d', '12d', '11h', '2h']
+Cards in pile:  ['13s', '5s']
+0 0 0 0  
+[3.6625, 4.835, 4.824, 4.2940000000000005]
+['Removing: ', '12d']
+Removing all of suit:  s
+Player:  0  played:  12d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[1, 0, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [1, 1, 1]
+Player cards 
+['8d', '11h', '2h']
+['3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '9d', '10d', '11d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '14s']
+['3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '9d', '10d', '11d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '14s']
+#############################################
+Trumps:  d
+All Cards In Hand:  ['8d', '11h', '2h']
+Legal Moves:  ['8d', '11h', '2h']
+Cards in pile:  []
+0 0 0  
+[5.706, 4.0520000000000005, 4.5135000000000005]
+['Removing: ', '8d']
+Player:  0  played:  8d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['10c', '6c', '12s']
+Cards in pile:  ['8d']
+['Removing: ', '6c']
+Removing all of suit:  d
+Player:  1  played:  6c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['14d']
+Cards in pile:  ['8d', '6c']
+['Removing: ', '14d']
+Player:  2  played:  14d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[1, 0, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  2 ############
+Bids:  [1, 1, 1]
+Player cards 
+['11h', '2h']
+['3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2c', '3c', '4c', '5c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '14s']
+['3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '9d', '10d', '11d', '13d', '2c', '3c', '4c', '5c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '14s']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['14c', '12c']
+Cards in pile:  []
+['Removing: ', '12c']
+Player:  2  played:  12c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  2
+------------------------------------------
+Trumps:  d
+All Cards In Hand:  ['11h', '2h']
+Legal Moves:  ['11h', '2h']
+Cards in pile:  ['12c']
+0 0  
+[11.0, 9.668000000000001]
+['Removing: ', '11h']
+Removing all of suit:  c
+Player:  0  played:  11h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  2
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['10c']
+Cards in pile:  ['12c', '11h']
+['Removing: ', '10c']
+Player:  1  played:  10c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  2
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[1, 0, 2]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  3 ############
+Bids:  [1, 1, 1]
+Player cards 
+['2h']
+['3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2c', '3c', '4c', '5c', '7c', '8c', '9c', '11c', '13c', '14c', '2s', '3s', '4s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '14s']
+['3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '9d', '10d', '11d', '13d', '2c', '3c', '4c', '5c', '7c', '8c', '9c', '11c', '13c', '14c', '2s', '3s', '4s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '14s']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['14c']
+Cards in pile:  []
+['Removing: ', '14c']
+Player:  2  played:  14c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  3
+------------------------------------------
+Trumps:  d
+All Cards In Hand:  ['2h']
+Legal Moves:  ['2h']
+Cards in pile:  ['14c']
+['Removing: ', '2h']
+Removing all of suit:  c
+Player:  0  played:  2h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  3
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['12s']
+Cards in pile:  ['14c', '2h']
+['Removing: ', '12s']
+Removing all of suit:  c
+Player:  1  played:  12s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  3
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[1, 0, 3]
+############### End of trick ################
+[29, 25, 8]
+('Round number: ', 5)
+ 
+ 
+------------------------------------------------
+Cards in round:  3
+Trumps:  h
+Bid:  1
+Bid confidence:  0.4354
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [1, 2, 1]
+Player cards 
+['14s', '6s', '5s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '7s', '8s', '9s', '10s', '11s', '12s', '13s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '7s', '8s', '9s', '10s', '11s', '12s', '13s']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['7h', '8s', '14h']
+Cards in pile:  []
+['Removing: ', '14h']
+Player:  2  played:  14h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['14s', '6s', '5s']
+Legal Moves:  ['14s', '6s', '5s']
+Cards in pile:  ['14h']
+0 0 0  
+[0.6765, 1.8935, 1.9345]
+['Removing: ', '5s']
+Removing all of suit:  h
+Player:  0  played:  5s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['10h']
+Cards in pile:  ['14h', '5s']
+['Removing: ', '10h']
+Player:  1  played:  10h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 0, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [1, 2, 1]
+Player cards 
+['14s', '6s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '11h', '12h', '13h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '7s', '8s', '9s', '10s', '11s', '12s', '13s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '11h', '12h', '13h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '7s', '8s', '9s', '10s', '11s', '12s', '13s']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['7h', '8s']
+Cards in pile:  []
+['Removing: ', '7h']
+Player:  2  played:  7h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['14s', '6s']
+Legal Moves:  ['14s', '6s']
+Cards in pile:  ['7h']
+0 0  
+[0.5115000000000001, 2.376]
+['Removing: ', '6s']
+Removing all of suit:  h
+Player:  0  played:  6s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['13s', '8c']
+Cards in pile:  ['7h', '6s']
+['Removing: ', '8c']
+Removing all of suit:  h
+Player:  1  played:  8c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 0, 2]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  2 ############
+Bids:  [1, 2, 1]
+Player cards 
+['14s']
+['2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '7s', '8s', '9s', '10s', '11s', '12s', '13s']
+['2h', '3h', '4h', '5h', '6h', '8h', '9h', '11h', '12h', '13h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '7s', '8s', '9s', '10s', '11s', '12s', '13s']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['8s']
+Cards in pile:  []
+['Removing: ', '8s']
+Player:  2  played:  8s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  2
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['14s']
+Legal Moves:  ['14s']
+Cards in pile:  ['8s']
+['Removing: ', '14s']
+Player:  0  played:  14s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  2
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['13s']
+Cards in pile:  ['8s', '14s']
+['Removing: ', '13s']
+Player:  1  played:  13s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  2
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[1, 0, 2]
+############### End of trick ################
+[40, 25, 10]
+('Round number: ', 6)
+ 
+ 
+------------------------------------------------
+Cards in round:  2
+Trumps:  h
+Bid:  0
+Bid confidence:  0.564
+Zero counter:  0
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [0, 1, 2]
+Player cards 
+['5d', '3s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+Trumps:  h
+All Cards In Hand:  ['5d', '3s']
+Legal Moves:  ['5d', '3s']
+Cards in pile:  []
+0 0  
+[7.9455, 8.288]
+['Removing: ', '3s']
+Player:  0  played:  3s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['6c', '3c']
+Cards in pile:  ['3s']
+['Removing: ', '6c']
+Removing all of suit:  s
+Player:  1  played:  6c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['2s']
+Cards in pile:  ['3s', '6c']
+['Removing: ', '2s']
+Player:  2  played:  2s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[1, 0, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [0, 1, 2]
+Player cards 
+['5d']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+Trumps:  h
+All Cards In Hand:  ['5d']
+Legal Moves:  ['5d']
+Cards in pile:  []
+['Removing: ', '5d']
+Player:  0  played:  5d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['3c']
+Cards in pile:  ['5d']
+['Removing: ', '3c']
+Removing all of suit:  d
+Player:  1  played:  3c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['13c']
+Cards in pile:  ['5d', '3c']
+['Removing: ', '13c']
+Removing all of suit:  d
+Player:  2  played:  13c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[2, 0, 0]
+############### End of trick ################
+[42, 25, 10]
+('Round number: ', 7)
+ 
+ 
+------------------------------------------------
+Cards in round:  1
+Trumps:  h
+Zero counter:  0
+Zero counter:  0
+Bid:  1
+Bid confidence:  0.5228
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [1, 0, 0]
+Player cards 
+['14h']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['8c']
+Cards in pile:  []
+['Removing: ', '8c']
+Player:  1  played:  8c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['4d']
+Cards in pile:  ['8c']
+['Removing: ', '4d']
+Removing all of suit:  c
+Player:  2  played:  4d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['14h']
+Legal Moves:  ['14h']
+Cards in pile:  ['8c', '4d']
+['Removing: ', '14h']
+Removing all of suit:  c
+Player:  0  played:  14h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[1, 0, 0]
+############### End of trick ################
+[53, 35, 20]
+('Round number: ', 8)
+ 
+ 
+------------------------------------------------
+Cards in round:  2
+Trumps:  h
+Bid:  0
+Bid confidence:  0.5176
+Zero counter:  0
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [0, 2, 1]
+Player cards 
+['12d', '7d']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '8d', '9d', '10d', '11d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '8d', '9d', '10d', '11d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['3h', '11c']
+Cards in pile:  []
+['Removing: ', '11c']
+Player:  2  played:  11c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['12d', '7d']
+Legal Moves:  ['12d', '7d']
+Cards in pile:  ['11c']
+0 0  
+[9.442, 8.803]
+['Removing: ', '12d']
+Removing all of suit:  c
+Player:  0  played:  12d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['11d', '8d']
+Cards in pile:  ['11c', '12d']
+['Removing: ', '8d']
+Removing all of suit:  c
+Player:  1  played:  8d
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 0, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [0, 2, 1]
+Player cards 
+['7d']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '9d', '10d', '11d', '13d', '14d', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '9d', '10d', '11d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['3h']
+Cards in pile:  []
+['Removing: ', '3h']
+Player:  2  played:  3h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['7d']
+Legal Moves:  ['7d']
+Cards in pile:  ['3h']
+['Removing: ', '7d']
+Removing all of suit:  h
+Player:  0  played:  7d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['11d']
+Cards in pile:  ['3h', '7d']
+['Removing: ', '11d']
+Removing all of suit:  h
+Player:  1  played:  11d
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 0, 2]
+############### End of trick ################
+[63, 35, 22]
+('Round number: ', 9)
+ 
+ 
+------------------------------------------------
+Cards in round:  3
+Trumps:  d
+Bid:  0
+Bid confidence:  0.4964
+Zero counter:  1
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [0, 1, 1]
+Player cards 
+['13h', '11s', '6s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '10s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '10s', '12s', '13s', '14s']
+#############################################
+Trumps:  d
+All Cards In Hand:  ['13h', '11s', '6s']
+Legal Moves:  ['13h', '11s', '6s']
+Cards in pile:  []
+0 0 0  
+[3.853, 4.3695, 5.8125]
+['Removing: ', '6s']
+Player:  0  played:  6s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['5s']
+Cards in pile:  ['6s']
+['Removing: ', '5s']
+Player:  1  played:  5s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['6h', '7d', '7c']
+Cards in pile:  ['6s', '5s']
+['Removing: ', '6h']
+Removing all of suit:  s
+Player:  2  played:  6h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[1, 0, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [0, 1, 1]
+Player cards 
+['13h', '11s']
+['2h', '3h', '4h', '5h', '7h', '8h', '9h', '10h', '11h', '12h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '7s', '8s', '9s', '10s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '7h', '8h', '9h', '10h', '11h', '12h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+Trumps:  d
+All Cards In Hand:  ['13h', '11s']
+Legal Moves:  ['13h', '11s']
+Cards in pile:  []
+0 0  
+[1.6945000000000001, 1.6965000000000001]
+['Removing: ', '11s']
+Player:  0  played:  11s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['8h', '9c']
+Cards in pile:  ['11s']
+['Removing: ', '9c']
+Removing all of suit:  s
+Player:  1  played:  9c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['7d', '7c']
+Cards in pile:  ['11s', '9c']
+['Removing: ', '7c']
+Removing all of suit:  s
+Player:  2  played:  7c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[2, 0, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  2 ############
+Bids:  [0, 1, 1]
+Player cards 
+['13h']
+['2h', '3h', '4h', '5h', '7h', '8h', '9h', '10h', '11h', '12h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '8c', '10c', '11c', '12c', '13c', '14c']
+['2h', '3h', '4h', '5h', '7h', '8h', '9h', '10h', '11h', '12h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '6c', '8c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+Trumps:  d
+All Cards In Hand:  ['13h']
+Legal Moves:  ['13h']
+Cards in pile:  []
+['Removing: ', '13h']
+Player:  0  played:  13h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  2
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['8h']
+Cards in pile:  ['13h']
+['Removing: ', '8h']
+Player:  1  played:  8h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  2
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['7d']
+Cards in pile:  ['13h', '8h']
+['Removing: ', '7d']
+Removing all of suit:  h
+Player:  2  played:  7d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  2
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[2, 0, 1]
+############### End of trick ################
+[65, 35, 33]
+('Round number: ', 10)
+ 
+ 
+------------------------------------------------
+Cards in round:  4
+Trumps:  d
+Bid:  1
+Bid confidence:  0.3656
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [1, 1, 1]
+Player cards 
+['5h', '13d', '11d', '8c']
+['2h', '3h', '4h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '14d', '2c', '3c', '4c', '5c', '6c', '7c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['6c', '9h', '4c', '7h']
+Cards in pile:  []
+['Removing: ', '6c']
+Player:  1  played:  6c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['9c']
+Cards in pile:  ['6c']
+['Removing: ', '9c']
+Player:  2  played:  9c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+Trumps:  d
+All Cards In Hand:  ['5h', '13d', '11d', '8c']
+Legal Moves:  ['8c']
+Cards in pile:  ['6c', '9c']
+['Removing: ', '8c']
+Player:  0  played:  8c
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 0, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [1, 1, 1]
+Player cards 
+['5h', '13d', '11d']
+['2h', '3h', '4h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '14d', '2c', '3c', '4c', '5c', '7c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '14d', '2c', '3c', '4c', '5c', '7c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['8s', '5s', '2s']
+Cards in pile:  []
+['Removing: ', '8s']
+Player:  2  played:  8s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+Trumps:  d
+All Cards In Hand:  ['5h', '13d', '11d']
+Legal Moves:  ['5h', '13d', '11d']
+Cards in pile:  ['8s']
+0 0 0  
+[3.355, 3.5195000000000003, 3.073]
+['Removing: ', '13d']
+Removing all of suit:  s
+Player:  0  played:  13d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['9h', '4c', '7h']
+Cards in pile:  ['8s', '13d']
+['Removing: ', '4c']
+Removing all of suit:  s
+Player:  1  played:  4c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[1, 0, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  2 ############
+Bids:  [1, 1, 1]
+Player cards 
+['5h', '11d']
+['2h', '3h', '4h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '14d', '2c', '3c', '5c', '7c', '10c', '11c', '12c', '13c', '14c']
+['2h', '3h', '4h', '6h', '7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '14d', '2c', '3c', '5c', '7c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+Trumps:  d
+All Cards In Hand:  ['5h', '11d']
+Legal Moves:  ['5h', '11d']
+Cards in pile:  []
+0 0  
+[3.11, 3.7465]
+['Removing: ', '11d']
+Player:  0  played:  11d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  2
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['9h', '7h']
+Cards in pile:  ['11d']
+['Removing: ', '7h']
+Removing all of suit:  d
+Player:  1  played:  7h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  2
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['5s', '2s']
+Cards in pile:  ['11d', '7h']
+['Removing: ', '5s']
+Removing all of suit:  d
+Player:  2  played:  5s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  2
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[2, 0, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  3 ############
+Bids:  [1, 1, 1]
+Player cards 
+['5h']
+['2h', '3h', '4h', '6h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2c', '3c', '5c', '7c', '10c', '11c', '12c', '13c', '14c']
+['2h', '3h', '4h', '6h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '2c', '3c', '5c', '7c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '6s', '7s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+Trumps:  d
+All Cards In Hand:  ['5h']
+Legal Moves:  ['5h']
+Cards in pile:  []
+['Removing: ', '5h']
+Player:  0  played:  5h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  3
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['9h']
+Cards in pile:  ['5h']
+['Removing: ', '9h']
+Player:  1  played:  9h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  3
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['2s']
+Cards in pile:  ['5h', '9h']
+['Removing: ', '2s']
+Removing all of suit:  h
+Player:  2  played:  2s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  3
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[2, 1, 1]
+############### End of trick ################
+[67, 46, 44]
+('Round number: ', 11)
+ 
+ 
+------------------------------------------------
+Cards in round:  5
+Trumps:  c
+Bid:  1
+Bid confidence:  0.412
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [1, 3, 2]
+Player cards 
+['4c', '12h', '14d', '11d', '2d']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '13h', '14h', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '13d', '2c', '3c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '11h', '13h', '14h', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '13d', '2c', '3c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  c
+All Real Possible Moves:  ['6s', '7h', '2c', '13h', '9h']
+Cards in pile:  []
+['Removing: ', '9h']
+Player:  2  played:  9h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+Trumps:  c
+All Cards In Hand:  ['4c', '12h', '14d', '11d', '2d']
+Legal Moves:  ['12h']
+Cards in pile:  ['9h']
+['Removing: ', '12h']
+Player:  0  played:  12h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  c
+All Real Possible Moves:  ['8h']
+Cards in pile:  ['9h', '12h']
+['Removing: ', '8h']
+Player:  1  played:  8h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[1, 0, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [1, 3, 2]
+Player cards 
+['4c', '14d', '11d', '2d']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '13h', '14h', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '13d', '2c', '3c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '13h', '14h', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '13d', '2c', '3c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+Trumps:  c
+All Cards In Hand:  ['4c', '14d', '11d', '2d']
+Legal Moves:  ['4c', '14d', '11d', '2d']
+Cards in pile:  []
+0 0 0 0  
+[7.1625000000000005, 3.7455000000000003, 4.7940000000000005, 6.3835]
+['Removing: ', '4c']
+Player:  0  played:  4c
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  c
+All Real Possible Moves:  ['5c']
+Cards in pile:  ['4c']
+['Removing: ', '5c']
+Player:  1  played:  5c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  c
+All Real Possible Moves:  ['2c']
+Cards in pile:  ['4c', '5c']
+['Removing: ', '2c']
+Player:  2  played:  2c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[1, 1, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  2 ############
+Bids:  [1, 3, 2]
+Player cards 
+['14d', '11d', '2d']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '13h', '14h', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '13d', '3c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '13h', '14h', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '13d', '3c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  c
+All Real Possible Moves:  ['3d', '9d', '10s']
+Cards in pile:  []
+['Removing: ', '3d']
+Player:  1  played:  3d
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  2
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  c
+All Real Possible Moves:  ['6s', '7h', '13h']
+Cards in pile:  ['3d']
+['Removing: ', '13h']
+Removing all of suit:  d
+Player:  2  played:  13h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  2
+------------------------------------------
+Trumps:  c
+All Cards In Hand:  ['14d', '11d', '2d']
+Legal Moves:  ['14d', '11d', '2d']
+Cards in pile:  ['3d', '13h']
+0 0 0  
+[2.543, 2.5905, 9.291500000000001]
+['Removing: ', '2d']
+Player:  0  played:  2d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  2
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[1, 2, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  3 ############
+Bids:  [1, 3, 2]
+Player cards 
+['14d', '11d']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '14h', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '13d', '3c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '14h', '3c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  c
+All Real Possible Moves:  ['9d', '10s']
+Cards in pile:  []
+['Removing: ', '10s']
+Player:  1  played:  10s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  3
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  c
+All Real Possible Moves:  ['6s']
+Cards in pile:  ['10s']
+['Removing: ', '6s']
+Player:  2  played:  6s
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  3
+------------------------------------------
+Trumps:  c
+All Cards In Hand:  ['14d', '11d']
+Legal Moves:  ['14d', '11d']
+Cards in pile:  ['10s', '6s']
+0 0  
+[9.9065, 9.596]
+['Removing: ', '14d']
+Removing all of suit:  s
+Player:  0  played:  14d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  3
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[1, 3, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  4 ############
+Bids:  [1, 3, 2]
+Player cards 
+['11d']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '14h', '4d', '5d', '6d', '7d', '8d', '9d', '10d', '12d', '13d', '3c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '10h', '11h', '14h', '3c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '7s', '8s', '9s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  c
+All Real Possible Moves:  ['9d']
+Cards in pile:  []
+['Removing: ', '9d']
+Player:  1  played:  9d
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  4
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  c
+All Real Possible Moves:  ['7h']
+Cards in pile:  ['9d']
+['Removing: ', '7h']
+Removing all of suit:  d
+Player:  2  played:  7h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  4
+------------------------------------------
+Trumps:  c
+All Cards In Hand:  ['11d']
+Legal Moves:  ['11d']
+Cards in pile:  ['9d', '7h']
+['Removing: ', '11d']
+Player:  0  played:  11d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  4
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[2, 3, 0]
+############### End of trick ################
+[69, 59, 44]
+('Round number: ', 12)
+ 
+ 
+------------------------------------------------
+Cards in round:  6
+Trumps:  d
+Bid:  1
+Bid confidence:  0.3778
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [1, 2, 2]
+Player cards 
+['3c', '9h', '6d', '5h', '12s', '11h']
+['2h', '3h', '4h', '6h', '7h', '8h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '13s', '14s']
+['2h', '3h', '4h', '6h', '7h', '8h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '7d', '8d', '9d', '10d', '11d', '12d', '13d', '14d', '2c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', '11s', '13s', '14s']
+#############################################
+Trumps:  d
+All Cards In Hand:  ['3c', '9h', '6d', '5h', '12s', '11h']
+Legal Moves:  ['3c', '9h', '6d', '5h', '12s', '11h']
+Cards in pile:  []
+0 0 0 0 0 0  
+[5.4095, 5.163, 4.7905, 4.8870000000000005, 5.6685, 5.0935]
+['Removing: ', '12s']
+Player:  0  played:  12s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['6s', '10s', '8s']
+Cards in pile:  ['12s']
+['Removing: ', '8s']
+Player:  1  played:  8s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['2c', '14d', '2d', '9d', '8c', '8h']
+Cards in pile:  ['12s', '8s']
+['Removing: ', '9d']
+Removing all of suit:  s
+Player:  2  played:  9d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 0, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [1, 2, 2]
+Player cards 
+['3c', '9h', '6d', '5h', '11h']
+['2h', '3h', '4h', '6h', '7h', '8h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '7d', '8d', '10d', '11d', '12d', '13d', '14d', '2c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '9s', '10s', '11s', '13s', '14s']
+['2h', '3h', '4h', '6h', '7h', '8h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '7d', '8d', '10d', '11d', '12d', '13d', '14d', '2c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['2c', '14d', '2d', '8c', '8h']
+Cards in pile:  []
+['Removing: ', '2d']
+Player:  2  played:  2d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+Trumps:  d
+All Cards In Hand:  ['3c', '9h', '6d', '5h', '11h']
+Legal Moves:  ['6d']
+Cards in pile:  ['2d']
+['Removing: ', '6d']
+Player:  0  played:  6d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['8d']
+Cards in pile:  ['2d', '6d']
+['Removing: ', '8d']
+Player:  1  played:  8d
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[0, 1, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  2 ############
+Bids:  [1, 2, 2]
+Player cards 
+['3c', '9h', '5h', '11h']
+['2h', '3h', '4h', '6h', '7h', '8h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '10d', '11d', '12d', '13d', '14d', '2c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '9s', '10s', '11s', '13s', '14s']
+['2h', '3h', '4h', '6h', '7h', '8h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '10d', '11d', '12d', '13d', '14d', '2c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['6s', '10s', '12h', '14c']
+Cards in pile:  []
+['Removing: ', '10s']
+Player:  1  played:  10s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  2
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['2c', '14d', '8c', '8h']
+Cards in pile:  ['10s']
+['Removing: ', '8h']
+Removing all of suit:  s
+Player:  2  played:  8h
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  2
+------------------------------------------
+Trumps:  d
+All Cards In Hand:  ['3c', '9h', '5h', '11h']
+Legal Moves:  ['3c', '9h', '5h', '11h']
+Cards in pile:  ['10s', '8h']
+0 0 0 0  
+[1.9715, 1.952, 2.688, 1.602]
+['Removing: ', '5h']
+Removing all of suit:  s
+Player:  0  played:  5h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  2
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[0, 2, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  3 ############
+Bids:  [1, 2, 2]
+Player cards 
+['3c', '9h', '11h']
+['2h', '3h', '4h', '6h', '7h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '10d', '11d', '12d', '13d', '14d', '2c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '4s', '5s', '6s', '7s', '9s', '11s', '13s', '14s']
+['2h', '3h', '4h', '6h', '7h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '10d', '11d', '12d', '13d', '14d', '2c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['6s', '12h', '14c']
+Cards in pile:  []
+['Removing: ', '14c']
+Player:  1  played:  14c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  3
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['2c', '8c']
+Cards in pile:  ['14c']
+['Removing: ', '2c']
+Player:  2  played:  2c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  3
+------------------------------------------
+Trumps:  d
+All Cards In Hand:  ['3c', '9h', '11h']
+Legal Moves:  ['3c']
+Cards in pile:  ['14c', '2c']
+['Removing: ', '3c']
+Player:  0  played:  3c
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  3
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[0, 3, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  4 ############
+Bids:  [1, 2, 2]
+Player cards 
+['9h', '11h']
+['2h', '3h', '4h', '6h', '7h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '10d', '11d', '12d', '13d', '14d', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '2s', '3s', '4s', '5s', '6s', '7s', '9s', '11s', '13s', '14s']
+['2h', '3h', '4h', '6h', '7h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '10d', '11d', '12d', '13d', '14d', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['6s', '12h']
+Cards in pile:  []
+['Removing: ', '6s']
+Player:  1  played:  6s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  4
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['14d', '8c']
+Cards in pile:  ['6s']
+['Removing: ', '14d']
+Removing all of suit:  s
+Player:  2  played:  14d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  4
+------------------------------------------
+Trumps:  d
+All Cards In Hand:  ['9h', '11h']
+Legal Moves:  ['9h', '11h']
+Cards in pile:  ['6s', '14d']
+0 0  
+[1.5895000000000001, 1.3860000000000001]
+['Removing: ', '9h']
+Removing all of suit:  s
+Player:  0  played:  9h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  4
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 3, 2]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  5 ############
+Bids:  [1, 2, 2]
+Player cards 
+['11h']
+['2h', '3h', '4h', '6h', '7h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '10d', '11d', '12d', '13d', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '2s', '3s', '4s', '5s', '7s', '9s', '11s', '13s', '14s']
+['2h', '3h', '4h', '6h', '7h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '10d', '11d', '12d', '13d', '4c', '5c', '6c', '7c', '8c', '9c', '10c', '11c', '12c', '13c']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  d
+All Real Possible Moves:  ['8c']
+Cards in pile:  []
+['Removing: ', '8c']
+Player:  2  played:  8c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  5
+------------------------------------------
+Trumps:  d
+All Cards In Hand:  ['11h']
+Legal Moves:  ['11h']
+Cards in pile:  ['8c']
+['Removing: ', '11h']
+Removing all of suit:  c
+Player:  0  played:  11h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  5
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  d
+All Real Possible Moves:  ['12h']
+Cards in pile:  ['8c', '11h']
+['Removing: ', '12h']
+Removing all of suit:  c
+Player:  1  played:  12h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  5
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[0, 3, 3]
+############### End of trick ################
+[69, 62, 47]
+('Round number: ', 13)
+ 
+ 
+------------------------------------------------
+Cards in round:  7
+Trumps:  h
+Bid:  1
+Bid confidence:  0.3308
+ 
+ 
+########### Beggining full trick number,  0 ############
+Bids:  [1, 2, 2]
+Player cards 
+['6d', '11h', '7s', '9d', '6c', '9s', '4s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '7d', '8d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '5s', '6s', '8s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '2d', '3d', '4d', '5d', '7d', '8d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '5s', '6s', '8s', '10s', '11s', '12s', '13s', '14s']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['8c', '5c', '4c', '14d', '2h', '6s', '8d']
+Cards in pile:  []
+['Removing: ', '6s']
+Player:  1  played:  6s
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  0
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['12d', '10d', '13c', '4d', '14c', '7c', '2d']
+Cards in pile:  ['6s']
+['Removing: ', '2d']
+Removing all of suit:  s
+Player:  2  played:  2d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  0
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['6d', '11h', '7s', '9d', '6c', '9s', '4s']
+Legal Moves:  ['7s', '9s', '4s']
+Cards in pile:  ['6s', '2d']
+0 0 0  
+[4.3745, 4.481, 5.432]
+['Removing: ', '4s']
+Player:  0  played:  4s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  0
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[0, 1, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  1 ############
+Bids:  [1, 2, 2]
+Player cards 
+['6d', '11h', '7s', '9d', '6c', '9s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '8d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '5s', '8s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '8d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '7c', '8c', '9c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['8c', '5c', '4c', '14d', '2h', '8d']
+Cards in pile:  []
+['Removing: ', '8c']
+Player:  1  played:  8c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  1
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['13c', '14c', '7c']
+Cards in pile:  ['8c']
+['Removing: ', '7c']
+Player:  2  played:  7c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  1
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['6d', '11h', '7s', '9d', '6c', '9s']
+Legal Moves:  ['6c']
+Cards in pile:  ['8c', '7c']
+['Removing: ', '6c']
+Player:  0  played:  6c
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  1
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[0, 2, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  2 ############
+Bids:  [1, 2, 2]
+Player cards 
+['6d', '11h', '7s', '9d', '9s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '8d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '5s', '8s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '3d', '4d', '5d', '7d', '8d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '9c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['5c', '4c', '14d', '2h', '8d']
+Cards in pile:  []
+['Removing: ', '8d']
+Player:  1  played:  8d
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  2
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['12d', '10d', '4d']
+Cards in pile:  ['8d']
+['Removing: ', '4d']
+Player:  2  played:  4d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  2
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['6d', '11h', '7s', '9d', '9s']
+Legal Moves:  ['6d', '9d']
+Cards in pile:  ['8d', '4d']
+0 0  
+[6.035, 4.6595]
+['Removing: ', '6d']
+Player:  0  played:  6d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  2
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[0, 3, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  3 ############
+Bids:  [1, 2, 2]
+Player cards 
+['11h', '7s', '9d', '9s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '3d', '5d', '7d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '5s', '8s', '10s', '11s', '12s', '13s', '14s']
+['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '3d', '5d', '7d', '10d', '11d', '12d', '13d', '14d', '2c', '3c', '4c', '5c', '9c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['5c', '4c', '14d', '2h']
+Cards in pile:  []
+['Removing: ', '2h']
+Player:  1  played:  2h
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  3
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['12d', '10d', '13c', '14c']
+Cards in pile:  ['2h']
+['Removing: ', '12d']
+Removing all of suit:  h
+Player:  2  played:  12d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  3
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['11h', '7s', '9d', '9s']
+Legal Moves:  ['11h']
+Cards in pile:  ['2h', '12d']
+['Removing: ', '11h']
+Player:  0  played:  11h
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  3
+------------------------------------------
+#############################################
+Player:  0  won the trick with so it is now:  0 's' go
+[1, 3, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  4 ############
+Bids:  [1, 2, 2]
+Player cards 
+['7s', '9d', '9s']
+['3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '3d', '5d', '7d', '10d', '11d', '13d', '14d', '2c', '3c', '4c', '5c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '5s', '8s', '10s', '11s', '12s', '13s', '14s']
+['3d', '5d', '7d', '10d', '11d', '13d', '14d', '2c', '3c', '4c', '5c', '9c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+Trumps:  h
+All Cards In Hand:  ['7s', '9d', '9s']
+Legal Moves:  ['7s', '9d', '9s']
+Cards in pile:  []
+0 0 0  
+[6.5195, 7.7525, 6.164]
+['Removing: ', '9d']
+Player:  0  played:  9d
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  4
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['14d']
+Cards in pile:  ['9d']
+['Removing: ', '14d']
+Player:  1  played:  14d
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  4
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['10d']
+Cards in pile:  ['9d', '14d']
+['Removing: ', '10d']
+Player:  2  played:  10d
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  4
+------------------------------------------
+#############################################
+Player:  1  won the trick with so it is now:  1 's' go
+[1, 4, 0]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  5 ############
+Bids:  [1, 2, 2]
+Player cards 
+['7s', '9s']
+['3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '3d', '5d', '7d', '11d', '13d', '2c', '3c', '4c', '5c', '9c', '10c', '11c', '12c', '13c', '14c', '2s', '3s', '5s', '8s', '10s', '11s', '12s', '13s', '14s']
+['3d', '5d', '7d', '11d', '13d', '2c', '3c', '4c', '5c', '9c', '10c', '11c', '12c', '13c', '14c']
+#############################################
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['5c', '4c']
+Cards in pile:  []
+['Removing: ', '4c']
+Player:  1  played:  4c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  5
+------------------------------------------
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['13c', '14c']
+Cards in pile:  ['4c']
+['Removing: ', '13c']
+Player:  2  played:  13c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  5
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['7s', '9s']
+Legal Moves:  ['7s', '9s']
+Cards in pile:  ['4c', '13c']
+0 0  
+[11.0, 11.0]
+['Removing: ', '7s']
+Removing all of suit:  c
+Player:  0  played:  7s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  5
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[1, 4, 1]
+############### End of trick ################
+ 
+ 
+########### Beggining full trick number,  6 ############
+Bids:  [1, 2, 2]
+Player cards 
+['9s']
+['3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', '12h', '13h', '14h', '3d', '5d', '7d', '11d', '13d', '2c', '3c', '5c', '9c', '10c', '11c', '12c', '14c', '2s', '3s', '5s', '8s', '10s', '11s', '12s', '13s', '14s']
+['3d', '5d', '7d', '11d', '13d', '2c', '3c', '5c', '9c', '10c', '11c', '12c', '14c']
+#############################################
+ ------------ Player:  2  -----------
+Trumps:  h
+All Real Possible Moves:  ['14c']
+Cards in pile:  []
+['Removing: ', '14c']
+Player:  2  played:  14c
+------------------------------------------
+Incrementing turn from  2  to  0
+For tick number:  6
+------------------------------------------
+Trumps:  h
+All Cards In Hand:  ['9s']
+Legal Moves:  ['9s']
+Cards in pile:  ['14c']
+['Removing: ', '9s']
+Removing all of suit:  c
+Player:  0  played:  9s
+------------------------------------------
+Incrementing turn from  0  to  1
+For tick number:  6
+------------------------------------------
+ ------------ Player:  1  -----------
+Trumps:  h
+All Real Possible Moves:  ['5c']
+Cards in pile:  ['14c', '9s']
+['Removing: ', '5c']
+Player:  1  played:  5c
+------------------------------------------
+Incrementing turn from  1  to  2
+For tick number:  6
+------------------------------------------
+#############################################
+Player:  2  won the trick with so it is now:  2 's' go
+[1, 4, 2]
+############### End of trick ################
+[80, 66, 59]

@@ -62,7 +62,6 @@ class Game():
         self.resetRound()
         
         # Deal all the cards
-        #self.dealAllCards(cardsinround,strategyList)
         self.manualDeal(cardsinround)
 
         # The dealer picks trumps
@@ -243,25 +242,31 @@ class Game():
         self.roundnumber = 0
         self.trickNumber = 0
 
-    def dealAllCards(self,cardsinround,strategyList):
-        # Deal the cards
-        playerhands = generate_random_deal(cardsinround,self.numberofplayers)
-        self.players = []
-        playerNumber = 0
-        for hand in playerhands:
-            thisplayer = Player( playerNumber,playerhands, strategy= strategyList[playerNumber])
-            thisplayer.cardsLeftInHand = cardsinround
-            self.players.append(copy.deepcopy(thisplayer))
-            playerNumber = playerNumber + 1
-
     def manualDeal(self,cardsinround):
-        #player1hand = generate_manual_deal(cardsinround)
+        # Manually deal the first player
+        player1hand = generate_manual_deal(cardsinround)
+        playerOne = self.players[0]
+        playerOne.possibleHand = [i for i in player1hand]
+        playerOne.realHand = [i for i in player1hand]
+        playerOne.cardsLeftInHand = cardsinround
+        # Now track the possible hands of all other players
+        for playerNumber in range(1,self.numberofplayers):
+            thisplayer = self.players[playerNumber]
+            thisplayer.cardsLeftInHand = cardsinround
+            thisplayer.setPossibleHand(thisplayer.getListOfAllPossibleHands())
+            thisplayer.removePossible(playerOne.realHand)
+            thisplayer.realHand = [i for i in thisplayer.possibleHand]
+
+    def randomDeal(self,cardsinround):
+        # Generate the real hands
         playerHands = generate_random_deal(cardsinround,self.numberofplayers)
         playerOne = self.players[0]
+        # We know our real hand and so don't have to imagine a possible hand
         playerOne.possibleHand = [i for i in playerHands[0]]
         playerOne.realHand = [i for i in playerHands[0]]
         playerOne.cardsLeftInHand = cardsinround
-        # Generate all other possibilities
+        # The rest of the players are dealt a real hand and the possible hand 
+        # they could hold according to the monte carlo player is tracked
         for playerNumber in range(1,self.numberofplayers):
             thisplayer = self.players[playerNumber]
             thisplayer.cardsLeftInHand = cardsinround

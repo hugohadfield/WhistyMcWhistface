@@ -3,12 +3,26 @@ import random
 import StringIO
 import operator
 from operator import mul
+GRAPHICAL_INPUT = False
+try:
+    import easygui
+    GRAPHICAL_INPUT = True
+except:
+    print('easygui not available, defaulting to text input')
 
 
-def generate_manual_deal(cardsinround):
+def generate_easygui_deal(cardsinround):
     areYouSure = False
     while not areYouSure:
-        print "Plead enter cards, 1 at a time: "
+        hand = easygui.multchoicebox(msg='Select ' + str(cardsinround) + ' cards',title='Dealing',choices=all_cards_in_deck())
+        if len(hand) == cardsinround:
+            areYouSure = True
+    return hand
+
+def generate_cmd_deal(cardsinround):
+    areYouSure = False
+    while not areYouSure:
+        print "Please enter cards, 1 at a time: "
         hand = []
         for cIt in range(0,cardsinround):
             card = raw_input().rstrip()
@@ -18,6 +32,12 @@ def generate_manual_deal(cardsinround):
         if raw_input().rstrip() == "y":
             areYouSure = True
     return hand
+
+def generate_manual_deal(cardsinround):
+    if GRAPHICAL_INPUT:
+        return generate_easygui_deal(cardsinround)
+    else:
+        return generate_cmd_deal(cardsinround)
 
 
 class NullIO(StringIO.StringIO):
@@ -114,6 +134,14 @@ def cards_of_suit(cardlist, suit):
         if thiscard[-1] == suit:
             outputlist.append(thiscard)
     return outputlist
+
+def all_cards_in_deck():
+    numberlist = range( 2, 15 )
+    all_cards = []
+    for i in ['h','c','s','d']:
+        for x in numberlist:
+            all_cards.append(str(x) + i)
+    return all_cards
 
 def card_beating_list(card, trumpsuit):
     # This is a list of all the possible cards that beat a specific card
@@ -242,8 +270,8 @@ def mini_monte_reward_function(cardIndex, pile, leadingProbList, followingProbLi
 
     copiedFollowList = [i for i in followingProbList]
     followLoss = copiedFollowList.pop(cardIndex)
-    mini_monte_sim(, followingProbList, bidPosition, mcnumber)
-    mini_monte_sim()
+    #mini_monte_sim(, followingProbList, bidPosition, mcnumber)
+    #mini_monte_sim()
 
     ncards = len(leadingProbList)
     pdfout = []

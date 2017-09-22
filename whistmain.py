@@ -1,13 +1,14 @@
 
 from WhistStructure import *
 from WhistLib import *
+from os import system
 
 if __name__ == "__main__":
     scoreLog = []
-    for i in range(0,20):
-        thisGame = Game("./testConfigFiles/ThreePlayerMonteVsAdvancedBid1000.json")
+    for i in range(0,1):
+    	system('title ' + 'game_number_'+str(i))
+        thisGame = Game("./testConfigFiles/SnakeTwoPlayerMonte500Manual.json")
         thisGame.playFullGame()
         scoreLog.append( thisGame.scores )
-    f = open('logfile.txt', 'w')
+    f = open('manual.txt', 'w')
     print >> f, scoreLog
-    

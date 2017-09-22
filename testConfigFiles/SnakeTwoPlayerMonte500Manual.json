@@ -1,0 +1,4 @@
+{"Players":[
+    {"class":"SnakeMonteCarloPlayer","playerNumber":"0", "additionalParameters":{"monteCarloNumber":"500"}},
+    {"class":"ManualPlayer","playerNumber":"1","additionalParameters":{}}
+]}
