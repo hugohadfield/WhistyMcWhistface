@@ -11,13 +11,30 @@ except:
     print('easygui not available, defaulting to text input')
 
 
+inv_card_name_mapping = {'Js':'11s','Jc':'11c','Jh':'11h','Jd':'11d',
+'Qs':'12s','Qc':'12c','Qh':'12h','Qd':'12d',
+'Ks':'13s','Kc':'13c','Kh':'13h','Kd':'13d',
+'As':'14s','Ac':'14c','Ah':'14h','Ad':'14d'}
+
+card_name_mapping = {v: k for k, v in inv_card_name_mapping.items()}
+
+def translate_card_name(card_name):
+    graphics_name = card_name_mapping.get(card_name,card_name)
+    return graphics_name
+
+def translate_inv_card_name(card_name):
+    internal_name = inv_card_name_mapping.get(card_name,card_name)
+    return internal_name
+
 def generate_easygui_deal(cardsinround):
     areYouSure = False
     while not areYouSure:
-        hand = easygui.multchoicebox(msg='Select ' + str(cardsinround) + ' cards',title='Dealing',choices=all_cards_in_deck())
-        if len(hand) == cardsinround:
+        translated_choices = [translate_card_name(i) for i in all_cards_in_deck()]
+        hand = easygui.multchoicebox(msg='Select ' + str(cardsinround) + ' cards',title='Dealing',choices=translated_choices)
+        translated_hand = [translate_inv_card_name(i) for i in hand]
+        if len(translated_hand) == cardsinround:
             areYouSure = True
-    return hand
+    return translated_hand
 
 def generate_cmd_deal(cardsinround):
     areYouSure = False
