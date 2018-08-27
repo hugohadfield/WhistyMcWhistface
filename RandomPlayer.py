@@ -9,13 +9,13 @@ class RandomPlayer(Player):
 
     def makeMove(self, pile, trumpsuit, fullGameObject=None):
         possibleMoves = self.getRealPossibleMoves(pile)
-        print " ------------ Player: ", self.playerNumber, " -----------"
-        print "Trumps: ",
-        print trumpsuit
-        print "All Real Possible Moves: ",
-        print possibleMoves
-        print "Cards in pile: ",
-        print pile
+        print(" ------------ Player: ", self.playerNumber, " -----------")
+        print("Trumps: ", end=' ')
+        print(trumpsuit)
+        print("All Real Possible Moves: ", end=' ')
+        print(possibleMoves)
+        print("Cards in pile: ", end=' ')
+        print(pile)
         if type(possibleMoves) is str:
             card = possibleMoves
         else:
@@ -24,7 +24,7 @@ class RandomPlayer(Player):
             self.cardSuitCheck(pile, card)
             return card
         else:
-            print "Error playing card"
+            print("Error playing card")
 
     def makeBid(self, nplayers, ncards, trumpsuit, previousbids):
         thisbid = self.makeAverageBid( nplayers, ncards, trumpsuit, previousbids)
@@ -39,10 +39,10 @@ class RandomPlayer(Player):
             thisbid = (originalbid + i) % (ncards+1)
             if thisbid in validBids:
                 return thisbid
-        print "Bid Error"
-        print validBids
-        print originalbid
-        print ncards
+        print("Bid Error")
+        print(validBids)
+        print(originalbid)
+        print(ncards)
 
     def generateModelPlayer(self):
         return copy.deepcopy(self)

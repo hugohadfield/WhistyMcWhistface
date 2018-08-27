@@ -9,13 +9,13 @@ class RandomWithAdvancedBidPlayer(Player):
 
     def makeMove(self, pile, trumpsuit, fullGameObject=None):
         possibleMoves = self.getRealPossibleMoves(pile)
-        print " ------------ Player: ", self.playerNumber, " -----------"
-        print "Trumps: ",
-        print trumpsuit
-        print "All Real Possible Moves: ",
-        print possibleMoves
-        print "Cards in pile: ",
-        print pile
+        print(" ------------ Player: ", self.playerNumber, " -----------")
+        print("Trumps: ", end=' ')
+        print(trumpsuit)
+        print("All Real Possible Moves: ", end=' ')
+        print(possibleMoves)
+        print("Cards in pile: ", end=' ')
+        print(pile)
         if type(possibleMoves) is str:
             card = possibleMoves
         else:
@@ -24,7 +24,7 @@ class RandomWithAdvancedBidPlayer(Player):
             self.cardSuitCheck(pile, card)
             return card
         else:
-            print "Error playing card"
+            print("Error playing card")
 
     def makeBid(self, nplayers, ncards, trumpsuit, previousbids):
         thisbid = self.makeAdvancedBid(nplayers, ncards, trumpsuit, previousbids)
@@ -48,8 +48,8 @@ class RandomWithAdvancedBidPlayer(Player):
                 bidPDF[i] = -1.0
 
         [confidence, thisbid] = max_and_index(bidPDF)
-        print "Bid: ", thisbid
-        print "Bid confidence: ", confidence
+        print("Bid: ", thisbid)
+        print("Bid confidence: ", confidence)
         return thisbid
 
     def computeLeadingCardVictory(self, nplayers, cardsInHand, ncards, trumpsuit):

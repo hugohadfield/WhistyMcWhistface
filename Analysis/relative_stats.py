@@ -19,5 +19,5 @@ if __name__ == "__main__":
 	mean = float(accumulator)/len(data)
 	variance = float(accumulatorSqrd)/len(data) - mean*mean
 	print(mean)
-	print(math.sqrt(variance))
+	print((math.sqrt(variance)))
 	print(n_lost)

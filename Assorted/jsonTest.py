@@ -7,7 +7,7 @@ def doJson(configFileName):
         jsonFileData = json.load(data_file)
         for parameterCollection in jsonFileData["GameParameters"]:
             playerConfigName = parameterCollection["PlayerConfigFile"]
-            print playerConfigName
+            print(playerConfigName)
 
         #pprint(jsonFileData)
 

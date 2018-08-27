@@ -17,27 +17,27 @@ class ManualPlayer(Player):
                 title='Player '+str(self.playerNumber), 
                 choices = translated_choices).rstrip()
         else:
-            cardToPlay = raw_input('Enter your card choice: ').rstrip()
+            cardToPlay = input('Enter your card choice: ').rstrip()
         translated_card = translate_inv_card_name(cardToPlay)
         return cardToPlay
 
     def makeMove(self, pile, trumpsuit, fullGameObject=None):
-        print " "
-        print "Manual card choice required"
+        print(" ")
+        print("Manual card choice required")
         while True:
-            print "Trumps: ",
-            print trumpsuit
-            print "All Possible Moves: ",
-            print self.possibleHand
-            print "Cards in pile: ",
-            print pile
+            print("Trumps: ", end=' ')
+            print(trumpsuit)
+            print("All Possible Moves: ", end=' ')
+            print(self.possibleHand)
+            print("Cards in pile: ", end=' ')
+            print(pile)
             message = 'Player ' + str(self.playerNumber) +'. Enter your card choice: '
             cardToPlay = self.get_manual_input(message, self.possibleHand)
             if self.playCard(cardToPlay):
                 self.cardSuitCheck(pile, cardToPlay)
                 return cardToPlay
             else:
-                print "Invalid card choice, try again"
+                print("Invalid card choice, try again")
 
     def makeBid(self, nplayers, ncards, trumpsuit, previousbids):
         thisbid = None
@@ -46,8 +46,8 @@ class ManualPlayer(Player):
                 title='Choose bid', 
                 lowerbound=0, upperbound=10)
         else:
-            print "Enter bid: "
-            thisbid = int(raw_input())
+            print("Enter bid: ")
+            thisbid = int(input())
         self.bid = thisbid
         self.advanceZeroCounter(thisbid)
         return thisbid
@@ -61,8 +61,8 @@ class ManualPlayer(Player):
                     title='Choose trump', 
                     choices = possible_trumps).rstrip()
             else:
-                print "Enter trump: "
-                trump = raw_input().rstrip()
+                print("Enter trump: ")
+                trump = input().rstrip()
         return trump
 
     def generateModelPlayer(self):

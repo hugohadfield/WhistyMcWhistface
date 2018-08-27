@@ -27,20 +27,20 @@ class MonteCarloPlayer(Player):
                     bidPDF[i] = -1.0
             [confidence, thisbid] = max_and_index(bidPDF)
             confidenceList.append(confidence)
-        print "Trump confidences: ", confidenceList
+        print("Trump confidences: ", confidenceList)
         [maxConfidence, trumpIndex] = max_and_index(confidenceList)
         return possibleTrumps[trumpIndex]
 
     def makeMove(self, pile, trumpsuit, fullGameObject=None):
         currentPossibleMoves = self.getPossibleMoves(pile)
-        print "Trumps: ",
-        print trumpsuit
-        print "All Cards In Hand: ",
-        print self.possibleHand
-        print "Legal Moves: ",
-        print currentPossibleMoves
-        print "Cards in pile: ",
-        print pile
+        print("Trumps: ", end=' ')
+        print(trumpsuit)
+        print("All Cards In Hand: ", end=' ')
+        print(self.possibleHand)
+        print("Legal Moves: ", end=' ')
+        print(currentPossibleMoves)
+        print("Cards in pile: ", end=' ')
+        print(pile)
         if currentPossibleMoves is not str:
             if len(currentPossibleMoves) > 1:
                 # Project n steps into the future and evaluate the quality of the move
@@ -53,10 +53,10 @@ class MonteCarloPlayer(Player):
                                                                            fullGameObject)
                     sys.stdout = sys.__stdout__
                     thisPlayerCardRanking.append(outputScores[self.playerNumber])
-                    print errorCounter,
-                print " "
+                    print(errorCounter, end=' ')
+                print(" ")
                 # Get the maximum value and expected point ranking
-                print thisPlayerCardRanking
+                print(thisPlayerCardRanking)
                 [expectedPointGain, cardIndex] = max_and_index(thisPlayerCardRanking)
 
                 # Play the card
@@ -69,17 +69,17 @@ class MonteCarloPlayer(Player):
             self.cardSuitCheck(pile, cardToPlay)
             return cardToPlay
         else:
-            print "Card playing error"
+            print("Card playing error")
 
 
     def cardPlayMonteCarlo(self, specificCard, monteCarloNumber, fullGameObject):
 
-        playerRange = range(0, fullGameObject.numberofplayers)
+        playerRange = list(range(0, fullGameObject.numberofplayers))
         averageScores = [0.0 for i in playerRange]
 
         # Keep track of any game errors and use them to correct score estimate
         errorCounter = 0
-        for monteIterator in xrange(0, monteCarloNumber):
+        for monteIterator in range(0, monteCarloNumber):
             # Make a copy of the current game object
             tempGame = copy.deepcopy(fullGameObject)
             tempGame.convertToDeterministicGame()
@@ -98,7 +98,7 @@ class MonteCarloPlayer(Player):
                 tempGame.playPartialRound()
 
                 # Merge the score output
-                averageScores = map(add, averageScores, tempGame.scores)
+                averageScores = list(map(add, averageScores, tempGame.scores))
                 # for i in range(0,tempGame.numberofplayers):
                 #    averageScores[i] = averageScores[i] + float(tempGame.scores[i])
             except:
@@ -125,10 +125,10 @@ class MonteCarloPlayer(Player):
             thisbid = (originalbid + i) % (ncards+1)
             if thisbid in validBids:
                 return thisbid
-        print "Bid Error"
-        print validBids
-        print originalbid
-        print ncards
+        print("Bid Error")
+        print(validBids)
+        print(originalbid)
+        print(ncards)
 
     def makeAdvancedBid(self, nplayers, ncards, trumpsuit, previousbids):
 
@@ -145,8 +145,8 @@ class MonteCarloPlayer(Player):
                 bidPDF[i] = -1.0
 
         [confidence, thisbid] = max_and_index(bidPDF)
-        print "Bid: ", thisbid
-        print "Bid confidence: ", confidence
+        print("Bid: ", thisbid)
+        print("Bid confidence: ", confidence)
         return thisbid
 
     def computeLeadingCardVictory(self, nplayers, cardsInHand, ncards, trumpsuit):

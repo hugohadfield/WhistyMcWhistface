@@ -15,7 +15,7 @@ def parseTestConfig(testConfigFileName):
 
 def runTests(testsToRun):
     for test in testsToRun:
-    	print "Starting Test..."
+        print("Starting Test...")
         with open(test[1], "w") as outputFileObject:
             subprocess.call(["python", "runGame.py", test[0]], stdout=outputFileObject)
 

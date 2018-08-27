@@ -48,7 +48,7 @@ class Player():
                         newHand.remove(cleanCard)
                         self.setPossibleHand(newHand)
         except:
-            print "Card removal error"
+            print("Card removal error")
 
     def removeReal(self, cards):
         newHand = [i for i in self.realHand]
@@ -67,15 +67,15 @@ class Player():
     def playCard(self, card):
         cleanCard = card.rstrip()
         if cleanCard in self.possibleHand:
-            print ["Removing: ", cleanCard]
+            print(["Removing: ", cleanCard])
             self.cardsLeftInHand = self.cardsLeftInHand - 1
             self.removePossible(cleanCard)
             self.removeReal(cleanCard)
             return True
         else:
-            print " Card is not in hand "
-            print cleanCard
-            print self.possibleHand
+            print(" Card is not in hand ")
+            print(cleanCard)
+            print(self.possibleHand)
             return False
 
     def removeSuit(self, card):
@@ -109,7 +109,7 @@ class Player():
         if len(pile) > 0:
             if cardPlayed[-1] != pile[0][-1]:
                 self.removeSuit(pile[0][-1])
-                print "Removing all of suit: ", pile[0][-1]
+                print("Removing all of suit: ", pile[0][-1])
 
     def pick_trumps(self, nplayers):
         thistrump = TrumpPicker.picktrump(self.realHand)
@@ -137,7 +137,7 @@ class Player():
 
     def advanceZeroCounter(self,bid):
         if bid == 0:
-            print "Zero counter: ", self.zeroCounter
+            print("Zero counter: ", self.zeroCounter)
             self.zeroCounter = self.zeroCounter + 1
             if self.zeroCounter >= 2:
                 self.canBidZero = False
@@ -146,18 +146,18 @@ class Player():
             self.canBidZero = True
 
     def convertToValidHand(self):
-        print self.possibleHand, self.cardsLeftInHand
+        print(self.possibleHand, self.cardsLeftInHand)
         try:
             newHand = random.sample(self.possibleHand, self.cardsLeftInHand)
         except:
             newHand = []
-            print "error"
+            print("error")
         return newHand
 
     def setPossibleHand(self,newHand):
         if len( newHand ) < self.cardsLeftInHand:
             a = 1
-            print "This is the bad bit"
+            print("This is the bad bit")
         self.possibleHand = [i for i in newHand]
 
     def setRealHand(self,newHand):
