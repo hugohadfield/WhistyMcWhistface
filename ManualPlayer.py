@@ -1,4 +1,3 @@
-from WhistPlayer import *
 from RandomPlayer import *
 GRAPHICAL_INPUT = False
 try:
@@ -67,8 +66,6 @@ class ManualPlayer(Player):
 
     def generateModelPlayer(self):
         modelPlayer = RandomPlayer(self.playerNumber, self.possibleHand)
-        modelPlayer.canBidZero = self.canBidZero
-        modelPlayer.zeroCounter = self.zeroCounter
-        modelPlayer.cardsLeftInHand = self.cardsLeftInHand
+        modelPlayer.resetZeroCounter(self.zero_bid_count)
         modelPlayer.realHand = [i for i in self.realHand]
         return copy.deepcopy(modelPlayer)

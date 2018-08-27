@@ -1,4 +1,4 @@
-from WhistPlayer import *
+from alphawhist.core.WhistPlayer import *
 import copy
 
 
@@ -27,7 +27,6 @@ class StatHeuristicPlayer(Player):
             print("Error playing card")
 
     def makeRewardBasedMove(self, possibleMoves):
-
         return card
 
     def makeBid(self, nplayers, ncards, trumpsuit, previousbids):

@@ -1,4 +1,4 @@
-from WhistPlayer import *
+from alphawhist.core.WhistPlayer import *
 import copy
 
 class RandomWithAdvancedBidPlayer(Player):

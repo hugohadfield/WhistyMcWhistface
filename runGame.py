@@ -1,5 +1,4 @@
-import sys
-from WhistStructure import *
+from alphawhist.core.WhistStructure import *
 
 if __name__ == "__main__":
 	playerConfigName = sys.argv[1]

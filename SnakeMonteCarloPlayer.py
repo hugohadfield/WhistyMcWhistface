@@ -1,5 +1,7 @@
-from WhistPlayer import *
 from RandomPlayer import *
+import sys
+import traceback
+
 
 class SnakeMonteCarloPlayer(Player):
 
@@ -8,14 +10,14 @@ class SnakeMonteCarloPlayer(Player):
         return True
 
     def pick_trumps(self, nplayers):
-        #thistrump = self.alternateTrumpPicker(nplayers)
+        # thistrump = self.alternateTrumpPicker(nplayers)
         thistrump = TrumpPicker.picktrump(self.realHand)
         return thistrump
 
     def alternateTrumpPicker(self, nplayers):
         cardsInHand = self.realHand
         ncards = len(self.realHand)
-        possibleTrumps = ['h','d','c','s']
+        possibleTrumps = ['h', 'd', 'c', 's']
         confidenceList = []
         for trumpsuit in possibleTrumps:
             leadingProbList = self.computeLeadingCardVictory(nplayers, cardsInHand, ncards, trumpsuit)
@@ -31,8 +33,8 @@ class SnakeMonteCarloPlayer(Player):
         [maxConfidence, trumpIndex] = max_and_index(confidenceList)
         return possibleTrumps[trumpIndex]
 
-    def snakeFunction( self, p_num, scores ):
-        not_my_scores = [x for i,x in enumerate(scores) if i!=p_num]
+    def snakeFunction(self, p_num, scores):
+        not_my_scores = [x for i, x in enumerate(scores) if i != p_num]
         snake_val = scores[p_num] - max(not_my_scores)
         return snake_val
 
@@ -57,7 +59,7 @@ class SnakeMonteCarloPlayer(Player):
                     [outputScores, errorCounter] = self.cardPlayMonteCarlo(specificCard, self.monteCarloNumber,
                                                                            fullGameObject)
                     sys.stdout = sys.__stdout__
-                    thisPlayerCardRanking.append( self.snakeFunction(self.playerNumber,outputScores)  )
+                    thisPlayerCardRanking.append(self.snakeFunction(self.playerNumber, outputScores))
                     print(errorCounter, end=' ')
                 print(" ")
                 # Get the maximum value and expected point ranking
@@ -75,7 +77,6 @@ class SnakeMonteCarloPlayer(Player):
             return cardToPlay
         else:
             print("Card playing error")
-
 
     def cardPlayMonteCarlo(self, specificCard, monteCarloNumber, fullGameObject):
 
@@ -95,29 +96,29 @@ class SnakeMonteCarloPlayer(Player):
             # Revert all players to random
             newPlayers = []
             for p in tempGame.players:
-                newPlayers.append( p.generateModelPlayer() )
+                newPlayers.append(p.generateModelPlayer())
             tempGame.players = [i for i in newPlayers]
 
-            try:
-                tempGame.playPartialTrick(specificCard)
-                tempGame.playPartialRound()
+            # try:
+            tempGame.playPartialTrick(specificCard)
+            tempGame.playPartialRound()
 
-                # Merge the score output
-                averageScores = list(map(add, averageScores, tempGame.scores))
-                # for i in range(0,tempGame.numberofplayers):
-                #    averageScores[i] = averageScores[i] + float(tempGame.scores[i])
-            except:
-                tb = traceback.format_exc()
-                errorCounter = errorCounter + 1
+            # Merge the score output
+            averageScores = [a + s for a, s in zip(averageScores, tempGame.scores)]
+            # for i in range(0,tempGame.numberofplayers):
+            #    averageScores[i] = averageScores[i] + float(tempGame.scores[i])
+            # except:
+            #     tb = traceback.format_exc()
+            #     errorCounter = errorCounter + 1
 
         # Convert to proper average
-        for i in range(0, tempGame.numberofplayers):
+        for i in range(0, fullGameObject.numberofplayers):
             averageScores[i] = (1 / float(monteCarloNumber - errorCounter)) * averageScores[i]
 
         return averageScores, errorCounter
 
     def makeBid(self, nplayers, ncards, trumpsuit, previousbids):
-        #thisbid = self.makeAverageBid( nplayers, ncards, trumpsuit, previousbids)
+        # thisbid = self.makeAverageBid( nplayers, ncards, trumpsuit, previousbids)
         thisbid = self.makeAdvancedBid(nplayers, ncards, trumpsuit, previousbids)
         self.bid = thisbid
         self.advanceZeroCounter(thisbid)
@@ -126,8 +127,8 @@ class SnakeMonteCarloPlayer(Player):
     def makeAverageBid(self, nplayers, ncards, trumpsuit, previousbids):
         originalbid = int(round(ncards / float(nplayers)))
         validBids = self.getValidBidOptions(nplayers, ncards, previousbids)
-        for i in range(0, ncards+1):
-            thisbid = (originalbid + i) % (ncards+1)
+        for i in range(0, ncards + 1):
+            thisbid = (originalbid + i) % (ncards + 1)
             if thisbid in validBids:
                 return thisbid
         print("Bid Error")
@@ -189,9 +190,7 @@ class SnakeMonteCarloPlayer(Player):
 
     def generateModelPlayer(self):
         modelPlayer = RandomPlayer(self.playerNumber, self.possibleHand)
-        modelPlayer.canBidZero = self.canBidZero
-        modelPlayer.zeroCounter = self.zeroCounter
-        modelPlayer.cardsLeftInHand = self.cardsLeftInHand
+        modelPlayer.resetZeroCounter(self.zero_bid_count)
         modelPlayer.monteCarloNumber = self.monteCarloNumber
         modelPlayer.realHand = [i for i in self.realHand]
         return copy.deepcopy(modelPlayer)

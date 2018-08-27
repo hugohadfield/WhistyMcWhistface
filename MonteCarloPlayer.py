@@ -1,4 +1,3 @@
-from WhistPlayer import *
 from RandomPlayer import *
 
 class MonteCarloPlayer(Player):
@@ -184,9 +183,8 @@ class MonteCarloPlayer(Player):
 
     def generateModelPlayer(self):
         modelPlayer = RandomPlayer(self.playerNumber, self.possibleHand)
-        modelPlayer.canBidZero = self.canBidZero
-        modelPlayer.zeroCounter = self.zeroCounter
-        modelPlayer.cardsLeftInHand = self.cardsLeftInHand
+        modelPlayer.can_bid_zero = self.can_bid_zero
+        modelPlayer.zero_bid_count = self.zero_bid_count
         modelPlayer.monteCarloNumber = self.monteCarloNumber
         modelPlayer.realHand = [i for i in self.realHand]
         return copy.deepcopy(modelPlayer)

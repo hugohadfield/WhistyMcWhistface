@@ -1,6 +1,5 @@
 
-from WhistStructure import *
-from WhistLib import *
+from alphawhist.core.WhistStructure import *
 import subprocess
 
 def parseTestConfig(testConfigFileName):
