@@ -4,7 +4,7 @@ import copy
 class RandomPlayer(Player):
 
     def pick_trumps(self, numberOfPlayers):
-        thistrump = TrumpPicker.picktrump(self.possibleHand)
+        thistrump = TrumpPicker.picktrump(self.possible_hand)
         return thistrump
 
     def makeMove(self, pile, trumpsuit, fullGameObject=None):

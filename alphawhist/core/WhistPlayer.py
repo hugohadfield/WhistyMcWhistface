@@ -6,17 +6,39 @@ class Player():
     def __init__(self, playerNumber, specificCards=[], additionalParameters=[]):
         self.playerNumber = playerNumber
         self.resetZeroCounter()
+        self.real_hand = [i for i in specificCards]
         if not specificCards:
-            self.possibleHand = [i for i in all_cards_in_deck]
+            self.possible_hand = [i for i in all_cards_in_deck]
         else:
-            self.possibleHand = [i for i in specificCards]
+            self.possible_hand = [i for i in specificCards]
         if additionalParameters:
             self.handleAdditionalParamaters(additionalParameters)
-        self.realHand = [i for i in specificCards]
+
+    @property
+    def possible_hand(self):
+        return self._possible_hand
+
+    @possible_hand.setter
+    def possible_hand(self, newHand):
+        self._possible_hand = [i for i in newHand]
+        for i in self.real_hand:
+            if i not in newHand:
+                print('\n\n\n\n\n\n\n')
+                print(i)
+                print(newHand)
+                raise ValueError('New possible hand does not contain real hand')
+
+    @property
+    def real_hand(self):
+        return self._real_hand
+
+    @real_hand.setter
+    def real_hand(self, newHand):
+        self._real_hand = [i for i in newHand]
 
     @property
     def n_cards_in_hand(self):
-        return len(self.realHand)
+        return len(self.real_hand)
 
     @property
     def zero_bid_count(self):
@@ -33,70 +55,70 @@ class Player():
         self._zero_bid_count = count
 
     def removePossible(self, cards):
-        newHand = [i for i in self.possibleHand]
+        newHand = [i for i in self.possible_hand]
         if type(cards) is str:
             cleanCard = cards.rstrip()
             if cleanCard in newHand:
                 newHand.remove(cleanCard)
-                self.setPossibleHand(newHand)
+                self.possible_hand = newHand
         else:
             for card in cards:
                 cleanCard = card.rstrip()
                 if cleanCard in newHand:
                     newHand.remove(cleanCard)
-                    self.setPossibleHand(newHand)
+                    self.possible_hand = newHand
 
     def removeReal(self, cards):
-        newHand = [i for i in self.realHand]
+        newHand = [i for i in self.real_hand]
         if type(cards) is str:
             cleanCard = cards.rstrip()
             if cleanCard in newHand:
                 newHand.remove(cleanCard)
-                self.setRealHand(newHand)
+                self.real_hand = newHand
         else:
             for card in cards:
                 cleanCard = card.rstrip()
                 if cleanCard in newHand:
                     newHand.remove(cleanCard)
-                    self.setRealHand(newHand)
+                    self.real_hand = newHand
 
     def playCard(self, card):
         cleanCard = card.rstrip()
-        if cleanCard in self.possibleHand:
+        if cleanCard in self.possible_hand:
             print(["Removing: ", cleanCard])
-            self.removePossible(cleanCard)
             self.removeReal(cleanCard)
+            self.removePossible(cleanCard)
             return True
         else:
             print(" Card is not in hand ")
             print(cleanCard)
-            print(self.possibleHand)
+            print(self.possible_hand)
             return False
 
     def removeSuit(self, card):
         suit = card[-1]
-        cardsToRemove = cards_of_suit(self.possibleHand, suit)
+        cardsToRemove = cards_of_suit(self.possible_hand, suit)
         self.removePossible(cardsToRemove)
 
     def getPossibleMoves(self, pile):
         if len(pile) > 0:
-            ledCards = cards_of_suit(self.possibleHand, pile[0][-1])
+            ledCards = cards_of_suit(self.possible_hand, pile[0][-1])
             if len(ledCards) > 0:
                 return ledCards
             else:
-                return self.possibleHand
+                return self.possible_hand
         else:
-            return self.possibleHand
+            return self.possible_hand
 
     def getRealPossibleMoves(self, pile):
         if len(pile) > 0:
-            ledCards = cards_of_suit(self.realHand, pile[0][-1])
+            ledCards = cards_of_suit(self.real_hand, pile[0][-1])
             if len(ledCards) > 0:
                 return ledCards
             else:
-                return self.realHand
+                return self.real_hand
         else:
-            return self.realHand
+            return self.real_hand
 
     def cardSuitCheck(self, pile, cardPlayed):
         # If the player makes a move that is not the same as is led
@@ -107,11 +129,11 @@ class Player():
                 print("Removing all of suit: ", pile[0][-1])
 
     def pick_trumps(self, nplayers):
-        thistrump = TrumpPicker.picktrump(self.realHand)
+        thistrump = TrumpPicker.picktrump(self.real_hand)
         return thistrump
 
     def checkValidBid(self, nplayers, ncards, bid, previousbids):
-        if self.can_bid_zero == False:
+        if not self.can_bid_zero:
             if bid == 0:
                 return False
         if len(previousbids) < nplayers - 1:
@@ -138,19 +160,11 @@ class Player():
             self._zero_bid_count = 0
 
     def convertToValidHand(self):
-        print(self.possibleHand, self.n_cards_in_hand)
+        print(self.possible_hand, self.n_cards_in_hand)
         try:
-            newHand = random.sample(self.possibleHand, self.n_cards_in_hand)
+            newHand = random.sample(self.possible_hand, self.n_cards_in_hand)
         except:
             newHand = []
             print("error")
         return newHand
 
-    def setPossibleHand(self, newHand):
-        if len(newHand) < self.n_cards_in_hand:
-            a = 1
-            print("This is the bad bit")
-        self.possibleHand = [i for i in newHand]
-
-    def setRealHand(self, newHand):
-        self.realHand = [i for i in newHand]

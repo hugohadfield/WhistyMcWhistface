@@ -101,7 +101,7 @@ class Game():
         print("Bids: ", self.bids)
         print("Player cards ")
         for p in self.players:
-            print(p.possibleHand)
+            print(p.possible_hand)
         print("#############################################")
         self.pile = []
         for n in range(0,self.numberofplayers):
@@ -167,7 +167,7 @@ class Game():
         print(self.tricksWon)
         print("############### End of trick ################")
 
-    def cleanCardFromPlayers(self,card,playerToIgnore = 0):
+    def cleanCardFromPlayers(self, card, playerToIgnore = 0):
         for playerTag in self.players:
             if playerTag.playerNumber != playerToIgnore:
                 playerTag.removePossible(card)
@@ -244,29 +244,29 @@ class Game():
         # Manually deal the first player
         player1hand = generate_manual_deal(cardsinround)
         playerOne = self.players[0]
-        playerOne.possibleHand = [i for i in player1hand]
-        playerOne.realHand = [i for i in player1hand]
+        playerOne.possible_hand = [i for i in player1hand]
+        playerOne.real_hand = [i for i in player1hand]
         # Now track the possible hands of all other players
         for playerNumber in range(1,self.numberofplayers):
             thisplayer = self.players[playerNumber]
-            thisplayer.setPossibleHand(all_cards_in_deck)
-            thisplayer.removePossible(playerOne.realHand)
-            thisplayer.realHand = [i for i in thisplayer.possibleHand]
+            thisplayer.possible_hand = all_cards_in_deck
+            thisplayer.removePossible(playerOne.real_hand)
+            thisplayer.real_hand = [i for i in thisplayer.possible_hand]
 
     def randomDeal(self,cardsinround):
         # Generate the real hands
         playerHands = generate_random_deal(cardsinround,self.numberofplayers)
         playerOne = self.players[0]
         # We know our real hand and so don't have to imagine a possible hand
-        playerOne.possibleHand = [i for i in playerHands[0]]
-        playerOne.realHand = [i for i in playerHands[0]]
+        playerOne.possible_hand = [i for i in playerHands[0]]
+        playerOne.real_hand = [i for i in playerHands[0]]
         # The rest of the players are dealt a real hand and the possible hand 
         # they could hold according to the monte carlo player is tracked
         for playerNumber in range(1,self.numberofplayers):
             thisplayer = self.players[playerNumber]
-            thisplayer.setPossibleHand(thisplayer.getListOfAllPossibleHands())
+            thisplayer.possible_hand = all_cards_in_deck
             thisplayer.removePossible(playerHands[0])
-            thisplayer.realHand = [i for i in playerHands[playerNumber]]
+            thisplayer.real_hand = [i for i in playerHands[playerNumber]]
 
     def processScore(self):
         # Compare the number of tricks that each player has won 
@@ -280,8 +280,8 @@ class Game():
     def convertToDeterministicGame(self):
         for thisPlayer in self.players:
             hand = thisPlayer.convertToValidHand()
-            thisPlayer.setPossibleHand( hand )
-            thisPlayer.setRealHand( hand )
+            thisPlayer.real_hand = hand
+            thisPlayer.possible_hand = hand
             playerToIgnore = thisPlayer.playerNumber
-            for card in thisPlayer.possibleHand:
+            for card in thisPlayer.possible_hand:
                 self.cleanCardFromPlayers(card, playerToIgnore)

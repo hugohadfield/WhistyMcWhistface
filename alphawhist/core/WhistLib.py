@@ -223,20 +223,20 @@ def card_following_list(card, leadsuit, trumpsuit):
 def player_beating_list(card, trumpsuit, player):
     # This is a list of the possible cards that a specific player can play that would beat your card
     cardlist = card_beating_list(card, trumpsuit)
-    return intersect(player.possiblehand, cardlist)
+    return intersect(player.self.possible_hand, cardlist)
 
 
 def player_beating_probability(card, trumpsuit, player):
     # This is the probability that a specific player can beat your card
     numer = len(player_beating_list(card, trumpsuit, player))
-    denom = len(player.possiblehand)
+    denom = len(player.possible_hand)
     return float(numer) / denom
 
 
 def list_all_possible_player_cards(allplayers):
     allplayercards = []
     for thisp in allplayers:
-        allplayercards = union(allplayercards, thisp.possiblehand)
+        allplayercards = union(allplayercards, thisp.possible_hand)
     return allplayercards
 
 
@@ -260,8 +260,8 @@ def all_players_beating_probability(card, trumpsuit, oppositionplayers):
 
 def probability_player_leads_suit(player, suit):
     # This is the probability that a specific player leads with a specific suit for the case they have one card
-    numer = len(cards_of_suit(player.possiblehand, suit))
-    denom = len(player.possiblehand)
+    numer = len(cards_of_suit(player.possible_hand, suit))
+    denom = len(player.possible_hand)
     return float(numer) / denom
 
 

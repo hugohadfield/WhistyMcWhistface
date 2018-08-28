@@ -27,11 +27,11 @@ class ManualPlayer(Player):
             print("Trumps: ", end=' ')
             print(trumpsuit)
             print("All Possible Moves: ", end=' ')
-            print(self.possibleHand)
+            print(self.possible_hand)
             print("Cards in pile: ", end=' ')
             print(pile)
             message = 'Player ' + str(self.playerNumber) +'. Enter your card choice: '
-            cardToPlay = self.get_manual_input(message, self.possibleHand)
+            cardToPlay = self.get_manual_input(message, self.possible_hand)
             if self.playCard(cardToPlay):
                 self.cardSuitCheck(pile, cardToPlay)
                 return cardToPlay
@@ -65,7 +65,7 @@ class ManualPlayer(Player):
         return trump
 
     def generateModelPlayer(self):
-        modelPlayer = RandomPlayer(self.playerNumber, self.possibleHand)
+        modelPlayer = RandomPlayer(self.playerNumber, self.possible_hand)
         modelPlayer.resetZeroCounter(self.zero_bid_count)
-        modelPlayer.realHand = [i for i in self.realHand]
+        modelPlayer.real_hand = [i for i in self.real_hand]
         return copy.deepcopy(modelPlayer)

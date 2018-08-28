@@ -8,12 +8,12 @@ class MonteCarloPlayer(Player):
 
     def pick_trumps(self, nplayers):
         #thistrump = self.alternateTrumpPicker(nplayers)
-        thistrump = TrumpPicker.picktrump(self.realHand)
+        thistrump = TrumpPicker.picktrump(self.real_hand)
         return thistrump
 
     def alternateTrumpPicker(self, nplayers):
-        cardsInHand = self.realHand
-        ncards = len(self.realHand)
+        cardsInHand = self.real_hand
+        ncards = len(self.real_hand)
         possibleTrumps = ['h','d','c','s']
         confidenceList = []
         for trumpsuit in possibleTrumps:
@@ -35,7 +35,7 @@ class MonteCarloPlayer(Player):
         print("Trumps: ", end=' ')
         print(trumpsuit)
         print("All Cards In Hand: ", end=' ')
-        print(self.possibleHand)
+        print(self.possible_hand)
         print("Legal Moves: ", end=' ')
         print(currentPossibleMoves)
         print("Cards in pile: ", end=' ')
@@ -133,7 +133,7 @@ class MonteCarloPlayer(Player):
 
         bidPosition = len(previousbids)
 
-        cardsInHand = self.realHand
+        cardsInHand = self.real_hand
         leadingProbList = self.computeLeadingCardVictory(nplayers, cardsInHand, ncards, trumpsuit)
         followingProbList = self.computeFollowingCardVictory(nplayers, cardsInHand, ncards, trumpsuit)
         bidPDF = mini_monte_sim(leadingProbList, followingProbList, bidPosition, 20000)
@@ -182,9 +182,9 @@ class MonteCarloPlayer(Player):
         return outputProbs
 
     def generateModelPlayer(self):
-        modelPlayer = RandomPlayer(self.playerNumber, self.possibleHand)
+        modelPlayer = RandomPlayer(self.playerNumber, self.possible_hand)
         modelPlayer.can_bid_zero = self.can_bid_zero
         modelPlayer.zero_bid_count = self.zero_bid_count
         modelPlayer.monteCarloNumber = self.monteCarloNumber
-        modelPlayer.realHand = [i for i in self.realHand]
+        modelPlayer.real_hand = [i for i in self.real_hand]
         return copy.deepcopy(modelPlayer)

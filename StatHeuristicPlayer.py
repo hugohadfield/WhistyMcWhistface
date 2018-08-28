@@ -4,7 +4,7 @@ import copy
 
 class StatHeuristicPlayer(Player):
     def pick_trumps(self, nplayers):
-        thistrump = TrumpPicker.picktrump(self.realHand)
+        thistrump = TrumpPicker.picktrump(self.real_hand)
         return thistrump
 
     def makeMove(self, pile, trumpsuit, fullGameObject=None):
@@ -39,7 +39,7 @@ class StatHeuristicPlayer(Player):
 
         bidPosition = len(previousbids)
 
-        cardsInHand = self.realHand
+        cardsInHand = self.real_hand
         leadingProbList = self.computeLeadingCardVictory(nplayers, cardsInHand, ncards, trumpsuit)
         followingProbList = self.computeFollowingCardVictory(nplayers, cardsInHand, ncards, trumpsuit)
         bidPDF = mini_monte_sim(leadingProbList, followingProbList, bidPosition, 20000)
