@@ -91,3 +91,42 @@ def test_summary_bootstrap_and_arguments():
         tournament(1, cards=(1, 1), rollouts=8, bootstrap=100)
     with pytest.raises(ValueError):
         tournament(1, cards=(7,), players=8, rollouts=8, bootstrap=100)
+
+
+@pytest.mark.parametrize("cards", [2, 4])
+def test_same_policy_is_identical_against_monte_carlo_opponents(cards):
+    row = run_scenario(
+        index=5, cards=cards, seed=20262211, rollouts=8,
+        opponents="monte_carlo", policy_a="bid_aware_2",
+        policy_b="bid_aware_2",
+    )
+    assert row.opponents == "monte_carlo"
+    assert row.score_delta == 0
+    assert row.margin_delta == 0
+    assert row.tricks_a == row.tricks_b
+
+
+def test_strong_opponents_matched_deal_reproducible_across_workers(tmp_path):
+    kwargs = dict(
+        rounds_per_size=2, cards=(3, 4), rollouts=8, players=3,
+        seed=20262219, bootstrap=200, progress_every=2,
+        opponents="monte_carlo",
+    )
+    serial, serial_summary = tournament(
+        **kwargs, workers=1, csv_path=tmp_path / "one.csv",
+    )
+    parallel, parallel_summary = tournament(
+        **kwargs, workers=2, csv_path=tmp_path / "two.csv",
+    )
+    assert [replace(row, seconds=0) for row in serial] == [
+        replace(row, seconds=0) for row in parallel
+    ]
+    assert serial_summary == parallel_summary
+    assert all(row.opponents == "monte_carlo" for row in serial)
+
+
+def test_invalid_opponent_type_is_rejected():
+    with pytest.raises(ValueError, match="opponent"):
+        run_scenario(0, 3, rollouts=8, opponents="unknown")
+    with pytest.raises(ValueError, match="opponent"):
+        tournament(1, cards=(3,), rollouts=8, opponents="unknown")
