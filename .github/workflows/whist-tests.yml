@@ -24,6 +24,23 @@ jobs:
       - name: Benchmark complete AI versus random 13-round matches
         run: |
           python -m benchmarks.full_game --rollouts 16 128 1024 --bots MonteCarloPlayer SnakeMonteCarloPlayer
+      - name: Check out prior implementation for same-run performance comparison
+        if: github.event_name == 'pull_request' && github.head_ref == 'perf/fast-sim-rng-exact-bids'
+        uses: actions/checkout@v4
+        with:
+          ref: d3c588c4a24be3f9946e308706b6cbbec6cf4c5c
+          path: .baseline
+      - name: Compare old and new full-game runtime and CPU profile
+        if: github.event_name == 'pull_request' && github.head_ref == 'perf/fast-sim-rng-exact-bids'
+        run: |
+          echo '=== BASELINE PROFILE ==='
+          (cd .baseline && python -m benchmarks.profile_full_game --rollouts 1024 --seed 20261031 --limit 5) | grep -E '^(PROFILE_MATCH|HOTSPOT group=(simulation fn=(evaluate_actions|_batch|finish_round|play|sample_hands|from_snapshot)|bidding fn=(makeAdvancedBid|mini_monte_sim|estimate_card_win_probabilities)))' || true
+          echo '=== OPTIMIZED PROFILE ==='
+          python -m benchmarks.profile_full_game --rollouts 1024 --seed 20261031 --limit 5 | grep -E '^(PROFILE_MATCH|HOTSPOT group=(simulation fn=(evaluate_actions|_batch|finish_round|play|sample_hands|from_snapshot)|bidding fn=(makeAdvancedBid|mini_monte_sim|estimate_card_win_probabilities)))' || true
+          echo '=== BASELINE WALL CLOCK ==='
+          (cd .baseline && python -m benchmarks.full_game --rollouts 1024 --bots MonteCarloPlayer SnakeMonteCarloPlayer)
+          echo '=== OPTIMIZED WALL CLOCK ==='
+          python -m benchmarks.full_game --rollouts 1024 --bots MonteCarloPlayer SnakeMonteCarloPlayer
       - name: Report per-card scoring convergence
         run: |
           python -m benchmarks.score_convergence --scenario early --rollouts 16 64 256 1024 4096 --reference 8192
