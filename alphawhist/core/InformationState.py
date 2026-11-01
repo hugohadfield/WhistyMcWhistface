@@ -319,7 +319,7 @@ class InformationState:
         )
 
     def to_json(self, **kwargs):
-        return json.dumps(self.to_dict(), sort_keys=True, **kwargs)
+        return json.dumps(self.to_dict(), **dict({"sort_keys": True}, **kwargs))
 
     @classmethod
     def from_json(cls, data):
