@@ -72,11 +72,11 @@ def test_full_thirteen_rounds_random_against_random():
     assert game.observe(0).phase == "between_rounds"
 
 
-def test_full_game_has_49_tricks_and_147_card_plays():
+def test_full_game_has_55_tricks_and_165_card_plays():
     game = run_match(MonteCarloPlayer, 0, rollouts=4, seed=246)
     history = game.observe(0).public_history
-    assert sum(e["type"] == "trick_end" for e in history) == 49
-    assert sum(e["type"] == "card" for e in history) == 147
+    assert sum(e["type"] == "trick_end" for e in history) == 55
+    assert sum(e["type"] == "card" for e in history) == 165
     assert sum(e["type"] == "bid" for e in history) == 39
     assert sum(e["type"] == "round_start" for e in history) == 13
     assert sum(e["type"] == "round_end" for e in history) == 13
@@ -87,4 +87,4 @@ def test_full_game_can_be_replayed_from_information_boundaries():
     info = game.observe(0)
     loaded = InformationState.from_json(info.to_json())
     assert loaded == info
-    assert [e["type"] for e in loaded.public_history].count("card") == 147
+    assert [e["type"] for e in loaded.public_history].count("card") == 165
