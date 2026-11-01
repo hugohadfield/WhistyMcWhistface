@@ -30,6 +30,7 @@ from alphawhist.learning.encoding import (
     FEATURE_DIM, FEATURE_SCHEMA_VERSION, encode_decision,
 )
 from alphawhist.learning.recording import TRACE_SCHEMA_VERSION, iter_trace_decisions
+from alphawhist.learning.timing import TimingCounters
 
 SPLITS = ("train", "val", "test")
 
@@ -52,9 +53,21 @@ def _split_for_game(seed, rec):
     return "train" if fraction < .8 else "val" if fraction < .9 else "test"
 
 
-def _label_one(rec, rollouts, workers, seed, policy, batch_size):
+def _label_one(rec, rollouts, workers, seed, policy, batch_size, timed=False):
+    last = time.perf_counter_ns() if timed else None
+    stages = {} if timed else None
+
+    def mark(label):
+        nonlocal last
+        if stages is not None:
+            now = time.perf_counter_ns()
+            stages[label] = now - last
+            last = now
+
     snapshot = InformationState.from_dict(rec["observation"])
+    mark("deserialize_observation")
     encoded = encode_decision(snapshot)
+    mark("encode_features")
     actions = tuple(rec["legal_cards"])
     if set(actions) != set(snapshot.own_hand).intersection(actions):
         raise ValueError("Training actions contradict own hand")
@@ -67,6 +80,7 @@ def _label_one(rec, rollouts, workers, seed, policy, batch_size):
         workers=workers, batch_size=batch_size, policy=policy,
         collect_trick_histograms=True,
     )
+    mark("monte_carlo")
     labels = np.zeros((52, 8), dtype=np.uint32)
     for action, counts, expected_score in zip(
             evaluation.actions, evaluation.additional_trick_counts,
@@ -84,7 +98,8 @@ def _label_one(rec, rollouts, workers, seed, policy, batch_size):
         ) / rollouts
         if abs(derived - expected_score) > 1e-8:
             raise AssertionError("Trick histogram and score teacher disagree")
-    return {
+    mark("validate_and_pack_labels")
+    result = {
         "features": encoded.features,
         "legal_mask": encoded.legal_mask,
         "trick_counts": labels,
@@ -101,6 +116,9 @@ def _label_one(rec, rollouts, workers, seed, policy, batch_size):
         "player": rec["player"],
         "teacher_seed": rollout_seed,
     }
+    if stages is not None:
+        result["_timing_ns"] = stages
+    return result
 
 
 def _label_state_batch(task):
@@ -109,9 +127,9 @@ def _label_state_batch(task):
     Rollout workers MUST be one: parallelism happens across independent
     decision states, never with nested per-state process pools.
     """
-    records, rollouts, seed, policy, batch_size = task
+    records, rollouts, seed, policy, batch_size, timed = task
     return [
-        (split, _label_one(rec, rollouts, 1, seed, policy, batch_size))
+        (split, _label_one(rec, rollouts, 1, seed, policy, batch_size, timed))
         for split, rec in records
     ]
 
@@ -124,7 +142,8 @@ def _record_batches(records, state_batch_size):
 
 
 def _iter_labeled_states(records, rollouts, workers, seed, policy,
-                         batch_size, state_batch_size, prefetch_batches):
+                         batch_size, state_batch_size, prefetch_batches,
+                         timed=False):
     """Stream deterministic labels, preserving input order across workers.
 
     At most workers * prefetch_batches * state_batch_size decisions are
@@ -134,7 +153,8 @@ def _iter_labeled_states(records, rollouts, workers, seed, policy,
     """
     if workers == 1:
         for split, rec in records:
-            yield split, _label_one(rec, rollouts, 1, seed, policy, batch_size)
+            yield split, _label_one(rec, rollouts, 1, seed, policy, batch_size,
+                                    timed)
         return
 
     batches = iter(_record_batches(records, state_batch_size))
@@ -149,7 +169,7 @@ def _iter_labeled_states(records, rollouts, workers, seed, policy,
                 return False
             pending.append(pool.submit(
                 _label_state_batch,
-                (batch, rollouts, seed, policy, batch_size),
+                (batch, rollouts, seed, policy, batch_size, timed),
             ))
             return True
 
@@ -199,7 +219,8 @@ def _write_shard(directory, split, index, rows):
 def label_traces(paths, output_dir, rollouts=1024, workers=1,
                  seed=20261102, policy="bid_aware_2", batch_size=256,
                  shard_size=256, max_states=None, include_forced=False,
-                 state_batch_size=4, prefetch_batches=2):
+                 state_batch_size=4, prefetch_batches=2,
+                 timings_json=None):
     if (rollouts < 1 or workers < 1 or batch_size < 1 or shard_size < 1
             or state_batch_size < 1 or prefetch_batches < 1):
         raise ValueError("Rollout, worker, shard and prefetch counts must be positive")
@@ -216,6 +237,7 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
         raise FileExistsError("Output directory must be empty (never overwrite labels)")
 
     started = time.perf_counter()
+    timings = TimingCounters() if timings_json is not None else None
     buffers = defaultdict(list)
     counts = dict.fromkeys(SPLITS, 0)
     indices = dict.fromkeys(SPLITS, 0)
@@ -226,7 +248,11 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
     def flush(split):
         if not buffers[split]:
             return
+        before_write = time.perf_counter_ns() if timings is not None else None
         path = _write_shard(out, split, indices[split], buffers[split])
+        if timings is not None:
+            timings.add("parent.shard_compression_and_write",
+                        time.perf_counter_ns() - before_write)
         indices[split] += 1
         shard_names.append(path.name)
         buffers[split].clear()
@@ -240,7 +266,11 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
     for split, row in _iter_labeled_states(
             ((_split_for_game(seed, rec), rec) for rec in source),
             rollouts, workers, seed, policy, batch_size,
-            state_batch_size, prefetch_batches):
+            state_batch_size, prefetch_batches,
+            timings is not None):
+        if timings is not None:
+            for stage, nanoseconds in row.pop("_timing_ns").items():
+                timings.add("worker." + stage, nanoseconds)
         buffers[split].append(row)
         counts[split] += 1
         processed += 1
@@ -271,6 +301,13 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
         encoding="utf-8",
     )
     elapsed = time.perf_counter() - started
+    if timings is not None:
+        timings.save(timings_json, {
+            "states": processed, "workers": workers, "rollouts": rollouts,
+            "teacher_policy": policy, "wall_seconds": elapsed,
+            "note": "Worker durations summed across processes are NOT "
+                    "end-to-end wall time. Timed mode has additional overhead.",
+        })
     print(f"DONE labeled_states={processed} splits={counts} "
           f"workers={workers} state_batch_size={state_batch_size} "
           f"seconds={elapsed:.3f} states_per_second={processed / elapsed:.3f} "
@@ -296,12 +333,15 @@ def main():
                         help="States per worker task, amortizing IPC")
     parser.add_argument("--prefetch-batches", type=int, default=2,
                         help="Outstanding tasks per worker (bounded streaming)")
+    parser.add_argument("--timings-json", type=Path,
+                        help="Opt-in per-stage timing summary, no per-row timing storage")
     args = parser.parse_args()
     traces = sorted(set(p for pattern in args.traces for p in glob.glob(pattern)))
     label_traces(traces, args.output_dir, args.rollouts, args.workers,
                  args.seed, args.policy, args.batch_size, args.shard_size,
                  args.max_states, args.include_forced,
-                 args.state_batch_size, args.prefetch_batches)
+                 args.state_batch_size, args.prefetch_batches,
+                 args.timings_json)
 
 
 if __name__ == "__main__":
