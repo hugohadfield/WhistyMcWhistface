@@ -1,6 +1,7 @@
 from alphawhist.core.WhistPlayer import *
 import sys
 import json
+import random
 
 class Game():
     def __init__(self, playerConfigFileName):
@@ -89,7 +90,7 @@ class Game():
         print(cardsinround)
         
         # Play the remaining tricks
-        startingTurn = copy.deepcopy( self.trickNumber )
+        startingTurn = self.trickNumber
         for trick in range(startingTurn,cardsinround):
             self.playFullTrick()
 
@@ -112,7 +113,7 @@ class Game():
             player = self.players[ self.turn ]
 
             # Player makes their move
-            cardPlayed = player.makeMove(self.pile, self.trumpsuit, self)
+            cardPlayed = player.makeMove(self.pile.copy(), self.trumpsuit, self)
 
             self.pile.append( cardPlayed )
             print("Player: ", player.playerNumber, " played: ", end=' ')
@@ -151,7 +152,7 @@ class Game():
             # Each player makes their move
             
             # Player makes their move
-            cardPlayed = player.makeMove(self.pile, self.trumpsuit, self)
+            cardPlayed = player.makeMove(self.pile.copy(), self.trumpsuit, self)
 
 
             self.pile.append( cardPlayed )
@@ -218,7 +219,7 @@ class Game():
             bidno = (bidno + 1) % self.numberofplayers
             player = self.players[bidno]
             ncards = self.cardnumbers[self.roundnumber]
-            thisPlayerBid = player.makeBid(self.numberofplayers, ncards, self.trumpsuit, currentBids)
+            thisPlayerBid = player.makeBid(self.numberofplayers, ncards, self.trumpsuit, currentBids.copy())
             currentBids.append(thisPlayerBid)
             self.bids[bidno] = thisPlayerBid
 
@@ -244,33 +245,31 @@ class Game():
         self.roundnumber = 0
         self.trickNumber = 0
 
-    def manualDeal(self,cardsinround):
-        # Manually deal the first player
-        player1hand = generate_manual_deal(cardsinround)
-        playerOne = self.players[0]
-        playerOne.possible_hand = [i for i in player1hand]
-        playerOne.real_hand = [i for i in player1hand]
-        # Now track the possible hands of all other players
-        for playerNumber in range(1,self.numberofplayers):
-            thisplayer = self.players[playerNumber]
-            thisplayer.possible_hand = all_cards_in_deck
-            thisplayer.removePossible(playerOne.real_hand)
-            thisplayer.real_hand = [i for i in thisplayer.possible_hand]
+    def manualDeal(self, cardsinround):
+        """Use the entered first hand and deal non-overlapping opponent hands."""
+        first_hand = list(generate_manual_deal(cardsinround))
+        if len(first_hand) != cardsinround or len(set(first_hand)) != cardsinround:
+            raise ValueError('Manual deal must contain the requested number of unique cards')
+        if not set(first_hand).issubset(all_cards_in_deck):
+            raise ValueError('Manual deal contains an invalid card')
+        unseen = [card for card in all_cards_in_deck if card not in first_hand]
+        if (self.numberofplayers - 1) * cardsinround > len(unseen):
+            raise ValueError('Not enough cards for all players')
+        sampled = random.sample(unseen, (self.numberofplayers - 1) * cardsinround)
+        self.players[0].set_hands(first_hand)
+        for i, player in enumerate(self.players[1:]):
+            hand = sampled[i * cardsinround:(i + 1) * cardsinround]
+            player.set_hands(hand, unseen)
 
-    def randomDeal(self,cardsinround):
-        # Generate the real hands
-        playerHands = generate_random_deal(cardsinround,self.numberofplayers)
-        playerOne = self.players[0]
-        # We know our real hand and so don't have to imagine a possible hand
-        playerOne.real_hand = [i for i in playerHands[0]]
-        playerOne.possible_hand = [i for i in playerHands[0]]
-        # The rest of the players are dealt a real hand and the possible hand 
-        # they could hold according to the monte carlo player is tracked
-        for playerNumber in range(1,self.numberofplayers):
-            thisplayer = self.players[playerNumber]
-            thisplayer.real_hand = [i for i in playerHands[playerNumber]]
-            thisplayer.possible_hand = all_cards_in_deck
-            thisplayer.removePossible(playerHands[0])
+    def randomDeal(self, cardsinround):
+        """Deal independent real hands; only the observed hand is fully known."""
+        player_hands = generate_random_deal(cardsinround, self.numberofplayers)
+        if not isinstance(player_hands, list):
+            raise ValueError('Not enough cards for all players')
+        known = set(player_hands[0])
+        unseen = [card for card in all_cards_in_deck if card not in known]
+        for i, player in enumerate(self.players):
+            player.set_hands(player_hands[i], player_hands[i] if i == 0 else unseen)
 
     def processScore(self):
         # Compare the number of tricks that each player has won 
@@ -282,10 +281,52 @@ class Game():
             self.scores[playerIterator] = self.scores[playerIterator] + thisPlayerScore
 
     def convertToDeterministicGame(self):
-        for thisPlayer in self.players:
-            hand = thisPlayer.convertToValidHand()
-            thisPlayer.real_hand = hand
-            thisPlayer.possible_hand = hand
-            playerToIgnore = thisPlayer.playerNumber
-            for card in thisPlayer.possible_hand:
-                self.cleanCardFromPlayers(card, playerToIgnore)
+        """Sample mutually consistent hands for a Monte Carlo rollout.
+
+        Player zero's hand is observed. Opponent hands are sampled from their
+        possible-card sets with randomized bipartite matching, so the same
+        card cannot occur in two hands. Check feasibility before mutation.
+        """
+        if not self.players:
+            return
+        known_hand = self.players[0].real_hand
+        known = set(known_hand)
+        if len(known) != len(known_hand) or not known.issubset(self.players[0].possible_hand):
+            raise ValueError('Observed hand is inconsistent')
+
+        slot_players = []
+        options = []
+        for player_index, player in enumerate(self.players[1:], start=1):
+            candidates = [card for card in player.possible_hand if card not in known]
+            if len(candidates) < player.n_cards_in_hand:
+                raise ValueError('No consistent assignment of opponent hands')
+            for _ in range(player.n_cards_in_hand):
+                choices = candidates.copy()
+                random.shuffle(choices)
+                slot_players.append(player_index)
+                options.append(choices)
+
+        matching = {}  # card -> player-slot index
+
+        def assign(slot, visited):
+            for card in options[slot]:
+                if card in visited:
+                    continue
+                visited.add(card)
+                if card not in matching or assign(matching[card], visited):
+                    matching[card] = slot
+                    return True
+            return False
+
+        slots = list(range(len(options)))
+        random.shuffle(slots)
+        if any(not assign(slot, set()) for slot in slots):
+            raise ValueError('No consistent assignment of opponent hands')
+
+        hands = [[] for _ in self.players]
+        hands[0] = known_hand
+        for card, slot in matching.items():
+            hands[slot_players[slot]].append(card)
+        for player, hand in zip(self.players, hands):
+            player.set_hands(hand)
+

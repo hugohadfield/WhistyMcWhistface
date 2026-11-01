@@ -192,5 +192,5 @@ class SnakeMonteCarloPlayer(Player):
         modelPlayer = RandomPlayer(self.playerNumber, self.possible_hand)
         modelPlayer.resetZeroCounter(self.zero_bid_count)
         modelPlayer.monteCarloNumber = self.monteCarloNumber
-        modelPlayer.real_hand = [i for i in self.real_hand]
+        modelPlayer.set_hands(self.real_hand, self.possible_hand)
         return copy.deepcopy(modelPlayer)

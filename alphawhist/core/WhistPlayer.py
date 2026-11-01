@@ -3,34 +3,52 @@ from alphawhist.core import TrumpPicker
 
 
 class Player():
-    def __init__(self, playerNumber, specificCards=[], additionalParameters=[]):
+    def __init__(self, playerNumber, specificCards=None, additionalParameters=None):
         self.playerNumber = playerNumber
         self.resetZeroCounter()
-        self.real_hand = [i for i in specificCards]
-        if not specificCards:
-            self.possible_hand = [i for i in all_cards_in_deck]
-        else:
-            self.possible_hand = [i for i in specificCards]
+        # Take ownership of both lists instead of keeping caller-owned hands.
+        cards = list(specificCards) if specificCards is not None else []
+        self.set_hands(cards, cards if cards else all_cards_in_deck)
         if additionalParameters:
             self.handleAdditionalParamaters(additionalParameters)
 
     @property
     def possible_hand(self):
-        return self._possible_hand
+        # Return a snapshot; callers should use the setter to change a hand.
+        return self._possible_hand.copy()
 
     @possible_hand.setter
     def possible_hand(self, newHand):
-        if any(card not in newHand for card in self.real_hand):
+        possible = list(newHand)
+        if any(card not in possible for card in self.real_hand):
             raise ValueError('New possible hand does not contain real hand')
-        self._possible_hand = list(newHand)
+        if len(set(possible)) != len(possible):
+            raise ValueError('Possible hand contains duplicates')
+        self._possible_hand = possible
 
     @property
     def real_hand(self):
-        return self._real_hand
+        return self._real_hand.copy()
 
     @real_hand.setter
     def real_hand(self, newHand):
-        self._real_hand = [i for i in newHand]
+        real = list(newHand)
+        if hasattr(self, '_possible_hand') and not set(real).issubset(self._possible_hand):
+            raise ValueError('Possible hand must contain real hand')
+        if len(set(real)) != len(real):
+            raise ValueError('Real hand contains duplicates')
+        self._real_hand = real
+
+    def set_hands(self, real_hand, possible_hand=None):
+        """Atomically replace both hands without retaining caller-owned lists."""
+        real = list(real_hand)
+        possible = list(real if possible_hand is None else possible_hand)
+        if not set(real).issubset(possible):
+            raise ValueError('Possible hand must contain real hand')
+        if len(set(real)) != len(real) or len(set(possible)) != len(possible):
+            raise ValueError('Hands must not contain duplicate cards')
+        self._real_hand = real
+        self._possible_hand = possible
 
     @property
     def n_cards_in_hand(self):
@@ -160,11 +178,7 @@ class Player():
             self._zero_bid_count = 0
 
     def convertToValidHand(self):
-        print(self.possible_hand, self.n_cards_in_hand)
-        try:
-            newHand = random.sample(self.possible_hand, self.n_cards_in_hand)
-        except:
-            newHand = []
-            print("error")
-        return newHand
+        if self.n_cards_in_hand > len(self.possible_hand):
+            raise ValueError('Not enough possible cards to sample a hand')
+        return random.sample(self.possible_hand, self.n_cards_in_hand)
 
