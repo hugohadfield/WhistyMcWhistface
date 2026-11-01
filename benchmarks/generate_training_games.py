@@ -77,6 +77,7 @@ def play_training_game(index, seed=20261102, players=3,
     with TrainingRecorder(
         trace, game_id=f"{seed}-{index}", metadata={
             "run_seed": seed, "game_index": index, "game_seed": game_seed,
+            "deal_group": f"generated-{seed}-{index}",
             "players": players, "agents": names,
             "rollout_budget": rollouts, "deal_algorithm": "seed_per_round_v1",
         }, privileged_path=privileged,
