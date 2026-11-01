@@ -266,3 +266,13 @@ it assesses approximate ranking and speed, **not** a calibrated strategic
 opponent model or end-to-end win rate. This is a starting heuristic for future
 improvements to public-card inference, conditional card probabilities and
 game-theoretic play.
+
+The [endgame policy experiment report](docs/bid-aware-endgame-policy-2026-11-01.md)
+records full **2–7-player** speed measurements and decision-quality
+diagnostics. With precomputed probability tables, isolated two-trick
+continuations were **1.5–1.6×** the runtime of uniform random continuations.
+On a representative **three-player seven-card** full action evaluation,
+the measured slowdown was **25–28%**. This is still above the initial
+10–20% full-evaluation overhead target, so the policy remains strictly
+**experimental and opt-in**; improved real-game playing strength has not
+yet been demonstrated.
