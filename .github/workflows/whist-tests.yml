@@ -33,6 +33,14 @@ jobs:
       - name: Compare old and new full-game runtime and CPU profile
         if: github.event_name == 'pull_request' && github.head_ref == 'perf/fast-sim-rng-exact-bids'
         run: |
+          echo '=== ISOLATED SEEDED EVALUATOR (same state; identical output expected) ==='
+          cp benchmarks/measure_evaluator.py .baseline/benchmarks/measure_evaluator.py
+          for scenario in early mid; do
+            echo "=== BASELINE EVALUATOR scenario=$scenario ==="
+            (cd .baseline && python -m benchmarks.measure_evaluator --scenario "$scenario" --rollouts 4096 --repeats 3)
+            echo "=== OPTIMIZED EVALUATOR scenario=$scenario ==="
+            python -m benchmarks.measure_evaluator --scenario "$scenario" --rollouts 4096 --repeats 3
+          done
           echo '=== BASELINE PROFILE ==='
           (cd .baseline && python -m benchmarks.profile_full_game --rollouts 1024 --seed 20261031 --limit 5) | grep -E '^(PROFILE_MATCH|HOTSPOT group=(simulation fn=(evaluate_actions|_batch|finish_round|play|sample_hands|from_snapshot)|bidding fn=(makeAdvancedBid|mini_monte_sim|estimate_card_win_probabilities)))' || true
           echo '=== OPTIMIZED PROFILE ==='
