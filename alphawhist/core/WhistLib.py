@@ -194,8 +194,8 @@ def card_beating_list(card, trumpsuit):
     # This is a list of all the possible cards that beat a specific card
     # All cards of the same suit that are larger than it and all trumps 
     # if it is not a trump
-    numberlist = list(range(int(card[0]) + 1, 15))
-    cardlist = [str(x) + card[1] for x in numberlist]
+    numberlist = list(range(int(card[:-1]) + 1, 15))
+    cardlist = [str(x) + card[-1] for x in numberlist]
     if card[-1] != trumpsuit:
         alltrumps = [str(x) + trumpsuit for x in range(2, 15)]
         cardlist = cardlist + alltrumps
@@ -203,15 +203,18 @@ def card_beating_list(card, trumpsuit):
 
 
 def card_following_list(card, leadsuit, trumpsuit):
+    # A trump can only be beaten by a higher trump, not by the original lead suit.
+    if card[-1] == trumpsuit:
+        return card_beating_list(card, trumpsuit)
     # This is a list of all the possible cards that beat a specific card assuming that it is not leading
     # All cards of the lead suit, all cards that are larger than it of the lead suit and all trumps
     # if it is not a trump
     cardlist = []
     if card[-1] == leadsuit:
-        numberlist = list(range(int(card[0]) + 1, 15))
-        cardlist = [str(x) + card[1] for x in numberlist]
+        numberlist = list(range(int(card[:-1]) + 1, 15))
+        cardlist = [str(x) + card[-1] for x in numberlist]
     else:
-        if leadsuit != trumpsuit:
+        if card[-1] != trumpsuit and leadsuit != trumpsuit:
             alllead = [str(x) + leadsuit for x in range(2, 15)]
             cardlist = cardlist + alllead
     if card[-1] != trumpsuit:
@@ -223,14 +226,14 @@ def card_following_list(card, leadsuit, trumpsuit):
 def player_beating_list(card, trumpsuit, player):
     # This is a list of the possible cards that a specific player can play that would beat your card
     cardlist = card_beating_list(card, trumpsuit)
-    return intersect(player.self.possible_hand, cardlist)
+    return intersect(player.possible_hand, cardlist)
 
 
 def player_beating_probability(card, trumpsuit, player):
     # This is the probability that a specific player can beat your card
     numer = len(player_beating_list(card, trumpsuit, player))
     denom = len(player.possible_hand)
-    return float(numer) / denom
+    return float(numer) / denom if denom else 0.0
 
 
 def list_all_possible_player_cards(allplayers):
@@ -255,14 +258,14 @@ def all_players_beating_probability(card, trumpsuit, oppositionplayers):
     alloppositioncards = list_all_possible_player_cards(oppositionplayers)
     numer = len(oppositionbeatingcards)
     denom = len(alloppositioncards)
-    return float(numer) / denom
+    return float(numer) / denom if denom else 0.0
 
 
 def probability_player_leads_suit(player, suit):
     # This is the probability that a specific player leads with a specific suit for the case they have one card
     numer = len(cards_of_suit(player.possible_hand, suit))
     denom = len(player.possible_hand)
-    return float(numer) / denom
+    return float(numer) / denom if denom else 0.0
 
 
 def max_and_index(listin):

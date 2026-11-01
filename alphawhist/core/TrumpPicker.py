@@ -45,6 +45,8 @@ def picktrump(hand):
         if suitsize>maxi:
             maxi=suitsize
             maxisuit=suit
+        if suitsize == 0:
+            continue
         av = numpy.sum(suit)/suitsize
         if av>maxav:
             maxav=av

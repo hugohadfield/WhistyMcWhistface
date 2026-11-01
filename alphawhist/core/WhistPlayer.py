@@ -20,13 +20,9 @@ class Player():
 
     @possible_hand.setter
     def possible_hand(self, newHand):
-        self._possible_hand = [i for i in newHand]
-        for i in self.real_hand:
-            if i not in newHand:
-                print('\n\n\n\n\n\n\n')
-                print(i)
-                print(newHand)
-                raise ValueError('New possible hand does not contain real hand')
+        if any(card not in newHand for card in self.real_hand):
+            raise ValueError('New possible hand does not contain real hand')
+        self._possible_hand = list(newHand)
 
     @property
     def real_hand(self):
@@ -84,7 +80,7 @@ class Player():
 
     def playCard(self, card):
         cleanCard = card.rstrip()
-        if cleanCard in self.possible_hand:
+        if cleanCard in self.real_hand and cleanCard in self.possible_hand:
             print(["Removing: ", cleanCard])
             self.removeReal(cleanCard)
             self.removePossible(cleanCard)
@@ -133,6 +129,10 @@ class Player():
         return thistrump
 
     def checkValidBid(self, nplayers, ncards, bid, previousbids):
+        if type(bid) is not int or not 0 <= bid <= ncards:
+            return False
+        if len(previousbids) > nplayers - 1:
+            return False
         if not self.can_bid_zero:
             if bid == 0:
                 return False

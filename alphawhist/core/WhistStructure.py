@@ -59,8 +59,12 @@ class Game():
         # Reset the game variables
         self.resetRound()
         
-        # Deal all the cards
-        self.manualDeal(cardsinround)
+        # AI-only games need not ask for manual card input.
+        from ManualPlayer import ManualPlayer
+        if any(isinstance(player, ManualPlayer) for player in self.players):
+            self.manualDeal(cardsinround)
+        else:
+            self.randomDeal(cardsinround)
 
         # The dealer picks trumps
         self.trumpsuit = self.players[self.dealer].pick_trumps(self.numberofplayers)
@@ -258,15 +262,15 @@ class Game():
         playerHands = generate_random_deal(cardsinround,self.numberofplayers)
         playerOne = self.players[0]
         # We know our real hand and so don't have to imagine a possible hand
-        playerOne.possible_hand = [i for i in playerHands[0]]
         playerOne.real_hand = [i for i in playerHands[0]]
+        playerOne.possible_hand = [i for i in playerHands[0]]
         # The rest of the players are dealt a real hand and the possible hand 
         # they could hold according to the monte carlo player is tracked
         for playerNumber in range(1,self.numberofplayers):
             thisplayer = self.players[playerNumber]
+            thisplayer.real_hand = [i for i in playerHands[playerNumber]]
             thisplayer.possible_hand = all_cards_in_deck
             thisplayer.removePossible(playerHands[0])
-            thisplayer.real_hand = [i for i in playerHands[playerNumber]]
 
     def processScore(self):
         # Compare the number of tricks that each player has won 
