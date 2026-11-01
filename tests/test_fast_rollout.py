@@ -200,9 +200,7 @@ def test_alternative_high_card_policy_and_custom_policy():
 ])
 def test_bad_evaluation_options_raise(kwargs):
     with pytest.raises(ValueError):
-        evaluate_actions(snapshot(), n_rollouts=2, **{
-            k: v for k, v in kwargs.items()
-        })
+        evaluate_actions(snapshot(), **{"n_rollouts": 2, **kwargs})
 
 
 def test_illegal_candidate_rejected():
