@@ -8,6 +8,9 @@ class SnakeMonteCarloPlayer(Player):
 
     def handleAdditionalParamaters(self, parameters):
         self.monteCarloNumber = int(parameters["monteCarloNumber"])
+        self.monteCarloWorkers = int(parameters.get("monteCarloWorkers", 1))
+        if self.monteCarloNumber < 1 or self.monteCarloWorkers < 1:
+            raise ValueError("Monte Carlo rollouts and workers must be positive")
         return True
 
     def pick_trumps(self, nplayers):
@@ -57,6 +60,7 @@ class SnakeMonteCarloPlayer(Player):
                 observation, moves,
                 n_rollouts=self.monteCarloNumber,
                 seed=random.getrandbits(64),
+                workers=self.monteCarloWorkers,
                 objective="margin",
             )
             card = result.best_action()
@@ -76,6 +80,7 @@ class SnakeMonteCarloPlayer(Player):
             [specificCard],
             n_rollouts=monteCarloNumber,
             seed=random.getrandbits(64),
+            workers=self.monteCarloWorkers,
             objective="margin",
         )
         return list(result.mean_round_scores[0]), 0
