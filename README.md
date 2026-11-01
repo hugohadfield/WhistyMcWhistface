@@ -53,6 +53,15 @@ with **one tie**, but the 25 paired deal-level results are inconclusive.
 Reproduce with
 `python -m benchmarks.trump_tournament --games 50 --rollouts 1024`.
 
+To run independent games concurrently (separate CPU processes), use e.g.
+`python -m benchmarks.trump_tournament --games 500 --rollouts 1024 --workers 4 --csv tournament.csv`.
+Each bot still uses one CPU worker for its per-decision Monte Carlo rollouts;
+`--workers` controls how many **whole games** run concurrently. Results and
+CSV rows remain ordered by game, with reproducible scores for fixed seeds.
+In the summary, `wall_seconds` is the actual end-to-end tournament time;
+`total_seconds` adds up match times and is **not** elapsed wall time with
+parallel execution.
+
 ## Serializable information state and rollout experiments
 
 The authoritative hard-constraint beliefs of **player 0** are tracked
