@@ -8,11 +8,16 @@ Monte Carlo agents swapping seats. Pairs rotate which two seats compete.
 Run:
     python -m benchmarks.trump_tournament --games 50 --rollouts 1024
     python -m benchmarks.trump_tournament --games 50 --rollouts 1024 --csv tournament.csv
+    python -m benchmarks.trump_tournament --games 500 --rollouts 1024 --workers 4 --csv tournament.csv
 
 The two matches in a pair have identical starting deals in every round,
 but decisions and random streams can diverge as the policies interact.
+Use --workers N to evaluate independent matches concurrently in separate
+processes; each agent still uses one worker for its 1024 rollouts per move.
 """
 import argparse
+from concurrent.futures import ProcessPoolExecutor
+from itertools import repeat
 import contextlib
 import csv
 from dataclasses import asdict, dataclass
@@ -111,14 +116,16 @@ def play_match(game_index, seed=20261031, rollouts=1024):
     )
 
 
-def tournament(games=50, seed=20261031, rollouts=1024, csv_path=None):
+def tournament(games=50, seed=20261031, rollouts=1024, csv_path=None,
+               workers=1):
     if games < 1 or games % 2:
         raise ValueError("Number of games must be positive and even (seat-swap pairs)")
-    if rollouts < 1:
-        raise ValueError("Rollouts must be positive")
+    if rollouts < 1 or workers < 1:
+        raise ValueError("Rollouts and workers must be positive")
     results = []
-    for index in range(games):
-        match = play_match(index, seed=seed, rollouts=rollouts)
+    started = time.perf_counter()
+
+    def record(match):
         results.append(match)
         print(
             f"MATCH {match.game:02d} pair={((match.game - 1) // 2) + 1:02d} "
@@ -129,6 +136,18 @@ def tournament(games=50, seed=20261031, rollouts=1024, csv_path=None):
             f"outright={match.winner} time={match.seconds:.3f}s",
             flush=True
         )
+
+    if workers == 1:
+        for index in range(games):
+            record(play_match(index, seed=seed, rollouts=rollouts))
+    else:
+        # Ordered results despite concurrent execution; games seed their
+        # process-local global RNG independently, so outcomes remain exact.
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            for match in pool.map(play_match, range(games),
+                                  repeat(seed), repeat(rollouts), chunksize=1):
+                record(match)
+    elapsed = time.perf_counter() - started
     new_h2h = sum(m.result == "NEW" for m in results)
     old_h2h = sum(m.result == "OLD" for m in results)
     ties = sum(m.result == "TIE" for m in results)
@@ -139,7 +158,7 @@ def tournament(games=50, seed=20261031, rollouts=1024, csv_path=None):
     top_ties = sum(m.winner == "TIE_FOR_FIRST" for m in results)
     print(
         f"SUMMARY games={games} paired_deals={games // 2} "
-        f"rollouts={rollouts} h2h_new_wins={new_h2h} "
+        f"rollouts={rollouts} workers={workers} h2h_new_wins={new_h2h} "
         f"h2h_old_wins={old_h2h} h2h_ties={ties} "
         f"outright_new_wins={new_out} outright_old_wins={old_out} "
         f"outright_random_wins={random_out} outright_ties={top_ties} "
@@ -148,7 +167,8 @@ def tournament(games=50, seed=20261031, rollouts=1024, csv_path=None):
         f"avg_random_score={statistics.mean(m.random_score for m in results):.3f} "
         f"avg_margin={statistics.mean(m.margin for m in results):+.3f} "
         f"median_margin={statistics.median(m.margin for m in results):+.3f} "
-        f"total_seconds={sum(m.seconds for m in results):.3f}",
+        f"total_seconds={sum(m.seconds for m in results):.3f} "
+        f"wall_seconds={elapsed:.3f}",
         flush=True
     )
     if csv_path is not None:
@@ -167,9 +187,12 @@ def main():
     parser.add_argument("--games", type=int, default=50)
     parser.add_argument("--seed", type=int, default=20261031)
     parser.add_argument("--rollouts", type=int, default=1024)
+    parser.add_argument("--workers", type=int, default=1,
+                        help="Concurrent full-game processes, distinct from rollout workers")
     parser.add_argument("--csv", type=Path)
     args = parser.parse_args()
-    tournament(args.games, args.seed, args.rollouts, args.csv)
+    tournament(args.games, args.seed, args.rollouts, args.csv,
+               workers=args.workers)
 
 
 if __name__ == "__main__":
