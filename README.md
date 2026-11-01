@@ -9,6 +9,108 @@ Some limited GUI functionality is provided via the easygui library
 
 TrumpPicker was written by Ed Dakin
 
+## Rules of contract whist
+
+This repository plays a **free-for-all, trick-taking version of contract whist**:
+each player competes individually to earn points by both winning tricks and
+correctly predicting how many they will take. It is **not** the traditional
+four-player partnership game, and there is no auction for the trump suit.
+
+### 1. Players, deck, and rounds
+
+- **Players:** 2–7, playing individually (no partners).
+- **Deck:** a standard 52-card deck, without jokers. Each suit runs from 2
+  (lowest) through 10, Jack, Queen, King, Ace (highest).
+- **Match:** 13 rounds, with the following number of cards dealt **to each
+  player** in successive rounds:
+
+  `7 → 6 → 5 → 4 → 3 → 2 → 1 → 2 → 3 → 4 → 5 → 6 → 7`
+
+- A new hand is dealt every round. Cards not dealt to any player are simply
+  out of play for that round.
+- The dealer rotates to the next player after each round. **Before bidding**,
+  that round's dealer chooses one of hearts, clubs, spades, or diamonds as the
+  **trump suit**. There is always a trump suit; no-trump contracts are not
+  part of this implementation.
+
+### 2. Bidding: predict your tricks
+
+Once the cards have been dealt and trumps have been chosen, each player
+announces the **exact number of tricks they expect to win** in that round:
+
+- A bid is an integer from **0** to the number of cards in the player's hand.
+  Players do not bid against one another for a shared contract: **everyone
+  makes their own prediction**.
+- Bidding begins with the player immediately after the dealer in seat order,
+  proceeds around the table, and ends with the dealer.
+- **Dealer's restriction ("the hook"):** the dealer may **not** make a bid
+  that would cause the *sum of all players' bids* to equal the number of
+  available tricks. Consequently, at least one player must miss their bid.
+- **Consecutive zero bids:** a player may bid zero in two successive rounds,
+  but **may not bid zero for a third consecutive round**. Any nonzero bid
+  resets that player's zero-bid streak.
+
+**Example:** In a four-card round with three players, the first two players
+bid **2** and **1**. The dealer cannot bid **1**, because `2 + 1 + 1 = 4`,
+which equals the four tricks available. The dealer could bid **0, 2, 3, or
+4**, subject to the consecutive-zero rule.
+
+### 3. Playing tricks
+
+After everyone has bid, the player immediately after the dealer leads the
+first trick.
+
+1. The leader plays any card from their hand; its suit becomes the **led
+   suit** for that trick.
+2. In seat order, every other player plays one card. **You must follow the
+   led suit if you have a card of that suit.**
+3. If you have no card of the led suit, you may play **any** card, including
+   a trump (to try to win) or a card of another suit (to discard). You are
+   **not** required to play a trump.
+4. **Winning the trick:** the highest trump wins if any trump was played.
+   Otherwise, the highest card of the led suit wins. Cards of other suits
+   cannot win unless they are trumps.
+5. The trick's winner leads the next trick. Continue until all cards have
+   been played: a round with `N` cards per player has exactly **N tricks**.
+
+There is no requirement to overtake a card already played: the only
+obligation when following is to **play the led suit if possible**.
+
+### 4. Scoring and winning
+
+Each player scores independently at the end of every round:
+
+`round points = tricks won + (10 if tricks won == bid else 0)`
+
+In other words, you earn **one point for each trick you take**, plus a
+**10-point bonus if you make your bid exactly**. Missing your bid earns no
+bonus, but also carries **no additional penalty**: you still keep the points
+for tricks actually taken. Bidding zero and winning zero tricks earns 10 points.
+
+For example, suppose a four-card round ends like this:
+
+| Player | Bid | Tricks won | Round points |
+| --- | ---: | ---: | ---: |
+| A | 2 | 2 | 12 |
+| B | 1 | 1 | 11 |
+| C (dealer) | 2 | 1 | 1 |
+
+The players took four tricks in total; the bids total five, so the dealer's
+bid was legal. A and B earn their exact-bid bonuses; C scores one point for
+the trick taken but no bonus.
+
+**Round points accumulate across all 13 rounds. The highest cumulative score
+wins the match** (ties are possible).
+
+### 5. What a bot is allowed to know
+
+Like a human player, a bot sees **its own cards**, the chosen trump suit,
+every player's public bid, and the cards already played (including who won
+each trick). It does **not** see opponents' unplayed hands. For example, if
+an opponent fails to follow suit, a bot can infer that they have no remaining
+cards of that suit. The project's information-state and Monte Carlo systems
+use these public constraints to reason about possible hidden hands.
+
 # Getting started
 
 The simple entrypoint is whistmain.py, which currently loads three random players. Configure MonteCarloPlayer or SnakeMonteCarloPlayer to run AI-vs-random games.
