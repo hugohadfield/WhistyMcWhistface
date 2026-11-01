@@ -276,3 +276,19 @@ the measured slowdown was **25–28%**. This is still above the initial
 10–20% full-evaluation overhead target, so the policy remains strictly
 **experimental and opt-in**; improved real-game playing strength has not
 yet been demonstrated.
+
+### Larger endgame decision-quality evaluation (1 November 2026)
+
+The [6,000-real-state endgame evaluation](docs/endgame-quality-6000-real-states-2026-11-01.md)
+replaced the earlier 50-state synthetic quality diagnostic with **1,000
+independent legally played endgames per player count (2–7 players)** and
+**2,048 independent sampled hidden worlds per decision**. The resulting
+**12.3 million hidden-world draws** and **24.6 million action continuations**
+showed **78.1–90.8% best-action agreement** with the random-continuation
+Monte Carlo reference, versus 46–60% in the earlier synthetic test. The
+greedy heuristic's equal-weight mean expected-score regret was **0.099
+points**, compared with **0.308** for the current stochastic (temperature
+1.5) policy, **0.429** for a simpler bid-aware high/low policy and **0.576**
+for choosing randomly. These are **reference-model regrets**, **not**
+whole-game match strengths. The default remains `random`; a paired
+full-game tournament and temperature ablation are still needed.

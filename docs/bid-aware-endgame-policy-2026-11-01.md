@@ -115,3 +115,21 @@ The current lookup tables assume approximate independent rank/void probabilities
 The full rollout still models more than two cards with random choices. We have neither demonstrated calibration of the action probabilities nor improvement in full-match playing strength. The synthetic quality diagnostic is highly dependent on our specified random-continuation reference and a small sample of 50 states/player count.
 
 Next useful steps: obtain actual endgame snapshots from tournaments; compare softmax choice probabilities against real actions of different opponent policies; improve bid-conditioned probability estimates; measure score and win rate against the untouched Monte Carlo baseline on a paired-deal multi-player tournament. Do not treat the first positive diagnostic gains as a statistically conclusive strength result.
+
+## Follow-up: 6,000 legal game-endgame decision states
+
+The small 50-state synthetic quality diagnostic above was substantially
+less informative than a later
+[6,000-state / 24.6-million-continuation benchmark](endgame-quality-6000-real-states-2026-11-01.md)
+using **1,000 independently played rounds per player count**, 2–7 players,
+with full public information-state observations and **2,048 sampled hidden
+worlds per state**. On these states, the greedy two-card heuristic matched
+the highest Monte Carlo-estimated card in **78.1–90.8%** of cases. Its
+equal-weight mean expected-score regret was **0.099**, compared with
+**0.308** for the existing softmax policy, **0.429** for a simple high/low
+bid-aware rule and **0.576** for uniformly random choice. The evaluation
+still assumes random future play and **does not prove stronger game play**;
+the softmax temperature merits tuning. These follow-up results supersede the
+earlier 46–60% synthetic decision-quality estimate for realistic endgame
+states. The experiment code is preserved under
+`benchmarks/endgame_quality.py`.
