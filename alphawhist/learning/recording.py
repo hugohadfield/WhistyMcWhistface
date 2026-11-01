@@ -120,13 +120,19 @@ class TrainingRecorder:
             raise ValueError("Legal cards must be known to the acting player")
         self._pending.append({
             "type": "decision", "trace_schema": TRACE_SCHEMA_VERSION,
-            "game_id": self.game_id, "round": game.roundnumber,
+            "game_id": self.game_id,
+            "deal_group": str(self.metadata.get("deal_group", self.game_id)),
+            "round": game.roundnumber,
             "decision_in_round": len(self._pending),
             "player": snapshot.observer_id,
             "observation": _trim_snapshot(snapshot),
             "legal_cards": list(legal),
             "chosen_card": chosen,
             "behavior_policy": policy_name or type(game.players[snapshot.observer_id]).__name__,
+            "behavior_rollouts": getattr(game.players[snapshot.observer_id],
+                                         "monteCarloNumber", None),
+            "behavior_continuation": getattr(game.players[snapshot.observer_id],
+                                             "monteCarloPolicy", None),
         })
 
     def on_round_end(self, game):
