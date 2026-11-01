@@ -178,29 +178,31 @@ class Evaluation:
     mean_round_scores: tuple[tuple[float, ...], ...]
     values: tuple[float, ...]
     rollouts: int
+    additional_trick_counts: tuple[tuple[int, ...], ...] | None = None
 
     def best_action(self):
         return self.actions[max(range(len(self.actions)), key=self.values.__getitem__)]
 
 
-def _batch(args):
+def _batch_impl(args, collect_histograms=False):
+    """Shared exact simulation path for score sums and optional trick counts."""
     snapshot, actions, start, stop, seed, policy = args
     action_ids = [CARD_ID[card] for card in actions]
     n = snapshot.num_players
     accum = [[0] * n for _ in actions]
-    # Reuse RNG objects, but reset them to the identical per-rollout seeds.
-    # This preserves exact seeded outcomes across workers and batch sizes.
+    counts = ([[0] * 8 for _ in actions] if collect_histograms else None)
+    observer = snapshot.observer_id
+    previously_won = snapshot.tricks_won[observer]
+    max_additional = snapshot.cards_per_player - snapshot.trick_number
     deal_rng = random.Random()
     continuation_rng = random.Random()
     for index in range(start, stop):
         deal_rng.seed(_mix(seed, 2 * index))
-        # One sampled possible world, reused by EVERY candidate action.
+        # The same sampled hidden world evaluates EVERY candidate action.
         world = snapshot.sample_hands(deal_rng)
         base = SimState.from_snapshot(snapshot, world)
         policy_seed = _mix(seed, 2 * index + 1)
         for i, card in enumerate(action_ids):
-            # Cheap isolated copy of bitmasks and the current partial trick,
-            # rather than converting string cards for every candidate.
             state = SimState(base.hands.copy(), base.pile.copy(), base.bids,
                              base.tricks_won.copy(), base.leader, base.turn, base.trump)
             state.play(card)
@@ -208,12 +210,26 @@ def _batch(args):
             score = finish_round(state, continuation_rng, policy)
             for j, value in enumerate(score):
                 accum[i][j] += value
-    return accum
+            if counts is not None:
+                won = state.tricks_won[observer] - previously_won
+                if not 0 <= won <= max_additional <= 7:
+                    raise AssertionError("Invalid trick-count target")
+                counts[i][won] += 1
+    return (accum, counts) if collect_histograms else accum
+
+
+def _batch(args):
+    """Score-only hot path, backwards-compatible with existing tests."""
+    return _batch_impl(args)
+
+
+def _histogram_batch(args):
+    return _batch_impl(args, collect_histograms=True)
 
 
 def evaluate_actions(snapshot, actions=None, n_rollouts=DEFAULT_ROLLOUTS, seed=0,
                      workers=1, batch_size=256, objective="score",
-                     policy="random"):
+                     policy="random", collect_trick_histograms=False):
     """Evaluate candidate plays under paired possible-world rollouts.
 
     Reuses hidden deals and policy seeds across candidates (common random
@@ -225,6 +241,9 @@ def evaluate_actions(snapshot, actions=None, n_rollouts=DEFAULT_ROLLOUTS, seed=0
     'bid_aware_2' chooses between two legal cards using a cheap bid-aware
     stochastic heuristic; other hand sizes use uniform random play.
     Random remains the default (backwards-compatible).
+    Set collect_trick_histograms=True to return per-action integer counts
+    of 0..7 ADDITIONAL tricks won by the observer. This is the training
+    target for DistributionalWhistMLP, not an opponent's trick count.
     This is not the mean of the per-rollout minimum score margin.
     """
     if snapshot.phase != "playing" or snapshot.turn != snapshot.observer_id:
@@ -252,20 +271,29 @@ def evaluate_actions(snapshot, actions=None, n_rollouts=DEFAULT_ROLLOUTS, seed=0
     tasks = [(snapshot, actions, start, min(start + batch_size, n_rollouts),
               seed, policy)
              for start in range(0, n_rollouts, batch_size)]
+    totals = [[0] * snapshot.num_players for _ in actions]
+    counts = ([[0] * 8 for _ in actions] if collect_trick_histograms else None)
+    kernel = _histogram_batch if collect_trick_histograms else _batch
+
+    def accumulate(part):
+        batch, histogram = part if counts is not None else (part, None)
+        for i, row in enumerate(batch):
+            for j, value in enumerate(row):
+                totals[i][j] += value
+        if histogram is not None:
+            for i, row in enumerate(histogram):
+                for k, count in enumerate(row):
+                    counts[i][k] += count
+
     if workers == 1:
-        pieces = map(_batch, tasks)
-        totals = [[0] * snapshot.num_players for _ in actions]
-        for batch in pieces:
-            for i, row in enumerate(batch):
-                for j, value in enumerate(row):
-                    totals[i][j] += value
+        for part in map(kernel, tasks):
+            accumulate(part)
     else:
-        totals = [[0] * snapshot.num_players for _ in actions]
         with ProcessPoolExecutor(max_workers=workers) as pool:
-            for batch in pool.map(_batch, tasks):
-                for i, row in enumerate(batch):
-                    for j, value in enumerate(row):
-                        totals[i][j] += value
+            for part in pool.map(kernel, tasks):
+                accumulate(part)
+    if counts is not None and any(sum(row) != n_rollouts for row in counts):
+        raise AssertionError("Incomplete action histogram")
 
     means = tuple(tuple(value / n_rollouts for value in row) for row in totals)
     if objective == "score":
@@ -277,4 +305,5 @@ def evaluate_actions(snapshot, actions=None, n_rollouts=DEFAULT_ROLLOUTS, seed=0
         # original SnakeMonteCarloPlayer's ranking.
         values = tuple(row[own_id] - max(row[j] for j in range(snapshot.num_players)
                                           if j != own_id) for row in means)
-    return Evaluation(tuple(actions), means, values, n_rollouts)
+    return Evaluation(tuple(actions), means, values, n_rollouts,
+                      None if counts is None else tuple(tuple(row) for row in counts))
