@@ -3,7 +3,7 @@
 
 WhistyMcWhistface is an implementation of the rules of contract whist along with useful functionality for writing bots to play the game.
 
-The current state of the art on the platform SnakeMonteCarloPlayer performs a monte carlo simulation of future moves and plays to maximise the lead of the AI agent over the highest scoring other player in the game
+Two Monte Carlo agents are provided: MonteCarloPlayer maximizes expected own-round points, while SnakeMonteCarloPlayer maximizes its expected lead over the strongest expected opponent. Both support a default of 1,024 sampled rollouts per card decision.
 
 Some limited GUI functionality is provided via the easygui library
 
@@ -11,16 +11,25 @@ TrumpPicker was written by Ed Dakin
 
 # Getting started
 
-The best entrypoint is whistmain.py which is set up to play several games of a given test config file
+The simple entrypoint is whistmain.py, which currently loads three random players. Configure MonteCarloPlayer or SnakeMonteCarloPlayer to run AI-vs-random games.
 
 
+
+## Engineering change report — 31 October 2026
+
+For an end-to-end account of the rules and state refactor, fast simulation,
+full-game tests, measured performance, rollout convergence, the rationale
+for the **1,024 rollout default**, and AI-vs-random results, read the
+[31 October 2026 engineering report](docs/engineering-report-2026-10-31.md).
 
 ## Serializable information state and rollout experiments
 
-The authoritative hard-constraint beliefs of **player 0** are now tracked
-independently of other players' actual hands. Observations are immutable,
-versioned, JSON-serializable and updated **only from public events**. Each
-snapshot includes player 0's remaining hand, per-opponent candidate cards
+The authoritative hard-constraint beliefs of **player 0** are tracked
+incrementally and independently of other players' actual hands; observations
+for other seats are reconstructed from their own cards and public history.
+Observations are immutable, versioned, JSON-serializable and updated using
+public events. Each snapshot includes the observer's remaining hand,
+per-opponent candidate cards
 and remaining counts, known void suits, current bids/scores/trick/turn, full
 public event history, and a JSON-compatible policy-memory payload.
 
@@ -49,14 +58,15 @@ be assigned to any player. Every rollout is independent of the original game
 object; a different `player_factory(player_id, sampled_hand)` can supply
 alternative algorithms. Each worker should seed its own gameplay RNG.
 
-**Scope:** `game.observe()` supports player 0; multi-observer beliefs would
-need independently tracked information states. Snapshots can be taken
-during dealing, bidding, and partially completed tricks, but the current
-`Game.from_information_state()` rollout adapter handles only
-`phase == "playing"` (card-decision points). Full arbitrary-phase
-continuations will require the planned step-based game engine.
-`sample_hands()` guarantees consistent hidden hands, but its randomized
-matching does *not* guarantee uniform sampling over feasible deals.
+**Scope:** `game.observe(player_id)` supports all seats, with player 0
+tracked incrementally and other seats reconstructed from public events.
+Snapshots can be taken during dealing, bidding, and partially completed
+tricks, but the current `Game.from_information_state()` rollout adapter
+handles only `phase == "playing"` (card-decision points). Arbitrary-phase
+continuations still require a general step-based engine. `sample_hands()`
+guarantees feasible hidden hands: it uses exact uniform dealing for shared
+candidate pools, rejection sampling for differing pools when successful,
+and a potentially nonuniform matching fallback for restrictive cases.
 
 Custom policies can override `export_policy_state()` and
 `load_policy_state()` for their persistent JSON-compatible memory. If you
