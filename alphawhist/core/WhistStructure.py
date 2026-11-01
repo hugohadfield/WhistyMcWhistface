@@ -48,6 +48,9 @@ class Game():
         for i in range(0, len(self.cardnumbers)):
             print(("Round number: ", i + 1))
             self.playFullRound()
+        recorder = getattr(self, "training_recorder", None)
+        if recorder is not None:
+            recorder.on_game_end(self)
 
     def playFullRound(self):
         # How many cards are in this round
@@ -116,8 +119,15 @@ class Game():
         for n in range(0,self.numberofplayers):
             player = self.players[ self.turn ]
 
-            # Player makes their move
+            # Optional dataset recording: snapshot the actor's information
+            # BEFORE its decision. Never pass a Game or hidden hands to the
+            # training feature encoder. No observation overhead if disabled.
+            recorder = getattr(self, "training_recorder", None)
+            snapshot = self.observe(player.playerNumber) if recorder is not None else None
+            legal = player.getRealPossibleMoves(self.pile) if recorder is not None else None
             cardPlayed = player.makeMove(self.pile.copy(), self.trumpsuit, self)
+            if recorder is not None:
+                recorder.on_decision(self, snapshot, legal, cardPlayed)
 
             self.pile.append( cardPlayed )
             self._record_public_event({
@@ -145,7 +155,12 @@ class Game():
 
     def playPartialTrick(self,specificCard):
         player = self.players[ self.turn ]
+        recorder = getattr(self, "training_recorder", None)
+        snapshot = self.observe(player.playerNumber) if recorder is not None else None
+        legal = player.getRealPossibleMoves(self.pile) if recorder is not None else None
         if player.playCard(specificCard):
+            if recorder is not None:
+                recorder.on_decision(self, snapshot, legal, specificCard)
             self.pile.append(specificCard)
             self._record_public_event({
                 "type": "card", "player": player.playerNumber, "card": specificCard
@@ -166,8 +181,12 @@ class Game():
             # Each player makes their move
             
             # Player makes their move
+            recorder = getattr(self, "training_recorder", None)
+            snapshot = self.observe(player.playerNumber) if recorder is not None else None
+            legal = player.getRealPossibleMoves(self.pile) if recorder is not None else None
             cardPlayed = player.makeMove(self.pile.copy(), self.trumpsuit, self)
-
+            if recorder is not None:
+                recorder.on_decision(self, snapshot, legal, cardPlayed)
 
             self.pile.append( cardPlayed )
             self._record_public_event({
@@ -271,6 +290,8 @@ class Game():
         self.roundnumber = 0
         self.trickNumber = 0
         self._information_state = None
+        # Recorder is opt-in, never part of game-state serialization.
+        self.training_recorder = None
 
     def manualDeal(self, cardsinround):
         """Use the entered first hand and deal non-overlapping opponent hands."""
@@ -308,7 +329,9 @@ class Game():
             thisBid = self.bids[playerIterator]
             thisPlayerScore = tricksToScore(thisBid,thisTrickCount)
             self.scores[playerIterator] = self.scores[playerIterator] + thisPlayerScore
-
+        recorder = getattr(self, "training_recorder", None)
+        if recorder is not None:
+            recorder.on_round_end(self)
 
     def _begin_observer_round(self, cards_per_player):
         """Start public inference without ever reading opponents' real hands."""
@@ -326,6 +349,9 @@ class Game():
             previous_history=history,
             policy_state=memory,
         )
+        recorder = getattr(self, "training_recorder", None)
+        if recorder is not None:
+            recorder.on_round_start(self)
 
     def _record_public_event(self, event):
         """Update beliefs using *only* the public event."""
