@@ -66,3 +66,52 @@ for interpreting or discarding the old algorithm's memory.
 ```bash
 python -m pytest -q
 ```
+
+
+## Fast parallel Monte Carlo rollouts
+
+`alphawhist.core.FastRollout` is a *history-free simulation backend* for
+evaluating card decisions. The authoritative `Game` and immutable
+`InformationState` still perform event validation and maintain public
+observations, but no event log is updated in a rollout's inner loop.
+
+```python
+from alphawhist.core.FastRollout import evaluate_actions
+
+observation = game.observe(player_id=0)
+result = evaluate_actions(
+    observation,
+    n_rollouts=10000,
+    seed=42,
+    workers=8,
+    objective="score",    # or "margin" for the Snake policy
+)
+print(result.best_action(), result.actions, result.mean_round_scores)
+```
+
+Features include 52-bit hand masks, integer card/trick comparisons, reuse of
+the *same sampled hidden world* across candidate moves, deterministic
+per-rollout RNG seeds (independent of worker count and batch size), and
+`ProcessPoolExecutor` batch parallelism. Both `MonteCarloPlayer` and
+`SnakeMonteCarloPlayer` use this evaluator for move selection in any player
+seat. Player-specific private observations are reconstructed using only their
+own hand and the public action history. Multi-process evaluation works with
+the built-in `random` and `highest` rollout policies; custom callable
+policies must be picklable if `workers > 1`.
+
+Candidate sets sharing the same allowed-card pool use exact uniform dealing.
+Constrained positions first attempt exact rejection sampling, then fall back
+to randomized bipartite matching after 24 failures; this last resort is
+*feasible but not guaranteed uniform*.
+
+Use the bundled benchmark to measure real throughput on your hardware:
+
+```bash
+python -m benchmarks.rollouts --rollouts 100 --workers 1 --cards 7
+python -m benchmarks.rollouts --rollouts 300 --workers 4 --cards 7
+```
+
+The benchmark compares full remaining-round simulations from the same
+snapshot with the original object-based simulation. Process startup overhead
+means multiple workers may be slower for small workloads. Search quality and
+the statistical calibration of the rollout policy are separate issues.
