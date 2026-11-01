@@ -1,7 +1,7 @@
 """Detailed CPU profile of Whist game trace collection and MC teacher labels.
 
 Runs a separate cProfile single-process trace for the two hot pipelines,
-uses a stratified sample spanning 1..7 remaining cards, and benchmarks the
+uses a stratified sample spanning 2..7 remaining cards (non-forced actions), and benchmarks the
 identical teacher workload with 1/2/4 persistent state-parallel workers.
 Produces .prof binary pstats, human-readable top-function tables, stage
 timing JSON and a summary JSON. No GPUs or private hands required.
@@ -51,9 +51,9 @@ def _select_diverse_traces(paths, output, states_per_size):
     for rec in iter_trace_decisions(paths):
         snap = rec["observation"]
         size = snap["cards_per_player"] - snap["trick_number"]
-        if size in range(1, 8) and len(by_size[size]) < states_per_size:
+        if size in range(2, 8) and len(by_size[size]) < states_per_size:
             by_size[size].append(rec)
-    for size in range(1, 8):
+    for size in range(2, 8):
         if not by_size[size]:
             raise ValueError(f"No states found with {size} cards remaining")
     with output.open("w", encoding="utf-8") as stream:
@@ -102,7 +102,7 @@ def run_profile(output_dir, behavior_rollouts=16, teacher_rollouts=256,
         sorted(traces.glob("game-*.jsonl")), selected_path, states_per_size,
     )
     total = sum(sizes.values())
-    if total < 7:
+    if total < 6:
         raise AssertionError("Stratified sample is too small")
     common = dict(
         rollouts=teacher_rollouts, policy="bid_aware_2",
