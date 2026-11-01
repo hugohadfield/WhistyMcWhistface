@@ -22,6 +22,12 @@ full-game tests, measured performance, rollout convergence, the rationale
 for the **1,024 rollout default**, and AI-vs-random results, read the
 [31 October 2026 engineering report](docs/engineering-report-2026-10-31.md).
 
+For a measured **full-game CPU profile** (simulator, bidding, RNG, public
+information updates), see the
+[full-game profiling results](docs/full-game-profile-2026-10-31.md).
+Reproduce with `python -m benchmarks.profile_full_game --rollouts 1024`.
+
+
 ## Serializable information state and rollout experiments
 
 The authoritative hard-constraint beliefs of **player 0** are tracked

@@ -276,3 +276,17 @@ The implementation is significantly stronger but is not yet a calibrated optimal
 | Playing-strength smoke test | 10 complete matches against random opponents per bot | [PR #13](https://github.com/hugohadfield/WhistyMcWhistface/pull/13) |
 
 **Bottom line:** The repository is now suitable for reproducible small-to-medium Monte Carlo algorithm experiments and has comprehensive regression coverage for the currently supported game modes. The **1,024** default is a **pragmatic, evidence-informed baseline**, not a proven optimal policy budget. Fast simulation, unbiased handling of many hidden-hand cases, and favorable results versus random agents are real achievements; reliable *comparative playing-strength* conclusions require larger and more rigorous experiments.
+
+## 12. Subsequent full-game profiling (same development session)
+
+A full 13-round, 1,024-rollout Monte Carlo game was instrumented with
+`cProfile` after this report's baseline commit. The run reported
+**12.423 seconds of profiled CPU self time**, with approximately **74.6%**
+under the card rollout evaluator and **22.6%** under the bidding pipeline.
+The recorded 12.46 seconds wall time **includes profiler overhead** and
+should not be confused with ordinary match runtime. Simulation transition
+and random-card generation are the primary profiling hotspots, followed
+by the advanced bid estimator; the public-event state reducer is a minor
+contributor. The reusable profiler and complete breakdown are documented
+in [full-game profiling results](full-game-profile-2026-10-31.md), with
+[the raw run](https://github.com/hugohadfield/WhistyMcWhistface/actions/runs/41281313795).

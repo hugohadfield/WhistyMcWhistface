@@ -24,16 +24,6 @@ jobs:
       - name: Benchmark complete AI versus random 13-round matches
         run: |
           python -m benchmarks.full_game --rollouts 16 128 1024 --bots MonteCarloPlayer SnakeMonteCarloPlayer
-      - name: Profile a complete 1024-rollout Monte Carlo game
-        if: github.event_name == 'pull_request' && github.head_ref == 'experiment/profile-full-game-1024'
-        run: python -m benchmarks.profile_full_game --rollouts 1024 --seat 0 --seed 20261031 --limit 24 --output /tmp/whist-full-game.prof
-      - name: Save cProfile run for inspection
-        if: github.event_name == 'pull_request' && github.head_ref == 'experiment/profile-full-game-1024'
-        uses: actions/upload-artifact@v4
-        with:
-          name: whist-full-game-cprofile
-          path: /tmp/whist-full-game.prof
-          retention-days: 14
       - name: Report per-card scoring convergence
         run: |
           python -m benchmarks.score_convergence --scenario early --rollouts 16 64 256 1024 4096 --reference 8192
