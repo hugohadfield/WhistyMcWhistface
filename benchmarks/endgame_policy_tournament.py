@@ -95,6 +95,7 @@ def play_match(game_index, seed=20261301, rollouts=1024, training_dir=None):
             game_id=f"tournament-{seed}-pair-{pair}-seat-swap-{game_index % 2}",
             metadata={
                 "seed": seed, "deal_seed": deal_seed, "game_index": game_index,
+                "deal_group": f"tournament-{seed}-paired-{pair}",
                 "rollouts": rollouts, "agents": {
                     "aware": aware_seat, "random_policy": random_policy_seat,
                     "random_opponent": third,
