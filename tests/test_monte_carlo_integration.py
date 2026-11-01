@@ -82,3 +82,25 @@ def test_two_bots_can_share_same_game_without_shared_rollout_state(capsys):
     game.playPartialRound()
     assert game.roundnumber == 1
     assert sum(game.tricksWon) == 2
+
+
+@pytest.mark.parametrize("cls", [MonteCarloPlayer, SnakeMonteCarloPlayer])
+def test_bot_parallel_worker_configuration_is_serializable(cls, capsys):
+    game = game_with_mc_player(cls, 1)
+    player = game.players[1]
+    player.monteCarloWorkers = 2
+    snapshot = game.observe(1)
+    assert snapshot.policy_state["monteCarloWorkers"] == 2
+    assert snapshot.policy_state["monteCarloNumber"] == 16
+    legal = player.getRealPossibleMoves(game.pile)
+    selected = player.makeMove(game.pile.copy(), game.trumpsuit, game)
+    assert selected in legal
+    assert selected not in player.real_hand
+
+
+@pytest.mark.parametrize("cls", [MonteCarloPlayer, SnakeMonteCarloPlayer])
+def test_bot_invalid_worker_count_is_rejected(cls):
+    with pytest.raises(ValueError, match="positive"):
+        cls(0, ["14h"], additionalParameters={
+            "monteCarloNumber": "20", "monteCarloWorkers": "0"
+        })
