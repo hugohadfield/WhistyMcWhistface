@@ -60,3 +60,19 @@ def test_estimator_impossible_deal_fails():
 
 def test_empty_hand_still_supported():
     assert w.estimate_card_win_probabilities([], 3, 0, 'h') == ([], [])
+
+
+@pytest.mark.parametrize('cls,params', [
+    (MonteCarloPlayer, {'monteCarloNumber': '2'}),
+    (SnakeMonteCarloPlayer, {'monteCarloNumber': '2'}),
+    (RandomWithAdvancedBidPlayer, None),
+    (StatHeuristicPlayer, None),
+])
+def test_final_bidder_must_not_make_total_equal_tricks(cls, params):
+    # An ace of trumps is a certain winner, so the estimator strongly
+    # prefers bidding 1. But 1 is illegal when the earlier bids sum to 0
+    # in a one-trick round.
+    player = cls(2, ['14h'], additionalParameters=params)
+    bid = player.makeBid(3, 1, 'h', [0, 0])
+    assert bid == 0
+    assert player.zero_bid_count == 1
