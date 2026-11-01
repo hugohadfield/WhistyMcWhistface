@@ -99,11 +99,21 @@ class SimState:
         )
 
     def play(self, card):
-        """Play one legal card and score/advance the trick if completed."""
-        if not self.hands[self.turn] & (1 << card):
+        """Checked public entry point; invalid moves leave state untouched."""
+        bit = 1 << card
+        if not self.hands[self.turn] & bit:
             raise ValueError("Card is not held by the acting player")
-        if not legal_mask(self.hands[self.turn], self.pile) & (1 << card):
+        if not legal_mask(self.hands[self.turn], self.pile) & bit:
             raise ValueError("Card does not follow suit")
+        self._play_legal(card)
+
+    def _play_legal(self, card):
+        """Unchecked hot path: the caller must supply a currently legal card.
+
+        Rollout continuations select exclusively from legal_mask(), avoiding
+        a second set-membership and follow-suit test on every simulated card.
+        The public play() method remains checked.
+        """
         self.hands[self.turn] ^= 1 << card
         self.pile.append(card)
         if len(self.pile) == len(self.hands):
@@ -155,7 +165,7 @@ def finish_round(state, rng, policy="random"):
         mask = legal_mask(state.hands[state.turn], state.pile)
         if not mask:
             raise ValueError("No legal move in an unfinished round")
-        state.play(_choose_card(state, mask, rng, policy))
+        state._play_legal(_choose_card(state, mask, rng, policy))
     return state.round_scores()
 
 
@@ -175,14 +185,24 @@ def _batch(args):
     action_ids = [CARD_ID[card] for card in actions]
     n = snapshot.num_players
     accum = [[0] * n for _ in actions]
+    # Reuse RNG objects, but reset them to the identical per-rollout seeds.
+    # This preserves exact seeded outcomes across workers and batch sizes.
+    deal_rng = random.Random()
+    continuation_rng = random.Random()
     for index in range(start, stop):
+        deal_rng.seed(_mix(seed, 2 * index))
         # One sampled possible world, reused by EVERY candidate action.
-        world = snapshot.sample_hands(random.Random(_mix(seed, 2 * index)))
+        world = snapshot.sample_hands(deal_rng)
+        base = SimState.from_snapshot(snapshot, world)
         policy_seed = _mix(seed, 2 * index + 1)
         for i, card in enumerate(action_ids):
-            state = SimState.from_snapshot(snapshot, world)
+            # Cheap isolated copy of bitmasks and the current partial trick,
+            # rather than converting string cards for every candidate.
+            state = SimState(base.hands.copy(), base.pile.copy(), base.bids,
+                             base.tricks_won.copy(), base.leader, base.turn, base.trump)
             state.play(card)
-            score = finish_round(state, random.Random(policy_seed), policy)
+            continuation_rng.seed(policy_seed)
+            score = finish_round(state, continuation_rng, policy)
             for j, value in enumerate(score):
                 accum[i][j] += value
     return accum

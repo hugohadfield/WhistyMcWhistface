@@ -454,3 +454,64 @@ def test_all_bot_game_uses_random_deal_by_default(capsys):
     g.playFullGame()
     assert g.roundnumber == 1
     assert sum(g.tricksWon) == 2
+
+
+@pytest.mark.parametrize("n", range(1, 5))
+@pytest.mark.parametrize("starting_lead", [False, True])
+def test_exact_bid_pdf_matches_exhaustive_permutations(n, starting_lead):
+    """Reference enumerates every card order and Bernoulli outcome."""
+    from itertools import permutations
+    from math import factorial
+
+    lead = [0.15 + i * 0.12 for i in range(n)]
+    follow = [0.8 - i * 0.13 for i in range(n)]
+    ref = [0.0] * (n + 1)
+    for order in permutations(range(n)):
+        states = {(0, starting_lead): 1.0}
+        for index in order:
+            states_next = {}
+            for (wins, leading), mass in states.items():
+                probability = lead[index] if leading else follow[index]
+                states_next[(wins + 1, True)] = (
+                    states_next.get((wins + 1, True), 0.0) + mass * probability
+                )
+                states_next[(wins, False)] = (
+                    states_next.get((wins, False), 0.0) + mass * (1 - probability)
+                )
+            states = states_next
+        for (wins, _), mass in states.items():
+            ref[wins] += mass / factorial(n)
+
+    actual = w.exact_bid_trick_pdf(lead, follow, 0 if starting_lead else 1)
+    assert actual == pytest.approx(ref, abs=1e-12)
+    assert sum(actual) == pytest.approx(1.0, abs=1e-12)
+
+
+@pytest.mark.parametrize("lead,follow,position,expected", [
+    ([1, 1], [1, 1], 0, [0, 0, 1]),
+    ([0, 0], [0, 0], 2, [1, 0, 0]),
+    ([1, 0], [1, 0], 1, [0, 1, 0]),
+    ([], [], 0, [1.0]),
+])
+def test_exact_bid_pdf_deterministic_cases(lead, follow, position, expected):
+    assert w.exact_bid_trick_pdf(lead, follow, position) == pytest.approx(expected)
+
+
+def test_exact_bid_pdf_validates_probability_vectors():
+    with pytest.raises(ValueError):
+        w.exact_bid_trick_pdf([0.2], [0.3, 0.4], 0)
+    with pytest.raises(ValueError):
+        w.exact_bid_trick_pdf([1.2], [0.4], 0)
+
+
+def test_exact_bid_pdf_is_permutation_invariant():
+    rng = random.Random(18)
+    lead = [rng.random() for _ in range(7)]
+    follow = [rng.random() for _ in range(7)]
+    expected = w.exact_bid_trick_pdf(lead, follow, 1)
+    permutation = [3, 5, 6, 0, 2, 4, 1]
+    permuted = w.exact_bid_trick_pdf(
+        [lead[i] for i in permutation],
+        [follow[i] for i in permutation], 1
+    )
+    assert permuted == pytest.approx(expected, abs=1e-12)

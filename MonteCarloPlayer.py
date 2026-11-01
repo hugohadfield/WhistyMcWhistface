@@ -112,7 +112,7 @@ class MonteCarloPlayer(Player):
         leadingProbList, followingProbList = estimate_card_win_probabilities(
             cardsInHand, nplayers, ncards, trumpsuit
         )
-        bidPDF = mini_monte_sim(leadingProbList, followingProbList, bidPosition, 20000)
+        bidPDF = exact_bid_trick_pdf(leadingProbList, followingProbList, bidPosition)
 
         validBids = self.getValidBidOptions(nplayers, ncards, previousbids)
         for i in range(0, ncards + 1):

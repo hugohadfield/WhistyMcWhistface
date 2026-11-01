@@ -289,6 +289,51 @@ def monte_carlo_pdfify(problist, mcnumber):
     return pdfout
 
 
+def exact_bid_trick_pdf(leadingProbList, followingProbList, bidPosition):
+    """Exact win-count PMF under the existing random-order/leader model.
+
+    The original mini_monte_sim draws a random permutation of the player's
+    cards, then uses a lead- or follow-specific Bernoulli win probability
+    for each card. Winning a trick means leading the next one. A subset DP
+    marginalizes *all* permutations and win/loss outcomes without sampling.
+    It is exact for the approximating model, not for adversarial Whist play.
+
+    This is feasible for the game's 1..7 cards per round; its complexity is
+    O(2**n * n**2), independent of the former 20,000 bid simulations.
+    """
+    if len(leadingProbList) != len(followingProbList):
+        raise ValueError("Lead and follow probability lists must have equal lengths")
+    if any(not 0 <= p <= 1 for p in (*leadingProbList, *followingProbList)):
+        raise ValueError("Probabilities must be between zero and one")
+    from functools import lru_cache
+    lead, follow = tuple(leadingProbList), tuple(followingProbList)
+    n = len(lead)
+
+    @lru_cache(maxsize=None)
+    def solve(mask, leading):
+        if not mask:
+            return (1.0,)
+        count = mask.bit_count()
+        values = [0.0] * (count + 1)
+        remaining = mask
+        while remaining:
+            bit = remaining & -remaining
+            remaining ^= bit
+            index = bit.bit_length() - 1
+            probability = lead[index] if leading else follow[index]
+            rest = mask ^ bit
+            after_win = solve(rest, True)
+            after_loss = solve(rest, False)
+            weight_win = probability / count
+            weight_loss = (1.0 - probability) / count
+            for wins in range(count):
+                values[wins] += weight_loss * after_loss[wins]
+                values[wins + 1] += weight_win * after_win[wins]
+        return tuple(values)
+
+    return list(solve((1 << n) - 1, bidPosition == 0))
+
+
 def mini_monte_sim(leadingProbList, followingProbList, bidPosition, mcnumber):
     """Approximate trick-count distribution with a changing leader.
 

@@ -222,3 +222,54 @@ def test_evaluate_many_worlds_and_moves_without_history_mutation():
     assert len(result.mean_round_scores) == 3
     assert all(len(row) == 3 for row in result.mean_round_scores)
     assert len(s.public_history) == before
+
+
+@pytest.mark.parametrize("policy", ["random", "highest"])
+@pytest.mark.parametrize("seed", range(12))
+def test_unchecked_legal_play_matches_checked_simulation(policy, seed):
+    """Fast continuation and checked reference must produce exact same trace."""
+    from alphawhist.core.FastRollout import _choose_card
+    snapshot_state = snapshot(hand=("14h", "7h", "2s", "9c", "3d"))
+    hands = snapshot_state.sample_hands(random.Random(1000 + seed))
+    checked = SimState.from_snapshot(snapshot_state, hands)
+    unchecked = SimState.from_snapshot(snapshot_state, hands)
+    rng = random.Random(seed)
+    while any(checked.hands) or checked.pile:
+        legal = legal_mask(checked.hands[checked.turn], checked.pile)
+        chosen = _choose_card(checked, legal, rng, policy)
+        checked.play(chosen)
+        unchecked._play_legal(chosen)
+        assert checked.hands == unchecked.hands
+        assert checked.pile == unchecked.pile
+        assert checked.tricks_won == unchecked.tricks_won
+        assert checked.leader == unchecked.leader
+        assert checked.turn == unchecked.turn
+    assert checked.round_scores() == unchecked.round_scores()
+
+
+def test_optimized_batch_is_bit_identical_to_original_reference():
+    """Exact seeded scoring remains unchanged by RNG and branch caching."""
+    from alphawhist.core.FastRollout import _batch, _mix, _choose_card
+    snapshot_state = snapshot(hand=("14h", "7h", "2s", "9c", "3d"))
+    actions = tuple(snapshot_state.own_hand)
+    for policy in ("random", "highest"):
+        for seed in (0, 42, 15123121):
+            expected = [[0] * 3 for _ in actions]
+            for index in range(17):
+                world = snapshot_state.sample_hands(
+                    random.Random(_mix(seed, 2 * index))
+                )
+                policy_seed = _mix(seed, 2 * index + 1)
+                for i, card in enumerate(actions):
+                    sim = SimState.from_snapshot(snapshot_state, world)
+                    sim.play(CARD_ID[card])
+                    rng = random.Random(policy_seed)
+                    # Old finish_round path always used the checked play().
+                    while sim.pile or any(sim.hands):
+                        legal = legal_mask(sim.hands[sim.turn], sim.pile)
+                        sim.play(_choose_card(sim, legal, rng, policy))
+                    scores = sim.round_scores()
+                    for j, value in enumerate(scores):
+                        expected[i][j] += value
+            observed = _batch((snapshot_state, actions, 0, 17, seed, policy))
+            assert observed == expected
