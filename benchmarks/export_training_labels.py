@@ -40,8 +40,9 @@ def _seed_for_decision(seed, rec):
 
 
 def _split_for_game(seed, rec):
-    # Group by run seed/index in game_id, not by the position within a game.
-    payload = f'{seed}:{rec["game_id"]}'.encode("utf-8")
+    # Seat-swapped tournament replays share a deal_group and must remain
+    # in the SAME split, preventing matched-deal train/val leakage.
+    payload = f'{seed}:{rec.get("deal_group", rec["game_id"])}'.encode("utf-8")
     fraction = int.from_bytes(
         hashlib.sha256(payload).digest()[:8], "big"
     ) / 2 ** 64
