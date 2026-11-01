@@ -44,6 +44,7 @@ python -m benchmarks.export_training_labels \
   --traces 'data/traces-v1/*.jsonl' \
   --output-dir data/labeled-v1 \
   --rollouts 1024 --policy bid_aware_2 --workers 4 \
+  --state-batch-size 4 --prefetch-batches 2 \
   --shard-size 256 --seed 2026441
 ```
 
@@ -127,6 +128,25 @@ only a SHA-256 fingerprint of the deal and the observer state.
 - Labeling consumes extra Monte Carlo for **every non-forced card
   decision**, potentially far more compute than generating game traces.
   Use cheap collection runs and progressively larger teacher budgets.
+- The label exporter now uses **one persistent process pool for the entire
+  dataset**, parallelizing across independently seeded decision states.
+  `--workers N` controls total CPU processes; **each process evaluates its
+  own states with `evaluate_actions(workers=1)`**, with no nested pools.
+  `--state-batch-size 4` amortizes interprocess communication and
+  `--prefetch-batches 2` bounds queued work. At most
+  `workers * prefetch_batches * state_batch_size` decision records are
+  submitted, regardless of dataset size. Tune the state batch size for
+  your machine; smaller batches help load-balance costly early rounds.
+- Results are emitted in deterministic input order, so the same seeds,
+  teacher budget, and trace inputs produce identical training arrays and
+  shard boundaries for one worker or many. Monte Carlo per-action
+  **common random numbers are unchanged**, and training/validation/test
+  split assignment remains by whole deal group.
+- The exporter prints `states_per_second` and elapsed wall time to make
+  real throughput benchmarking straightforward. CI does not require a
+  speedup on GitHub-hosted runners, which can have limited CPU cores.
+  For a 16/32-core CPU, start with `--workers 12` or `--workers 28`
+  and check actual throughput before allocating every core.
 - Training labels are sampled under a particular future-play policy and
   are not ground-truth perfect-play values.
 - Initial deals are reset per round to remove coupling between card
