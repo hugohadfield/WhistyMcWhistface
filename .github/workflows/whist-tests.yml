@@ -165,3 +165,51 @@ jobs:
           path: training-bench/
           if-no-files-found: warn
           retention-days: 14
+
+  training_pipeline_profile:
+    name: Profile training data collection and MC labeling
+    if: github.event_name == 'pull_request' && github.head_ref == 'perf/profile-training-pipeline'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Profile real matches, labeling and concurrent throughput
+        run: |
+          python -m benchmarks.profile_training_pipeline \
+            --output-dir training-profile \
+            --behavior-rollouts 12 --teacher-rollouts 256 \
+            --states-per-size 7 --workers 1 2 4 --seed 20266117
+      - name: Show detailed cProfile hotspots and stage timing
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('training-profile')
+          summary = json.loads((root/'profile-summary.json').read_text())
+          print('PROFILE_SUMMARY', json.dumps(summary, indent=2))
+          for name in ('random-game', 'mixed-game', 'teacher-cprofile'):
+              print('\nHOTSPOTS', name)
+              text = (root/f'{name}-top-functions.txt').read_text()
+              print(text[:9000])
+          for name in ('teacher-cprofile-stage-timing.json',
+                       'teacher-timing-workers-1.json', 'teacher-timing-workers-2.json',
+                       'teacher-timing-workers-4.json',
+                       'game-timing/game-0000000.json',
+                       'game-timing/game-0000001.json'):
+              print('\nSTAGE_TIMING', name)
+              print((root/name).read_text()[:12000])
+          PY
+      - name: Archive raw cProfile files and timing results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-training-pipeline-cpu-profile
+          path: training-profile/
+          if-no-files-found: warn
+          retention-days: 14
