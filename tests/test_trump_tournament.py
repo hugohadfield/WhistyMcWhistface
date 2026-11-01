@@ -143,3 +143,28 @@ def test_parallel_matches_identical_to_serial(tmp_path, capsys):
 def test_tournament_rejects_invalid_worker_count():
     with pytest.raises(ValueError, match="workers"):
         tournament(games=2, rollouts=4, workers=0)
+
+
+def test_public_trump_events_replay_without_changing_games(tmp_path):
+    import csv
+    from dataclasses import replace
+    from benchmarks.analyze_trump_choices import analyze
+
+    log = tmp_path / "trumps.csv"
+    standard = tournament(games=4, rollouts=6, seed=5821, workers=1)
+    observed = tournament(games=4, rollouts=6, seed=5821, workers=2,
+                          trumps_csv=log)
+    assert [replace(x, seconds=0) for x in standard] == [
+        replace(x, seconds=0) for x in observed
+    ]
+    with log.open(encoding="utf-8", newline="") as stream:
+        choices = list(csv.DictReader(stream))
+    assert len(choices) == 4 * 13
+    assert all(x["suit"] in "hcds" for x in choices)
+    assert all(x["picker"] in ("NEW", "OLD", "RANDOM") for x in choices)
+    stats = analyze(log)
+    assert stats["games"] == 4
+    assert stats["comparable"] + stats["random_dealer_cases"] == 2 * 13
+    assert stats["same"] + stats["different"] == stats["comparable"]
+    assert sum(stats["new_suits"].values()) == stats["comparable"]
+    assert sum(stats["old_suits"].values()) == stats["comparable"]
