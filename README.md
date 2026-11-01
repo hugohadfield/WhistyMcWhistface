@@ -226,3 +226,43 @@ Explicit configuration overrides are unchanged; for example,
 `whistmain.py` still starts a game with random players unless its
 player config is changed; setting the Monte Carlo default does not change
 the default player lineup.
+
+## Bid-aware two-card endgame rollout policy (experimental)
+
+The fast rollout engine offers an **opt-in** policy, `bid_aware_2`. When an
+acting player holds exactly two **legal** cards, it estimates each play order's
+probability of making that player's bid, converts the two-trick score estimate
+to a softmax, and samples a move. Other hand sizes and forced moves retain
+cheap uniform random continuation. No extra Monte Carlo samples or full-game
+tree search are made inside the continuation policy.
+
+The heuristic only reads the acting player's own two cards and publicly
+observable information (bids, tricks won, trump, and current trick). Its
+lightweight rank/trump probability estimates are **uncalibrated**: they do
+not inspect the opponents' sampled hands. The policy is valid for **2–7
+players**, using the same implementation, and the original `random`
+continuation remains the default.
+
+To opt into it without modifying the global defaults, configure a
+`MonteCarloPlayer` (or `SnakeMonteCarloPlayer`) with:
+
+```json
+{"monteCarloNumber": "1024", "monteCarloWorkers": "1",
+ "monteCarloPolicy": "bid_aware_2"}
+```
+
+You can also evaluate a snapshot with
+`evaluate_actions(snapshot, policy="bid_aware_2")`.
+
+Compare raw **complete two-trick simulation** times and approximate action
+values for 2–7 players with:
+
+```bash
+python -m benchmarks.endgame_policy --players 2 3 4 5 6 7 --states 1500
+```
+
+The benchmark's fixed-deal oracle samples **random opponent continuations**;
+it assesses approximate ranking and speed, **not** a calibrated strategic
+opponent model or end-to-end win rate. This is a starting heuristic for future
+improvements to public-card inference, conditional card probabilities and
+game-theoretic play.
