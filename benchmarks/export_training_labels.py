@@ -13,7 +13,10 @@ Split assignment is stable at the full GAME level (not by decision).
 No PyTorch dependency. One complete shard is atomically renamed after save.
 """
 import argparse
-from collections import defaultdict
+from collections import defaultdict, deque
+from concurrent.futures import ProcessPoolExecutor
+from itertools import islice
+import time
 import glob
 import hashlib
 import json
@@ -100,6 +103,68 @@ def _label_one(rec, rollouts, workers, seed, policy, batch_size):
     }
 
 
+def _label_state_batch(task):
+    """Run a small block of states inside one persistent worker process.
+
+    Rollout workers MUST be one: parallelism happens across independent
+    decision states, never with nested per-state process pools.
+    """
+    records, rollouts, seed, policy, batch_size = task
+    return [
+        (split, _label_one(rec, rollouts, 1, seed, policy, batch_size))
+        for split, rec in records
+    ]
+
+
+def _record_batches(records, state_batch_size):
+    """Yield bounded blocks from a streaming JSONL decision iterator."""
+    iterator = iter(records)
+    while batch := tuple(islice(iterator, state_batch_size)):
+        yield batch
+
+
+def _iter_labeled_states(records, rollouts, workers, seed, policy,
+                         batch_size, state_batch_size, prefetch_batches):
+    """Stream deterministic labels, preserving input order across workers.
+
+    At most workers * prefetch_batches * state_batch_size decisions are
+    submitted at once. This avoids ProcessPoolExecutor.map() on Python 3.11,
+    which can eagerly consume the entire source iterator. A single pool
+    survives for all states; workers always run evaluate_actions(workers=1).
+    """
+    if workers == 1:
+        for split, rec in records:
+            yield split, _label_one(rec, rollouts, 1, seed, policy, batch_size)
+        return
+
+    batches = iter(_record_batches(records, state_batch_size))
+    max_pending = workers * prefetch_batches
+    pending = deque()
+
+    with ProcessPoolExecutor(max_workers=workers) as pool:
+        def submit_next():
+            try:
+                batch = next(batches)
+            except StopIteration:
+                return False
+            pending.append(pool.submit(
+                _label_state_batch,
+                (batch, rollouts, seed, policy, batch_size),
+            ))
+            return True
+
+        for _ in range(max_pending):
+            if not submit_next():
+                break
+
+        while pending:
+            # Submission order ensures bitwise-identical row/shard ordering
+            # regardless of worker count or individual state difficulty.
+            for item in pending.popleft().result():
+                yield item
+            submit_next()
+
+
 def _write_shard(directory, split, index, rows):
     if not rows:
         return None
@@ -133,9 +198,11 @@ def _write_shard(directory, split, index, rows):
 
 def label_traces(paths, output_dir, rollouts=1024, workers=1,
                  seed=20261102, policy="bid_aware_2", batch_size=256,
-                 shard_size=256, max_states=None, include_forced=False):
-    if rollouts < 1 or workers < 1 or batch_size < 1 or shard_size < 1:
-        raise ValueError("Invalid labelling budget or shard size")
+                 shard_size=256, max_states=None, include_forced=False,
+                 state_batch_size=4, prefetch_batches=2):
+    if (rollouts < 1 or workers < 1 or batch_size < 1 or shard_size < 1
+            or state_batch_size < 1 or prefetch_batches < 1):
+        raise ValueError("Rollout, worker, shard and prefetch counts must be positive")
     if max_states is not None and max_states < 1:
         raise ValueError("max_states must be positive")
     if policy not in ("random", "highest", "bid_aware_2"):
@@ -148,6 +215,7 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
     if any(out.iterdir()):
         raise FileExistsError("Output directory must be empty (never overwrite labels)")
 
+    started = time.perf_counter()
     buffers = defaultdict(list)
     counts = dict.fromkeys(SPLITS, 0)
     indices = dict.fromkeys(SPLITS, 0)
@@ -163,19 +231,23 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
         shard_names.append(path.name)
         buffers[split].clear()
 
-    for rec in iter_trace_decisions(paths, include_forced=include_forced):
-        split = _split_for_game(seed, rec)
-        buffers[split].append(_label_one(
-            rec, rollouts, workers, seed, policy, batch_size,
-        ))
+    source = iter_trace_decisions(paths, include_forced=include_forced)
+    if max_states is not None:
+        source = islice(source, max_states)
+
+    # Attach the assigned split before handing records to the workers.
+    # Each worker returns its (split, label) pairs in exactly source order.
+    for split, row in _iter_labeled_states(
+            ((_split_for_game(seed, rec), rec) for rec in source),
+            rollouts, workers, seed, policy, batch_size,
+            state_batch_size, prefetch_batches):
+        buffers[split].append(row)
         counts[split] += 1
         processed += 1
         if len(buffers[split]) >= shard_size:
             flush(split)
             print(f"SHARD {split} index={indices[split] - 1} "
                   f"states={processed}", flush=True)
-        if max_states is not None and processed >= max_states:
-            break
     for split in SPLITS:
         flush(split)
     manifest = {
@@ -188,13 +260,20 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
         "shard_size": shard_size, "counts_by_split": counts,
         "shards": shard_names, "include_forced": include_forced,
         "total_states": processed,
-        "split_assignment": "80/10/10 deterministic per game_id",
+        "workers": workers,
+        "parallelism": "persistent state-level pool, one MC worker per state",
+        "state_batch_size": state_batch_size,
+        "prefetch_batches": prefetch_batches,
+        "split_assignment": "80/10/10 deterministic per deal_group",
     }
     manifest_path.write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    elapsed = time.perf_counter() - started
     print(f"DONE labeled_states={processed} splits={counts} "
+          f"workers={workers} state_batch_size={state_batch_size} "
+          f"seconds={elapsed:.3f} states_per_second={processed / elapsed:.3f} "
           f"manifest={manifest_path}", flush=True)
     return manifest
 
@@ -213,11 +292,16 @@ def main():
     parser.add_argument("--shard-size", type=int, default=256)
     parser.add_argument("--max-states", type=int)
     parser.add_argument("--include-forced", action="store_true")
+    parser.add_argument("--state-batch-size", type=int, default=4,
+                        help="States per worker task, amortizing IPC")
+    parser.add_argument("--prefetch-batches", type=int, default=2,
+                        help="Outstanding tasks per worker (bounded streaming)")
     args = parser.parse_args()
     traces = sorted(set(p for pattern in args.traces for p in glob.glob(pattern)))
     label_traces(traces, args.output_dir, args.rollouts, args.workers,
                  args.seed, args.policy, args.batch_size, args.shard_size,
-                 args.max_states, args.include_forced)
+                 args.max_states, args.include_forced,
+                 args.state_batch_size, args.prefetch_batches)
 
 
 if __name__ == "__main__":
