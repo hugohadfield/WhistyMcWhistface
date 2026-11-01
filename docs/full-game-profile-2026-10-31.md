@@ -107,3 +107,12 @@ The profiler's `--output` writes a reusable binary cProfile record; the CI run u
 This is **one seeded, full, three-player game**, not a statistical distribution of latency across seats/deals/machines. The workload mixes early- and late-round decision sizes, and results are dominated by the AI's actual number of legal candidate cards and the remaining trick count. The percentages and absolute times can differ for other hands, seeds, and especially multiworker runs. Use ordinary unprofiled benchmarks for user-facing latency, cProfile self/cumulative timings for prioritizing improvements, and independent game-quality experiments to ensure optimization does not harm decisions.
 
 **Bottom line:** Simulation is the main bottleneck (~75% of profiled compute), **bidding second** (~23%), and observer/public-state validation currently only a few percent. The immediate code hot spots are the **simulated card transition**, **uniform random continuation move selection**, and **per-branch random-state initialization**. This supports optimizing the fast simulator's inner loop next rather than rewriting the public-state layer first.
+
+## Update: optimized simulation and exact bidding
+
+A subsequent optimization removed redundant checks in the simulation loop,
+reused bitmask states and seeded RNGs, and replaced the 20,000-sample active
+bid-distribution estimator with an exact subset DP. The old bottleneck
+ranking and raw profile above describe the **pre-optimization version**.
+For paired measured before/after results and preserved seeded card scores,
+see [the optimization report](rollout-and-bidding-optimization-2026-10-31.md).

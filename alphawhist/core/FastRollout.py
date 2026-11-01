@@ -218,7 +218,8 @@ def evaluate_actions(snapshot, actions=None, n_rollouts=DEFAULT_ROLLOUTS, seed=0
     for a fixed seed regardless of workers/batch_size.
 
     'score' maximizes our expected round points; 'margin' maximizes our
-    expected points minus the strongest opponent's points *per rollout*.
+    expected points minus the strongest *opponent expected score*.
+    This is not the mean of the per-rollout minimum score margin.
     """
     if snapshot.phase != "playing" or snapshot.turn != snapshot.observer_id:
         raise ValueError("Snapshot must be at the observer's card decision")

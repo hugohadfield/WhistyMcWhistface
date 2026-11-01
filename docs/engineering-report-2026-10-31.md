@@ -290,3 +290,20 @@ by the advanced bid estimator; the public-event state reducer is a minor
 contributor. The reusable profiler and complete breakdown are documented
 in [full-game profiling results](full-game-profile-2026-10-31.md), with
 [the raw run](https://github.com/hugohadfield/WhistyMcWhistface/actions/runs/41281313795).
+
+## 13. Performance optimization follow-up
+
+Following the cProfile analysis, the simulator gained a privately unchecked,
+already-legal card transition, reused pre-encoded sampled-world bitmasks and
+seeded RNG objects, and the active Monte Carlo bidders switched from a
+20,000-simulation distribution to an **exact random-order/leader-state subset
+DP**. This is an exact calculation under the prior approximate probability
+model; it does not make strategic bidding optimal.
+
+A same-run old/new comparison found **1.36× faster seven-card** and **1.22×
+faster three-card** evaluators on identical sampled states with identical
+score vectors, and around **1.2–1.4× faster complete matches**.
+See the [follow-up optimization report](rollout-and-bidding-optimization-2026-10-31.md)
+for the measurements, validation and methodology. This change supersedes
+the earlier descriptions of a 20,000-simulation active bid-distribution
+estimator, but not the historical benchmarks recorded above.

@@ -27,6 +27,14 @@ information updates), see the
 [full-game profiling results](docs/full-game-profile-2026-10-31.md).
 Reproduce with `python -m benchmarks.profile_full_game --rollouts 1024`.
 
+**Follow-up optimization:** Card-rollout loops now avoid redundant checks,
+reuse pre-encoded candidate states and seeded RNGs, while bidding uses an
+exact subset dynamic program instead of 20,000 sampled bid outcomes.
+The [optimization results and before/after measurements](docs/rollout-and-bidding-optimization-2026-10-31.md)
+show approximately 1.2–1.4× faster whole games and **identical seeded
+card-evaluation scores**. You can run the fixed-position benchmark with
+`python -m benchmarks.measure_evaluator --scenario early --rollouts 4096`.
+
 
 ## Serializable information state and rollout experiments
 
