@@ -104,3 +104,55 @@ def test_bot_invalid_worker_count_is_rejected(cls):
         cls(0, ["14h"], additionalParameters={
             "monteCarloNumber": "20", "monteCarloWorkers": "0"
         })
+
+
+@pytest.mark.parametrize("cls", [MonteCarloPlayer, SnakeMonteCarloPlayer])
+@pytest.mark.parametrize("parameters", [None, {}, {"monteCarloWorkers": "2"}])
+def test_default_monte_carlo_rollout_budget(cls, parameters):
+    """Omitting bot parameters must still initialize both defaults."""
+    kwargs = {} if parameters is None else {"additionalParameters": parameters}
+    bot = cls(0, ["14h", "2s"], **kwargs)
+    assert bot.monteCarloNumber == 1024
+    assert bot.monteCarloWorkers == (2 if parameters and "monteCarloWorkers" in parameters else 1)
+    assert bot.export_policy_state()["monteCarloNumber"] == 1024
+
+
+@pytest.mark.parametrize("cls", [MonteCarloPlayer, SnakeMonteCarloPlayer])
+def test_explicit_monte_carlo_rollout_budget_overrides_default(cls):
+    bot = cls(0, ["14h"], additionalParameters={"monteCarloNumber": "16"})
+    assert bot.monteCarloNumber == 16
+    assert bot.monteCarloWorkers == 1
+
+
+def test_fast_rollout_default_is_1024():
+    import inspect
+    from alphawhist.core.FastRollout import DEFAULT_ROLLOUTS, evaluate_actions
+
+    assert DEFAULT_ROLLOUTS == 1024
+    assert inspect.signature(evaluate_actions).parameters["n_rollouts"].default == 1024
+
+
+@pytest.mark.parametrize("cls", [MonteCarloPlayer, SnakeMonteCarloPlayer])
+def test_default_budget_is_passed_to_move_evaluator(cls, monkeypatch, capsys):
+    from types import SimpleNamespace
+    import alphawhist.core.FastRollout as fast_rollout
+
+    game = game_with_mc_player(cls, 1, ncards=3)
+    hand = game.players[1].real_hand
+    bot = cls(1, hand)
+    game.players[1] = bot
+    called = {}
+
+    def fake_evaluate(snapshot, moves, **kwargs):
+        called.update(kwargs)
+        called["observer_id"] = snapshot.observer_id
+        return SimpleNamespace(best_action=lambda: moves[0])
+
+    monkeypatch.setattr(fast_rollout, "evaluate_actions", fake_evaluate)
+    legal_moves = bot.getRealPossibleMoves(game.pile)
+    assert len(legal_moves) > 1
+    chosen = bot.makeMove(game.pile.copy(), game.trumpsuit, game)
+    assert chosen in legal_moves
+    assert called["n_rollouts"] == 1024
+    assert called["workers"] == 1
+    assert called["observer_id"] == 1

@@ -1,13 +1,18 @@
 from RandomPlayer import *
+from alphawhist.core.FastRollout import DEFAULT_ROLLOUTS
 import random
 import sys
 import traceback
 
 
 class SnakeMonteCarloPlayer(Player):
+    # Defaults also apply when no additionalParameters are supplied.
+    monteCarloNumber = DEFAULT_ROLLOUTS
+    monteCarloWorkers = 1
+
 
     def handleAdditionalParamaters(self, parameters):
-        self.monteCarloNumber = int(parameters["monteCarloNumber"])
+        self.monteCarloNumber = int(parameters.get("monteCarloNumber", DEFAULT_ROLLOUTS))
         self.monteCarloWorkers = int(parameters.get("monteCarloWorkers", 1))
         if self.monteCarloNumber < 1 or self.monteCarloWorkers < 1:
             raise ValueError("Monte Carlo rollouts and workers must be positive")

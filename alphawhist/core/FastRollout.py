@@ -17,6 +17,7 @@ SUITS = "hcsd"
 SUIT_MASKS = tuple(sum(1 << c for c in range(s * 13, (s + 1) * 13))
                    for s in range(4))
 UINT64 = (1 << 64) - 1
+DEFAULT_ROLLOUTS = 1024
 
 
 def hand_mask(cards):
@@ -187,7 +188,7 @@ def _batch(args):
     return accum
 
 
-def evaluate_actions(snapshot, actions=None, n_rollouts=1000, seed=0,
+def evaluate_actions(snapshot, actions=None, n_rollouts=DEFAULT_ROLLOUTS, seed=0,
                      workers=1, batch_size=256, objective="score",
                      policy="random"):
     """Evaluate candidate plays under paired possible-world rollouts.

@@ -140,3 +140,19 @@ reference is also a finite Monte Carlo estimate, **not exact ground truth**.
 Individual score estimates need not improve monotonically as N grows; the
 regression tests check exact prefix accounting and aggregate convergence
 against an analytically known one-card expectation.
+
+## Default Monte Carlo budget
+
+The default card-decision budget is **1,024 rollouts** in
+`FastRollout.evaluate_actions()`, `MonteCarloPlayer`, and
+`SnakeMonteCarloPlayer`. Both bot classes use this value even if
+`additionalParameters` is absent or empty. The worker default remains one.
+
+Explicit configuration overrides are unchanged; for example,
+`{"monteCarloNumber": "128", "monteCarloWorkers": "2"}` still requests
+128 rollouts with two workers. Existing numbered config presets (such as
+`ThreePlayerMonte1000.json`) retain their named, explicit budgets.
+
+`whistmain.py` still starts a game with random players unless its
+player config is changed; setting the Monte Carlo default does not change
+the default player lineup.
