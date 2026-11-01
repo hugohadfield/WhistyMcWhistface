@@ -477,10 +477,8 @@ def test_other_observer_sees_only_public_cards_not_opponents_secrets():
     first = game.players[0].real_hand
     second = game.players[1].real_hand
     # These are both opponents from player 2's perspective.
-    game.players[0].set_hands(second, game.players[0].possible_hand + [
-        card for card in second if card not in game.players[0].possible_hand
-    ])
-    game.players[1].set_hands(first, game.players[1].possible_hand)
+    game.players[0].set_hands(second)
+    game.players[1].set_hands(first)
     after = game.observe(player_id=2)
     assert after == before
 
