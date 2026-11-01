@@ -290,6 +290,7 @@ class Game():
         self.roundnumber = 0
         self.trickNumber = 0
         self._information_state = None
+        self._observer_cache = {}
         # Recorder is opt-in, never part of game-state serialization.
         self.training_recorder = None
 
@@ -349,6 +350,9 @@ class Game():
             previous_history=history,
             policy_state=memory,
         )
+        # Observer states are specific to one dealt round. Cached observers
+        # must not carry real hands/knowledge across independent deals.
+        self._observer_cache = {}
         recorder = getattr(self, "training_recorder", None)
         if recorder is not None:
             recorder.on_round_start(self)
@@ -360,11 +364,15 @@ class Game():
             self._information_state = state.apply_public_event(event)
 
     def observe(self, player_id=0):
-        """Return a player's public knowledge without inspecting other hands.
+        """Return only this player's private hand and publicly known cards.
 
-        Player 0's incrementally maintained information state is cached.
-        Other observers reconstruct their own beliefs from public events and
-        their personal remaining hand. The complete public timeline is kept.
+        Player zero has an incrementally updated InformationState. For
+        other players, lazily reconstruct once per round and then apply only
+        NEW public events. This avoids repeatedly replaying entire round and
+        match history on every turn, which dominated training-game traces.
+
+        Cache is invalidated at each deal and on a changed history prefix.
+        Policy memory is attached fresh on every call (never cached).
         """
         state = getattr(self, "_information_state", None)
         if state is None:
@@ -377,29 +385,43 @@ class Game():
         else:
             if state.phase not in ("dealt", "bidding", "playing"):
                 raise ValueError("Alternate observers require an active round")
-            events = state.public_history
-            first = max(i for i, event in enumerate(events)
-                        if event["type"] == "round_start")
-            round_events = events[first:]
-            start_event = round_events[0]
-            own_start = list(self.players[player_id].real_hand)
-            own_start.extend(
-                event["card"] for event in round_events[1:]
-                if event["type"] == "card" and event["player"] == player_id
-            )
-            observation = InformationState.new_round(
-                own_hand=own_start,
-                num_players=self.numberofplayers,
-                round_index=start_event["round"],
-                dealer=start_event["dealer"],
-                leader=start_event["leader"],
-                cards_per_player=start_event["cards_per_player"],
-                scores=self.scores,
-                observer_id=player_id,
-                previous_history=state.history_json[:first],
-            )
-            for event in round_events[1:]:
-                observation = observation.apply_public_event(event)
+            cache = getattr(self, "_observer_cache", None)
+            if cache is None:
+                cache = self._observer_cache = {}
+            observation = cache.get(player_id)
+            # Verify the public-history prefix before replaying just the
+            # suffix. A caller may legitimately replace _information_state
+            # during a deterministic simulation or test.
+            if (observation is None
+                    or len(observation.history_json) > len(state.history_json)
+                    or observation.history_json != state.history_json[:len(observation.history_json)]):
+                events = state.public_history
+                first = max(i for i, event in enumerate(events)
+                            if event["type"] == "round_start")
+                round_events = events[first:]
+                start_event = round_events[0]
+                own_start = list(self.players[player_id].real_hand)
+                own_start.extend(
+                    event["card"] for event in round_events[1:]
+                    if event["type"] == "card" and event["player"] == player_id
+                )
+                observation = InformationState.new_round(
+                    own_hand=own_start,
+                    num_players=self.numberofplayers,
+                    round_index=start_event["round"],
+                    dealer=start_event["dealer"],
+                    leader=start_event["leader"],
+                    cards_per_player=start_event["cards_per_player"],
+                    scores=self.scores,
+                    observer_id=player_id,
+                    previous_history=state.history_json[:first],
+                )
+                for event in round_events[1:]:
+                    observation = observation.apply_public_event(event)
+            else:
+                for event_json in state.history_json[len(observation.history_json):]:
+                    observation = observation.apply_public_event(json.loads(event_json))
+            cache[player_id] = observation
 
         player = self.players[player_id]
         return observation.with_policy_state(player.export_policy_state())

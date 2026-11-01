@@ -23,6 +23,7 @@ import time
 
 from alphawhist.core.WhistStructure import Game
 from alphawhist.learning.recording import TrainingRecorder
+from alphawhist.learning.timing import TimingCounters
 from MonteCarloPlayer import MonteCarloPlayer
 from RandomPlayer import RandomPlayer
 
@@ -32,7 +33,8 @@ AGENTS = ("random", "mc_random", "mc_aware")
 
 def play_training_game(index, seed=20261102, players=3,
                        agents=("random",), rollouts=256,
-                       output_dir="training-traces", private_dir=None):
+                       output_dir="training-traces", private_dir=None,
+                       timings_dir=None):
     if index < 0 or players < 2 or players > 7 or rollouts < 1:
         raise ValueError("Bad game index, player count or rollout budget")
     if not agents or any(a not in AGENTS for a in agents):
@@ -73,6 +75,12 @@ def play_training_game(index, seed=20261102, players=3,
         return original_deal(cards)
 
     game.randomDeal = fixed_deal
+    timers = TimingCounters() if timings_dir is not None else None
+    if timers is not None:
+        for method in ("randomDeal", "getPlayerBids", "processScore", "observe"):
+            timers.wrap(game, method, f"game.{method}")
+        for pid, player in enumerate(game.players):
+            timers.wrap(player, "makeMove", f"policy.{names[pid]}.makeMove")
     started = time.perf_counter()
     with TrainingRecorder(
         trace, game_id=f"{seed}-{index}", metadata={
@@ -83,25 +91,39 @@ def play_training_game(index, seed=20261102, players=3,
         }, privileged_path=privileged,
     ) as recorder:
         game.training_recorder = recorder
+        if timers is not None:
+            for method in ("on_round_start", "on_decision", "on_round_end",
+                           "on_game_end"):
+                timers.wrap(recorder, method, f"recording.{method}")
         with open(os.devnull, "w", encoding="utf-8") as sink:
             with contextlib.redirect_stdout(sink):
                 game.playFullGame()
         recorded = recorder.decisions_written
+    elapsed = time.perf_counter() - started
     if game.roundnumber != len(SCHEDULE) or recorded != players * sum(SCHEDULE):
         raise AssertionError("Incomplete full-game training trace")
-    return index, recorded, time.perf_counter() - started
+    if timers is not None:
+        timers.save(
+            Path(timings_dir) / f"game-{index:07d}.json",
+            {"index": index, "agents": names, "players": players,
+             "rollouts": rollouts, "total_wall_seconds": elapsed,
+             "trace_bytes": trace.stat().st_size},
+        )
+    return index, recorded, elapsed
 
 
 def generate(games=20, start=0, seed=20261102, players=3,
              agents=("random",), rollouts=256, workers=1,
-             output_dir="training-traces", private_dir=None):
+             output_dir="training-traces", private_dir=None,
+             timings_dir=None):
     if games < 1 or start < 0 or workers < 1:
         raise ValueError("Invalid game count, offset or workers")
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     indices = range(start, start + games)
     args = (seed, players, tuple(agents), rollouts, str(output_dir),
-            str(private_dir) if private_dir else None)
+            str(private_dir) if private_dir else None,
+            str(timings_dir) if timings_dir else None)
     started = time.perf_counter()
     if workers == 1:
         iterator = (play_training_game(index, *args) for index in indices)
@@ -115,6 +137,7 @@ def generate(games=20, start=0, seed=20261102, players=3,
                     repeat(seed), repeat(players), repeat(tuple(agents)),
                     repeat(rollouts), repeat(str(output_dir)),
                     repeat(str(private_dir) if private_dir else None),
+                    repeat(str(timings_dir) if timings_dir else None),
                     chunksize=1):
                 print(f"GAME {index} decisions={count} seconds={seconds:.2f}",
                       flush=True)
@@ -135,10 +158,13 @@ def main():
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--private-dir", type=Path)
+    parser.add_argument("--timings-dir", type=Path,
+                        help="Opt-in per-game JSON breakdown of recording, observation and policy time")
     args = parser.parse_args()
     generate(args.games, args.start, args.seed, args.players,
              tuple(args.agents.split(",")), args.rollouts,
-             args.workers, args.output_dir, args.private_dir)
+             args.workers, args.output_dir, args.private_dir,
+             args.timings_dir)
 
 
 if __name__ == "__main__":
