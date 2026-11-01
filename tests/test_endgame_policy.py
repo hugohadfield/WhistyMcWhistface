@@ -53,8 +53,8 @@ def test_cannot_win_current_trick_if_already_beaten():
         leader=0, turn=1, trump=0
     )
     legal = legal_mask(state.hands[1], state.pile)
-    assert _current_win_probability(state, CARD_ID["2h"], CARD_ID["3h"]) == 0.0
-    assert _current_win_probability(state, CARD_ID["3h"], CARD_ID["2h"]) == 0.0
+    assert _current_win_probability(state, CARD_ID["2h"]) == 0.0
+    assert _current_win_probability(state, CARD_ID["3h"]) == 0.0
     assert set((two_card_values(state, legal) or ())[:2]) == {
         CARD_ID["2h"], CARD_ID["3h"]
     }

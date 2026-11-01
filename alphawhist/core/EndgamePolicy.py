@@ -54,7 +54,7 @@ _LAST_FOLLOW_WIN = tuple(
 )
 
 
-def _current_win_probability(state, card, other):
+def _current_win_probability(state, card):
     """Survival chance given the public pile; never read hidden hands."""
     pile = state.pile
     trump = state.trump
@@ -108,8 +108,8 @@ def two_card_values(state, legal):
     b = (legal ^ first_bit).bit_length() - 1
     needed = state.bids[player] - state.tricks_won[player]
     others = len(state.hands) - 1
-    pa = _current_win_probability(state, a, b)
-    pb = _current_win_probability(state, b, a)
+    pa = _current_win_probability(state, a)
+    pb = _current_win_probability(state, b)
     # All terminal lead/follow probabilities are table lookups.
     sa, ra = int(a // 13 == state.trump), a % 13
     sb, rb = int(b // 13 == state.trump), b % 13
