@@ -102,12 +102,17 @@ def test_cannot_play_observers_hand_as_opponent():
 
 
 def test_own_hand_must_follow_suit():
-    s = started()
-    s = s.apply_public_event({"type": "card", "player": 0, "card": "2s"})
+    s = InformationState.new_round(
+        ["14h", "2s"], 3, 0, 0, 1, 2
+    )
+    s = s.apply_public_event({"type": "trump", "player": 0, "suit": "s"})
+    for pid in (1, 2, 0):
+        s = s.apply_public_event({"type": "bid", "player": pid, "bid": 0})
     s = s.apply_public_event({"type": "card", "player": 1, "card": "3h"})
-    # The observer has 14h and the next seat will be opponent 2;
-    # simple own-hand illegality is tested with a separate leader.
-    assert s.turn == 2
+    s = s.apply_public_event({"type": "card", "player": 2, "card": "4h"})
+    with pytest.raises(ValueError, match="follow suit"):
+        s.apply_public_event({"type": "card", "player": 0, "card": "2s"})
+    assert s.own_hand == ("14h", "2s")
 
 
 def test_invalid_trick_winner_is_rejected():
@@ -392,3 +397,40 @@ def test_determinization_of_snapshot_not_tied_to_source_game(capsys):
     rollout = Game.from_information_state(state, seed=71)
     assert tuple(rollout.players[0].real_hand) == state.own_hand
     assert set(card for p in rollout.players for card in p.real_hand) <= set(all_cards_in_deck)
+
+
+@pytest.mark.parametrize("hidden_field", [
+    {"opponent_hand": ["5h", "6h"]},
+    {"private_notes": "secret"},
+    {"real_hand": ["2s"]},
+])
+def test_public_event_rejects_hidden_extra_fields(hidden_field):
+    s = fresh()
+    event = {"type": "trump", "player": 2, "suit": "h", **hidden_field}
+    with pytest.raises(ValueError, match="schema"):
+        s.apply_public_event(event)
+
+
+def test_corrupted_history_with_hidden_card_field_rejected_on_load():
+    raw = fresh().to_dict()
+    raw["public_history"][0]["secret_opponent_hand"] = ["4h", "5h"]
+    with pytest.raises(ValueError, match="schema"):
+        InformationState.from_dict(raw)
+
+
+def test_public_event_history_tracks_all_three_player_bids_in_order():
+    s = started()
+    assert [
+        (e["player"], e["bid"])
+        for e in s.public_history if e["type"] == "bid"
+    ] == [(0, 0), (1, 0), (2, 0)]
+
+
+def test_snapshot_pickle_not_required_and_independent_of_policy_class(tmp_path):
+    state = fresh().with_policy_state({"policy": "custom-agent", "internal": {"x": 17}})
+    path = tmp_path / "portable.json"
+    state.save(path)
+    source = path.read_text(encoding="utf-8")
+    assert "custom-agent" in source
+    assert "pickle" not in source.lower()
+    assert InformationState.load(path).policy_state["internal"]["x"] == 17
