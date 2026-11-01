@@ -290,36 +290,29 @@ def monte_carlo_pdfify(problist, mcnumber):
 
 
 def mini_monte_sim(leadingProbList, followingProbList, bidPosition, mcnumber):
-    ncards = len(leadingProbList)
-    pdfout = []
-    for i in range(0, ncards + 1):
-        pdfout.append(0.0)
+    """Approximate trick-count distribution with a changing leader.
 
-    if bidPosition == 0:
-        startleading = True
-    else:
-        startleading = False
-    for mcIterator in range(0, mcnumber):
-        leading = startleading
-        accumulator = 0
-        leadCopy = [i for i in leadingProbList]
-        followCopy = [i for i in followingProbList]
-        for cardIterator in range(0, ncards):
-            cardIndex = random.choice(list(range(0, len(leadCopy))))
-            leadProb = leadCopy.pop(cardIndex)
-            followProb = followCopy.pop(cardIndex)
-            randomVal = random.random()
-            if leading:
-                if randomVal < leadProb:
-                    accumulator = accumulator + 1
-            else:
-                if randomVal < followProb:
-                    accumulator = accumulator + 1
-        pdfout[accumulator] = pdfout[accumulator] + 1
-    for i in range(0, ncards + 1):
-        pdfout[i] = pdfout[i] / float(mcnumber)
-    return pdfout
-
+    After winning we lead next; after losing another player leads.
+    """
+    if len(leadingProbList) != len(followingProbList):
+        raise ValueError("Lead and follow probability lists must have equal lengths")
+    if mcnumber < 1:
+        raise ValueError("mcnumber must be positive")
+    n = len(leadingProbList)
+    pdf = [0.0] * (n + 1)
+    for _ in range(mcnumber):
+        leading = bidPosition == 0
+        wins = 0
+        lead = list(leadingProbList)
+        follow = list(followingProbList)
+        for _ in range(n):
+            index = random.randrange(len(lead))
+            p_lead, p_follow = lead.pop(index), follow.pop(index)
+            won = random.random() < (p_lead if leading else p_follow)
+            wins += won
+            leading = won
+        pdf[wins] += 1
+    return [count / mcnumber for count in pdf]
 
 def mini_monte_reward_function(cardIndex, pile, leadingProbList, followingProbList, bidPosition, mcnumber):
     copiedLeadList = [i for i in leadingProbList]
@@ -359,3 +352,65 @@ def mini_monte_reward_function(cardIndex, pile, leadingProbList, followingProbLi
     for i in range(0, ncards + 1):
         pdfout[i] = pdfout[i] / float(mcnumber)
     return pdfout
+
+def estimate_card_win_probabilities(cards_in_hand, nplayers, ncards, trumpsuit, samples=512):
+    """Monte Carlo single-trick win rates, conditional on lead/follow status.
+
+    Opponents receive non-overlapping uniform random unseen cards and select
+    uniformly among legal plays (following suit if possible). Following
+    trials condition on our candidate card being legal for the sampled lead.
+    This is a random-opponent approximation, not a calibrated strategic model.
+    """
+    hand = list(cards_in_hand)
+    if not hand:
+        return [], []
+    if nplayers < 2 or ncards < len(hand) or ncards < 1:
+        raise ValueError("Invalid number of players or cards")
+    if len(set(hand)) != len(hand) or not set(hand).issubset(all_cards_in_deck):
+        raise ValueError("Cards must be distinct and from the deck")
+    if trumpsuit not in ('h', 'c', 's', 'd') or samples < 1:
+        raise ValueError("Invalid trump or sample count")
+    unseen = [c for c in all_cards_in_deck if c not in hand]
+    total = (nplayers - 1) * ncards
+    if total > len(unseen):
+        raise ValueError("Not enough unseen cards for opponents")
+
+    leading_wins = [0] * len(hand)
+    following_wins = [0] * len(hand)
+    following_attempts = [0] * len(hand)
+
+    def legal_random_play(remaining_hand, led_suit):
+        matching = cards_of_suit(remaining_hand, led_suit)
+        return random.choice(matching if matching else remaining_hand)
+
+    for _ in range(samples):
+        dealt = random.sample(unseen, total)
+        opponents = [dealt[i * ncards:(i + 1) * ncards]
+                     for i in range(nplayers - 1)]
+
+        for i, card in enumerate(hand):
+            trick = [card] + [legal_random_play(opp, card[-1])
+                              for opp in opponents]
+            leading_wins[i] += analyse_pile(trick, trumpsuit) == 0
+
+        our_position = random.randrange(1, nplayers)
+        led_card = random.choice(opponents[0])
+        prefix = [led_card]
+        for opp in opponents[1:our_position]:
+            prefix.append(legal_random_play(opp, led_card[-1]))
+        held_lead_suit = any(c[-1] == led_card[-1] for c in hand)
+
+        for i, card in enumerate(hand):
+            if held_lead_suit and card[-1] != led_card[-1]:
+                continue
+            following_attempts[i] += 1
+            trick = prefix + [card] + [
+                legal_random_play(opp, led_card[-1])
+                for opp in opponents[our_position:]
+            ]
+            following_wins[i] += analyse_pile(trick, trumpsuit) == our_position
+
+    lead_probs = [n / samples for n in leading_wins]
+    follow_probs = [wins / attempts if attempts else 0.0
+                    for wins, attempts in zip(following_wins, following_attempts)]
+    return lead_probs, follow_probs

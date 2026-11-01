@@ -38,12 +38,13 @@ class RandomWithAdvancedBidPlayer(Player):
         bidPosition = len(previousbids)
 
         cardsInHand = self.real_hand
-        leadingProbList = self.computeLeadingCardVictory(nplayers, cardsInHand, ncards, trumpsuit)
-        followingProbList = self.computeFollowingCardVictory(nplayers, cardsInHand, ncards, trumpsuit)
+        leadingProbList, followingProbList = estimate_card_win_probabilities(
+            cardsInHand, nplayers, ncards, trumpsuit
+        )
         bidPDF = mini_monte_sim(leadingProbList, followingProbList, bidPosition, 20000)
 
         validBids = self.getValidBidOptions(nplayers, ncards, previousbids)
-        for i in range(0, ncards):
+        for i in range(0, ncards + 1):
             if i not in validBids:
                 bidPDF[i] = -1.0
 
@@ -53,37 +54,10 @@ class RandomWithAdvancedBidPlayer(Player):
         return thisbid
 
     def computeLeadingCardVictory(self, nplayers, cardsInHand, ncards, trumpsuit):
-        outputProbs = []
-        handSize = len(cardsInHand)
-        for card in cardsInHand:
-            # All cards that beat this card, assuming this card leads
-            cardlist = card_beating_list(card, trumpsuit)
-            # All cards that beat this card and are not in my hand
-            possibleOppList = list(set(cardsInHand) ^ set(cardlist))
-            # Probability that an opposition player does not have one of these cards
-            probabilityOfWin1v1 = 1 - (len(possibleOppList) / float(52 - handSize))
-            # I know this is wrong, but not very wrong, needs some sampling without replacement stuff...
-            # Probability that no opposition players have one of these cards
-            probabilityTotalVictory = probabilityOfWin1v1 ** (nplayers - 1)
-            outputProbs.append(probabilityTotalVictory)
-        return outputProbs
+        return estimate_card_win_probabilities(cardsInHand, nplayers, ncards, trumpsuit)[0]
 
     def computeFollowingCardVictory(self, nplayers, cardsInHand, ncards, trumpsuit):
-        outputProbs = []
-        handSize = len(cardsInHand)
-        for card in cardsInHand:
-            # All cards that beat this card, assuming this card follows
-            leadsuit = 'p'
-            cardlist = card_following_list(card, leadsuit, trumpsuit)
-            # All cards that beat this card and are not in my hand
-            possibleOppList = list(set(cardsInHand) ^ set(cardlist))
-            # Probability that an opposition player does not have one of these cards
-            probabilityOfWin1v1 = 1 - (len(possibleOppList) / float(52 - handSize))
-            # I know this is wrong, but not very wrong, needs some sampling without replacement stuff...
-            # Probability that no opposition players have one of these cards
-            probabilityTotalVictory = probabilityOfWin1v1 ** (nplayers - 1)
-            outputProbs.append(probabilityTotalVictory)
-        return outputProbs
+        return estimate_card_win_probabilities(cardsInHand, nplayers, ncards, trumpsuit)[1]
 
     def generateModelPlayer(self):
         return copy.deepcopy(self)

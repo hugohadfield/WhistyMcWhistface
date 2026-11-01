@@ -175,7 +175,7 @@ def test_monte_carlo_distribution_normalized():
 @pytest.mark.parametrize('lead,follow,pos,expected', [
     ([1,1,1],[0,0,0],0,[0,0,0,1]),
     ([1,1,1],[0,0,0],1,[1,0,0,0]),
-    ([0,0],[1,1],0,[1,0,0]),
+    ([0,0],[1,1],0,[0,1,0]),
 ])
 def test_mini_monte_deterministic_probabilities(lead,follow,pos,expected):
     assert w.mini_monte_sim(lead,follow,pos,20) == expected
