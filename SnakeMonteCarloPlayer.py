@@ -1,4 +1,5 @@
 from RandomPlayer import *
+import random
 import sys
 import traceback
 
@@ -40,83 +41,44 @@ class SnakeMonteCarloPlayer(Player):
         return snake_val
 
     def makeMove(self, pile, trumpsuit, fullGameObject=None):
-        currentPossibleMoves = self.getPossibleMoves(pile)
-        print("Trumps: ", end=' ')
-        print(trumpsuit)
-        print("All Cards In Hand: ", end=' ')
-        print(self.possible_hand)
-        print("Legal Moves: ", end=' ')
-        print(currentPossibleMoves)
-        print("Cards in pile: ", end=' ')
-        print(pile)
-        if currentPossibleMoves is not str:
-            if len(currentPossibleMoves) > 1:
-                # Project n steps into the future and evaluate the quality of the move
-                thisPlayerCardRanking = []
+        """Evaluate every legal move with shared hidden-world rollouts."""
+        from alphawhist.core.FastRollout import evaluate_actions
 
-                for specificCard in currentPossibleMoves:
-                    # We suppress the monte carlo chatter
-                    sys.stdout = NullIO()
-                    [outputScores, errorCounter] = self.cardPlayMonteCarlo(specificCard, self.monteCarloNumber,
-                                                                           fullGameObject)
-                    sys.stdout = sys.__stdout__
-                    thisPlayerCardRanking.append(self.snakeFunction(self.playerNumber, outputScores))
-                    print(errorCounter, end=' ')
-                print(" ")
-                # Get the maximum value and expected point ranking
-                print(thisPlayerCardRanking)
-                [expectedPointGain, cardIndex] = max_and_index(thisPlayerCardRanking)
-
-                # Play the card
-                cardToPlay = currentPossibleMoves[cardIndex]
-            else:
-                cardToPlay = currentPossibleMoves[0]
+        moves = self.getRealPossibleMoves(pile)
+        if not moves:
+            raise ValueError("No legal moves")
+        if len(moves) == 1:
+            card = moves[0]
         else:
-            cardToPlay = currentPossibleMoves
-        if self.playCard(cardToPlay):
-            self.cardSuitCheck(pile, cardToPlay)
-            return cardToPlay
-        else:
-            print("Card playing error")
+            if fullGameObject is None:
+                raise ValueError("Monte Carlo move selection requires a Game")
+            observation = fullGameObject.observe(self.playerNumber)
+            result = evaluate_actions(
+                observation, moves,
+                n_rollouts=self.monteCarloNumber,
+                seed=random.getrandbits(64),
+                objective="margin",
+            )
+            card = result.best_action()
+        if not self.playCard(card):
+            raise ValueError("Selected card is no longer in hand")
+        self.cardSuitCheck(pile, card)
+        return card
 
     def cardPlayMonteCarlo(self, specificCard, monteCarloNumber, fullGameObject):
+        """Compatibility wrapper, now using the history-free simulator."""
+        from alphawhist.core.FastRollout import evaluate_actions
 
-        playerRange = list(range(0, fullGameObject.numberofplayers))
-        averageScores = [0.0 for i in playerRange]
-
-        # Keep track of any game errors and use them to correct score estimate
-        errorCounter = 0
-        for monteIterator in range(0, monteCarloNumber):
-            # Make a copy of the current game object
-            tempGame = copy.deepcopy(fullGameObject)
-            tempGame.convertToDeterministicGame()
-
-            # Reset scores for now
-            tempGame.scores = [0.0 for i in playerRange]
-
-            # Revert all players to random
-            newPlayers = []
-            for p in tempGame.players:
-                newPlayers.append(p.generateModelPlayer())
-            tempGame.players = [i for i in newPlayers]
-
-            # try:
-            tempGame.playPartialTrick(specificCard)
-            tempGame.playPartialRound()
-
-            # Merge the score output
-            averageScores = [a + s for a, s in zip(averageScores, tempGame.scores)]
-            # for i in range(0,tempGame.numberofplayers):
-            #    averageScores[i] = averageScores[i] + float(tempGame.scores[i])
-            # except:
-            #     tb = traceback.format_exc()
-            #     errorCounter = errorCounter + 1
-
-        # Convert to proper average
-        for i in range(0, fullGameObject.numberofplayers):
-            averageScores[i] = (1 / float(monteCarloNumber - errorCounter)) * averageScores[i]
-
-        return averageScores, errorCounter
+        if fullGameObject is None:
+            raise ValueError("Monte Carlo evaluation requires a Game")
+        result = evaluate_actions(
+            fullGameObject.observe(self.playerNumber),
+            [specificCard],
+            n_rollouts=monteCarloNumber,
+            seed=random.getrandbits(64),
+            objective="margin",
+        )
+        return list(result.mean_round_scores[0]), 0
 
     def makeBid(self, nplayers, ncards, trumpsuit, previousbids):
         # thisbid = self.makeAverageBid( nplayers, ncards, trumpsuit, previousbids)
