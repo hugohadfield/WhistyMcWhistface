@@ -17,4 +17,7 @@ jobs:
       - name: Run tests
         run: python -m pytest -q
       - name: Benchmark rollout throughput
-        run: python -m benchmarks.rollouts --rollouts 80 --workers 1 --cards 7
+        run: |
+          python -m benchmarks.rollouts --rollouts 80 --workers 1 --cards 7
+          python -m benchmarks.rollouts --rollouts 80 --workers 1 --cards 3
+          python -m benchmarks.rollouts --rollouts 80 --workers 1 --cards 1
