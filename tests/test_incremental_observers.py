@@ -74,7 +74,7 @@ def test_cached_observer_refreshed_after_new_private_policy_state():
     first = game.observe(1)
     # The policy's private memory is attached afresh; it is not copied
     # into the cached public world model.
-    game.players[1].zeroCounter += 1
+    game.players[1].resetZeroCounter(game.players[1].zero_bid_count + 1)
     after = game.observe(1)
     assert first.own_hand == after.own_hand
     assert first.history_json == after.history_json
