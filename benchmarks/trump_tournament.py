@@ -9,6 +9,7 @@ Run:
     python -m benchmarks.trump_tournament --games 50 --rollouts 1024
     python -m benchmarks.trump_tournament --games 50 --rollouts 1024 --csv tournament.csv
     python -m benchmarks.trump_tournament --games 500 --rollouts 1024 --workers 4 --csv tournament.csv
+    python -m benchmarks.trump_tournament --games 250 --rollouts 1024 --workers 4 --seed 20261056 --trumps-csv trump-choices.csv
 
 The two matches in a pair have identical starting deals in every round,
 but decisions and random streams can diverge as the policies interact.
@@ -58,7 +59,7 @@ class Match:
     seconds: float
 
 
-def play_match(game_index, seed=20261031, rollouts=1024):
+def play_match(game_index, seed=20261031, rollouts=1024, include_trumps=False):
     if game_index < 0 or rollouts < 1:
         raise ValueError("game_index must be >= 0 and rollouts must be positive")
     pair = game_index // 2
@@ -108,24 +109,59 @@ def play_match(game_index, seed=20261031, rollouts=1024):
         "OLD" if winners == [old_seat] else
         "RANDOM" if winners == [random_seat] else "TIE_FOR_FIRST"
     )
-    return Match(
+    match = Match(
         game=game_index + 1, deal_seed=deal_seed,
         new_seat=new_seat, old_seat=old_seat, random_seat=random_seat,
         new_score=new_score, old_score=old_score, random_score=random_score,
         margin=margin, result=result, winner=winner, seconds=duration
     )
+    if not include_trumps:
+        return match
+    # Public history records all 13 trump selections. Recording them does not
+    # cause any additional random draws or alter gameplay, unlike recomputing
+    # the Monte Carlo picker's choices after the fact.
+    trump_events = [
+        (round_index, event["player"], event["suit"])
+        for round_index, event in enumerate(
+            event for event in history if event["type"] == "trump"
+        )
+    ]
+    assert len(trump_events) == 13
+    assert all(dealer == index % 3
+               for index, dealer, suit in trump_events)
+    return match, tuple(trump_events)
 
 
 def tournament(games=50, seed=20261031, rollouts=1024, csv_path=None,
-               workers=1):
+               workers=1, trumps_csv=None):
     if games < 1 or games % 2:
         raise ValueError("Number of games must be positive and even (seat-swap pairs)")
     if rollouts < 1 or workers < 1:
         raise ValueError("Rollouts and workers must be positive")
     results = []
+    trump_rows = []
     started = time.perf_counter()
 
-    def record(match):
+    def record(item):
+        if trumps_csv is not None:
+            match, picks = item
+            for round_index, dealer, suit in picks:
+                picker = (
+                    "NEW" if dealer == match.new_seat else
+                    "OLD" if dealer == match.old_seat else "RANDOM"
+                )
+                trump_rows.append({
+                    "game": match.game,
+                    "pair": (match.game + 1) // 2,
+                    "deal_seed": match.deal_seed,
+                    "round": round_index + 1,
+                    "cards": (7, 6, 5, 4, 3, 2, 1, 2, 3, 4, 5, 6, 7)[round_index],
+                    "dealer": dealer,
+                    "picker": picker,
+                    "suit": suit,
+                })
+        else:
+            match = item
         results.append(match)
         print(
             f"MATCH {match.game:02d} pair={((match.game - 1) // 2) + 1:02d} "
@@ -139,13 +175,15 @@ def tournament(games=50, seed=20261031, rollouts=1024, csv_path=None,
 
     if workers == 1:
         for index in range(games):
-            record(play_match(index, seed=seed, rollouts=rollouts))
+            record(play_match(index, seed=seed, rollouts=rollouts,
+                              include_trumps=trumps_csv is not None))
     else:
         # Ordered results despite concurrent execution; games seed their
         # process-local global RNG independently, so outcomes remain exact.
         with ProcessPoolExecutor(max_workers=workers) as pool:
             for match in pool.map(play_match, range(games),
-                                  repeat(seed), repeat(rollouts), chunksize=1):
+                                  repeat(seed), repeat(rollouts),
+                                  repeat(trumps_csv is not None), chunksize=1):
                 record(match)
     elapsed = time.perf_counter() - started
     new_h2h = sum(m.result == "NEW" for m in results)
@@ -179,6 +217,20 @@ def tournament(games=50, seed=20261031, rollouts=1024, csv_path=None,
             writer.writeheader()
             writer.writerows(asdict(match) for match in results)
         print(f"CSV {csv_path}", flush=True)
+    if trumps_csv is not None:
+        trump_path = Path(trumps_csv)
+        trump_path.parent.mkdir(parents=True, exist_ok=True)
+        assert len(trump_rows) == games * 13
+        with trump_path.open("w", encoding="utf-8", newline="") as stream:
+            writer = csv.DictWriter(
+                stream,
+                fieldnames=("game", "pair", "deal_seed", "round", "cards",
+                            "dealer", "picker", "suit"),
+            )
+            writer.writeheader()
+            writer.writerows(trump_rows)
+        print(f"TRUMP_CSV {trump_path} selections={len(trump_rows)}",
+              flush=True)
     return results
 
 
@@ -190,9 +242,12 @@ def main():
     parser.add_argument("--workers", type=int, default=1,
                         help="Concurrent full-game processes, distinct from rollout workers")
     parser.add_argument("--csv", type=Path)
+    parser.add_argument("--trumps-csv", type=Path,
+                        help="Export every actually chosen trump suit, by "
+                             "dealer and game, from public game history")
     args = parser.parse_args()
     tournament(args.games, args.seed, args.rollouts, args.csv,
-               workers=args.workers)
+               workers=args.workers, trumps_csv=args.trumps_csv)
 
 
 if __name__ == "__main__":
