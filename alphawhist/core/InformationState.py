@@ -196,6 +196,10 @@ class InformationState:
     def apply_public_event(self, event):
         """Pure reducer for public events. Caller may never pass hidden cards."""
         _validate_public_event(event)
+        # Append this already-validated event during the same immutable
+        # dataclass replace, rather than constructing and validating two
+        # full history snapshots for every single public event.
+        new_history = self.history_json + (_event(event),)
         kind = event["type"]
         if kind == "trump":
             if self.phase != "dealt" or event.get("player") != self.dealer:
@@ -204,7 +208,8 @@ class InformationState:
             if suit not in SUITS:
                 raise ValueError("Invalid trump")
             result = replace(self, trump=suit, phase="bidding",
-                             turn=(self.dealer + 1) % self.num_players)
+                             turn=(self.dealer + 1) % self.num_players,
+                             history_json=new_history)
 
         elif kind == "bid":
             if self.phase != "bidding" or event.get("player") != self.turn:
@@ -219,7 +224,8 @@ class InformationState:
             all_bid = all(b is not None for b in bids)
             result = replace(self, bids=tuple(bids),
                              phase="playing" if all_bid else "bidding",
-                             turn=self.leader if all_bid else (self.turn + 1) % self.num_players)
+                             turn=self.leader if all_bid else (self.turn + 1) % self.num_players,
+                             history_json=new_history)
 
         elif kind == "card":
             if self.phase != "playing" or event.get("player") != self.turn:
@@ -264,6 +270,7 @@ class InformationState:
                 played_cards=self.played_cards + (card,),
                 pile=self.pile + ((player, card),),
                 turn=(player + 1) % self.num_players,
+                history_json=new_history,
             )
 
         elif kind == "trick_end":
@@ -282,6 +289,7 @@ class InformationState:
                 self, tricks_won=tuple(won), trick_number=next_trick,
                 pile=(), leader=winner, turn=winner,
                 phase="scoring" if next_trick == self.cards_per_player else "playing",
+                history_json=new_history,
             )
 
         elif kind == "round_end":
@@ -294,10 +302,11 @@ class InformationState:
             result = replace(self, scores=scores, round_index=self.round_index + 1,
                              dealer=dealer, leader=(dealer + 1) % self.num_players,
                              turn=(dealer + 1) % self.num_players,
-                             trick_number=0, phase="between_rounds")
+                             trick_number=0, phase="between_rounds",
+                             history_json=new_history)
         else:
             raise ValueError("Unknown public event")
-        return replace(result, history_json=result.history_json + (_event(event),))
+        return result
 
     def to_dict(self):
         return {
