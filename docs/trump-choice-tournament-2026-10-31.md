@@ -147,3 +147,15 @@ with two game workers and **2.61×** with four, and all twelve paired-match
 score records were identical to serial mode. See the
 [parallel tournament benchmark](parallel-tournament-benchmark-2026-10-31.md)
 for methodology and 200/500-game runtime estimates.
+
+## Update: independent 250-game follow-up
+
+A larger [250-game experiment](trump-choice-tournament-250-games-2026-11-01.md)
+using **125 fresh paired deal seeds** and four concurrent full-game workers
+found **130 wins for the new picker, 118 wins for the old heuristic, and two
+ties**. Mean new-minus-old score was **−0.32 points/game** (paired-bootstrap
+95% interval **−2.46 to +1.81**). Across both experiments (300 games, 150
+distinct deal pairs), the new picker's mean score advantage is only
+**+0.28 points/game**, with a paired-bootstrap interval spanning zero
+(**−1.73 to +2.28**). The early 30–19 result was not a reliably
+representative measure of long-run playing strength.

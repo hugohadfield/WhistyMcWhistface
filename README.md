@@ -50,6 +50,14 @@ The original `TrumpPicker.picktrump()` heuristic remains available, and the
 compares the two using identical 1,024-rollout bidding/card-play policies.
 The new version won **30** head-to-head games versus **19** for the heuristic,
 with **one tie**, but the 25 paired deal-level results are inconclusive.
+
+**Larger follow-up:** A [250-game tournament with four concurrent games](docs/trump-choice-tournament-250-games-2026-11-01.md)
+found **130 new-picker head-to-head wins, 118 heuristic wins and two ties**.
+Despite that win-count edge, the new picker's mean score advantage was
+**−0.32 points/game** (paired bootstrap 95% interval approximately
+**−2.46 to +1.81**). The combined 300-game evidence does **not** establish
+that either picker is stronger. The complete 250 scores are preserved in
+that report.
 Reproduce with
 `python -m benchmarks.trump_tournament --games 50 --rollouts 1024`.
 
