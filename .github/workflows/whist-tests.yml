@@ -29,16 +29,3 @@ jobs:
           python -m benchmarks.score_convergence --scenario early --rollouts 16 64 256 1024 4096 --reference 8192
           python -m benchmarks.score_convergence --scenario mid --rollouts 16 64 256 1024 4096 --reference 8192
 
-
-      - name: Experimental 250-game paired endgame policy tournament
-        if: github.event_name == 'pull_request' && github.head_ref == 'experiment/bid-aware-vs-random-tournament-250'
-        timeout-minutes: 20
-        run: |
-          python -m benchmarks.endgame_policy_tournament --games 250 --rollouts 1024 --workers 4 --seed 20261301 --csv endgame-policy-250.csv
-      - name: Archive experimental 250-game paired results
-        if: github.event_name == 'pull_request' && github.head_ref == 'experiment/bid-aware-vs-random-tournament-250'
-        uses: actions/upload-artifact@v4
-        with:
-          name: endgame-policy-250-raw-matches
-          path: endgame-policy-250.csv
-          retention-days: 14

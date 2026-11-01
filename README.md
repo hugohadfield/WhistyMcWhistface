@@ -292,3 +292,24 @@ points**, compared with **0.308** for the current stochastic (temperature
 for choosing randomly. These are **reference-model regrets**, **not**
 whole-game match strengths. The default remains `random`; a paired
 full-game tournament and temperature ablation are still needed.
+
+## Bid-aware versus random continuations: 250-game tournament (November 2026)
+
+The [250-game paired tournament report](docs/endgame-policy-250-game-tournament-2026-11-01.md)
+compares two otherwise identical 1,024-rollout `MonteCarloPlayer` agents,
+one using `bid_aware_2` for future simulated play and the other using the
+original uniform random future-play policy. The agents swapped seats for
+each of **125 matched deal seeds**; a third `RandomPlayer` filled the table.
+
+The bid-aware agent won **134 head-to-head games**, versus **114** for random
+continuations, with **two ties**. Its mean final-game score advantage was
+**+1.188 points**, with a paired-bootstrap 95% confidence interval of
+**[−0.152, +2.472]** points per game. That interval crosses zero, and the
+bid-aware policy incurs greater inference cost, so **no conclusive strength
+improvement has yet been established** and random continuation remains the
+default.
+
+The complete [250-match CSV](benchmarks/results/endgame-policy-250-2026-11-01.csv)
+is retained permanently in the repository. The [successful CI experiment
+run](https://github.com/hugohadfield/WhistyMcWhistface/actions/runs/41338768757)
+passed 496 tests; the one-off 250-game CI step was removed after the run.
