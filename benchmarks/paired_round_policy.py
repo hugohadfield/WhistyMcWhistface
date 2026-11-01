@@ -1,7 +1,8 @@
 """Matched single-round A/B test for Monte Carlo continuation policies.
 
 Both candidate bots play the SAME seat in independent replays of the SAME
-dealt round, against independently seeded but identical RandomPlayer opponents.
+dealt round, against fixed, independently seeded opponents (either random
+or strong 1024-rollout Monte Carlo bots).
 Trump selection, bids, and starting hands are checked for equality. Each
 candidate has the same rollout budget; only monteCarloPolicy differs.
 
@@ -11,7 +12,7 @@ the acting MonteCarloPlayer; it observes only public history and its own hand.
 
 Run:
  python -m benchmarks.paired_round_policy --rounds-per-size 100 --cards 1 2 3 4 5 6 7 \
-     --rollouts 512 --workers 4 --csv paired-rounds.csv
+     --rollouts 1024 --workers 4 --opponents monte_carlo --csv paired-rounds.csv
 """
 import argparse
 from concurrent.futures import ProcessPoolExecutor
@@ -76,6 +77,7 @@ class RoundResult:
     scenario: int
     cards: int
     players: int
+    opponents: str
     deal_seed: int
     deal_sha256: str
     tested_seat: int
@@ -97,16 +99,22 @@ class RoundResult:
     seconds: float
 
 
-def _play_round(hands, dealer, seat, rollouts, policy, seed):
+def _play_round(hands, dealer, seat, rollouts, policy, seed,
+                opponents="random"):
     nplayers = len(hands)
     cards = len(hands[0])
     game = Game.__new__(Game)
     game.cardnumbers = [cards]
     game.playerConfigFileName = ""
     game.numberofplayers = nplayers
+    if opponents not in ("random", "monte_carlo"):
+        raise ValueError("Unknown opponent type")
     game.players = [
         (_SeededMonteCarlo(pid, rollouts, policy, seed ^ 0x43A125)
          if pid == seat else
+         _SeededMonteCarlo(pid, rollouts, "bid_aware_2",
+                           (seed ^ 0x53B123) + 20011 * (pid + 1))
+         if opponents == "monte_carlo" else
          _SeededOpponent(pid, seed + 20011 * (pid + 1)))
         for pid in range(nplayers)
     ]
@@ -145,7 +153,8 @@ def _play_round(hands, dealer, seat, rollouts, policy, seed):
 
 
 def run_scenario(index, cards, seed=20261102, rollouts=256,
-                 players=3, policy_a="random", policy_b="bid_aware_2"):
+                 players=3, policy_a="random", policy_b="bid_aware_2",
+                 opponents="random"):
     """One independent, controlled matched-deal pair of actual round replays."""
     if index < 0 or rollouts < 1 or players < 2 or players > 7:
         raise ValueError("Invalid index, rollout budget or player count")
@@ -153,6 +162,8 @@ def run_scenario(index, cards, seed=20261102, rollouts=256,
         raise ValueError("Invalid cards per player")
     if policy_a not in POLICIES or policy_b not in POLICIES:
         raise ValueError("Unsupported continuation policy")
+    if opponents not in ("random", "monte_carlo"):
+        raise ValueError("Unknown opponent type")
     deal_seed = seed + cards * 1000003 + index
     rng = random.Random(deal_seed)
     dealt = rng.sample(all_cards_in_deck, cards * players)
@@ -164,8 +175,10 @@ def run_scenario(index, cards, seed=20261102, rollouts=256,
     seat = index % players
     fingerprint = hashlib.sha256(json.dumps(hands).encode()).hexdigest()
     begin = time.perf_counter()
-    a = _play_round(hands, dealer, seat, rollouts, policy_a, deal_seed)
-    b = _play_round(hands, dealer, seat, rollouts, policy_b, deal_seed)
+    a = _play_round(hands, dealer, seat, rollouts, policy_a, deal_seed,
+                    opponents)
+    b = _play_round(hands, dealer, seat, rollouts, policy_b, deal_seed,
+                    opponents)
     scores_a, tricks_a, bids_a, trump_a = a
     scores_b, tricks_b, bids_b, trump_b = b
     # Only the continuation policy is changed. Both bids and trump are
@@ -177,7 +190,8 @@ def run_scenario(index, cards, seed=20261102, rollouts=256,
     margin_b = scores_b[seat] - max(x for i, x in enumerate(scores_b)
                                      if i != seat)
     return RoundResult(
-        scenario=index, cards=cards, players=players, deal_seed=deal_seed,
+        scenario=index, cards=cards, players=players, opponents=opponents,
+        deal_seed=deal_seed,
         deal_sha256=fingerprint, tested_seat=seat, dealer=dealer,
         trump=trump_a, bids=json.dumps(bids_a),
         policy_a=policy_a, policy_b=policy_b,
@@ -238,7 +252,7 @@ def tournament(rounds_per_size=100, cards=(1, 2, 3, 4, 5, 6, 7),
                rollouts=256, workers=4, players=3, seed=20261102,
                csv_path=None, bootstrap=4000,
                policy_a="random", policy_b="bid_aware_2",
-               progress_every=25):
+               progress_every=25, opponents="random"):
     if rounds_per_size < 1 or workers < 1 or bootstrap < 100 or progress_every < 1:
         raise ValueError("Invalid tournament settings")
     cards = tuple(cards)
@@ -246,7 +260,9 @@ def tournament(rounds_per_size=100, cards=(1, 2, 3, 4, 5, 6, 7),
         raise ValueError("Card counts must be distinct and nonempty")
     if any(not 1 <= c <= 7 or c * players > 52 for c in cards):
         raise ValueError("Invalid card size for player count")
-    jobs = [(i, c, seed, rollouts, players, policy_a, policy_b)
+    if opponents not in ("random", "monte_carlo"):
+        raise ValueError("Unknown opponent type")
+    jobs = [(i, c, seed, rollouts, players, policy_a, policy_b, opponents)
             for c in cards for i in range(rounds_per_size)]
     if csv_path is not None:
         csv_path = Path(csv_path)
@@ -283,7 +299,8 @@ def tournament(rounds_per_size=100, cards=(1, 2, 3, 4, 5, 6, 7),
     for item in stats:
         print("SUMMARY " + " ".join(f"{key}={value}"
                                   for key, value in item.items()), flush=True)
-    print(f"DONE rounds={len(completed)} policies={policy_a},{policy_b} "
+    print(f"DONE rounds={len(completed)} opponents={opponents} "
+          f"policies={policy_a},{policy_b} "
           f"rollouts={rollouts} workers={workers} seed={seed} "
           f"wall_seconds={time.perf_counter() - started:.3f}", flush=True)
     return completed, stats
@@ -298,6 +315,8 @@ def main():
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--seed", type=int, default=20261102)
     parser.add_argument("--bootstrap", type=int, default=4000)
+    parser.add_argument("--opponents", choices=("random", "monte_carlo"),
+                        default="random")
     parser.add_argument("--policy-a", choices=POLICIES, default="random")
     parser.add_argument("--policy-b", choices=POLICIES, default="bid_aware_2")
     parser.add_argument("--progress-every", type=int, default=25)
@@ -305,7 +324,8 @@ def main():
     args = parser.parse_args()
     tournament(args.rounds_per_size, args.cards, args.rollouts,
                args.workers, args.players, args.seed, args.csv, args.bootstrap,
-               args.policy_a, args.policy_b, args.progress_every)
+               args.policy_a, args.policy_b, args.progress_every,
+               args.opponents)
 
 
 if __name__ == "__main__":
