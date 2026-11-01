@@ -136,6 +136,35 @@ def run(players=(2, 3, 4, 5, 6, 7), states=1500, quality_states=40,
     return results
 
 
+def full_evaluator_benchmark(rollouts=256, repeats=3, seed=42):
+    """Measure complete 7-card action evaluations, including early rollout."""
+    from benchmarks.score_convergence import example_snapshot
+    from alphawhist.core.FastRollout import evaluate_actions
+
+    if rollouts < 1 or repeats < 1:
+        raise ValueError("Full evaluator budgets must be positive")
+    snapshot = example_snapshot("early")
+    outcomes = {}
+    for policy in ("random", "bid_aware_2"):
+        times = []
+        decisions = []
+        for _ in range(repeats):
+            started = time.perf_counter()
+            result = evaluate_actions(
+                snapshot, n_rollouts=rollouts, seed=seed, policy=policy,
+            )
+            times.append(time.perf_counter() - started)
+            decisions.append(result.best_action())
+        assert all(x == decisions[0] for x in decisions)
+        outcomes[policy] = statistics.median(times)
+        print(f"FULL_EVAL policy={policy} rollouts={rollouts} "
+              f"median_seconds={outcomes[policy]:.5f} "
+              f"best_action={decisions[0]}", flush=True)
+    ratio = outcomes["bid_aware_2"]/outcomes["random"]
+    print(f"FULL_EVAL_SLOWDOWN ratio={ratio:.3f}x", flush=True)
+    return outcomes
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--players", type=int, nargs="+", default=list(range(2, 8)))
@@ -143,9 +172,12 @@ def main():
     parser.add_argument("--quality-states", type=int, default=40)
     parser.add_argument("--quality-rollouts", type=int, default=64)
     parser.add_argument("--seed", type=int, default=20261101)
+    parser.add_argument("--full-rollouts", type=int, default=256)
+    parser.add_argument("--full-repeats", type=int, default=3)
     args = parser.parse_args()
     run(args.players, args.states, args.quality_states,
         args.quality_rollouts, args.seed)
+    full_evaluator_benchmark(args.full_rollouts, args.full_repeats, args.seed)
 
 
 if __name__ == "__main__":
