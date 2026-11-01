@@ -110,7 +110,13 @@ def test_game_secret_opponent_hand_swap_cannot_change_encoding():
         "type": "trump", "player": game.dealer, "suit": "h",
     })
     game.getPlayerBids()
-    # The actor is seat 1 at round start; swap ONLY the other players.\n    left, right = game.players[0], game.players[2]\n    before = encode_decision(game.observe(1))\n    a, b = left.real_hand, right.real_hand\n    left.set_hands(b)\n    right.set_hands(a)\n    after = encode_decision(game.observe(1))
+    # The actor is seat 1 at round start; swap ONLY the other players.
+    left, right = game.players[0], game.players[2]
+    before = encode_decision(game.observe(1))
+    a, b = left.real_hand, right.real_hand
+    left.set_hands(b)
+    right.set_hands(a)
+    after = encode_decision(game.observe(1))
     np.testing.assert_array_equal(before.features, after.features)
     np.testing.assert_array_equal(before.legal_mask, after.legal_mask)
 
