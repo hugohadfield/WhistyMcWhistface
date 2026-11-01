@@ -13,6 +13,7 @@ this file. Install with `pip install -r requirements-ml.txt`.
 """
 from dataclasses import dataclass
 
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -122,15 +123,16 @@ class DistributionalWhistMLP(nn.Module):
         if isinstance(encoded, EncodedDecision):
             encoded = EncodedBatch(
                 encoded.features[None], encoded.legal_mask[None],
-                __import__("numpy").asarray([encoded.remaining_tricks]),
-                __import__("numpy").asarray([encoded.tricks_won]),
-                __import__("numpy").asarray([encoded.bid]),
+                np.asarray([encoded.remaining_tricks], dtype=np.int64),
+                np.asarray([encoded.tricks_won], dtype=np.int64),
+                np.asarray([encoded.bid], dtype=np.int64),
             )
         if not isinstance(encoded, EncodedBatch):
             raise TypeError("Expected EncodedDecision or EncodedBatch")
         if device is None:
             device = next(self.parameters()).device
-        to_tensor = lambda x, dtype: torch.as_tensor(x, dtype=dtype, device=device)
+        def to_tensor(array, dtype):
+            return torch.as_tensor(array, dtype=dtype, device=device)
         was_training = self.training
         try:
             self.eval()
