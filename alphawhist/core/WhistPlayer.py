@@ -71,6 +71,8 @@ class Player():
         }
         if hasattr(self, "monteCarloNumber"):
             result["monteCarloNumber"] = self.monteCarloNumber
+        if hasattr(self, "monteCarloWorkers"):
+            result["monteCarloWorkers"] = self.monteCarloWorkers
         return result
 
     def load_policy_state(self, state):
@@ -84,6 +86,8 @@ class Player():
         self.resetZeroCounter(state["zero_bid_count"])
         if "monteCarloNumber" in state and hasattr(self, "monteCarloNumber"):
             self.monteCarloNumber = state["monteCarloNumber"]
+        if "monteCarloWorkers" in state and hasattr(self, "monteCarloWorkers"):
+            self.monteCarloWorkers = state["monteCarloWorkers"]
 
     def handleAdditionalParamaters(self, parameters):
         return True
