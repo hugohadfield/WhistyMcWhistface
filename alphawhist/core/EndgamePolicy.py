@@ -1,7 +1,7 @@
 """Fast, information-safe heuristic for two-card Whist endgames.
 
 Only reads the acting player's two cards, the public current trick, public
-trick counts, bids and trump. It MUST NOT look into opponents' sampled hands.
+trick counts, bids and trump. Probability tables are computed at import. It MUST NOT look into opponents' sampled hands.
 No additional Monte Carlo sampling, search trees or deck allocations.
 
 All card IDs use FastRollout's original 52-card suit-major encoding:
@@ -16,93 +16,66 @@ _LAST_CARD_VOID_RATE = 0.75
 _TEMPERATURE = 1.5
 
 
-def _threats(card, led_suit, trump, void_rate):
-    """Effective number of unseen higher cards; approximate, not calibrated."""
-    rank = card % 13
-    suit = card // 13
-    if suit == trump:
-        return 12 - rank
-    if suit != led_suit:
-        return 52.0  # Off-suit nontrump can never win this trick.
-    return 12 - rank + 13 * void_rate
+def _win_tables(cards_per_opponent, void_fraction):
+    """Lookup probability of surviving N future opponents.
 
-
-def _lead_win_probability(card, trump, others, cards_per_opponent,
-                          other_own_card=-1):
-    """Cheap prior for an unplayed card leading a trick.
-
-    Not conditioned on specific opponent hands, which are secret. One threat
-    factor is applied per possible opposing card, with a constant 50-card
-    denominator as a first-order unseen-deck approximation.
+    Calculated once at module import; there are at most six opponents.
+    Suit flag index 0 = ordinary suit, 1 = trump. Rank index 0..12.
     """
-    if others == 0:
-        return 1.0
-    suit = card // 13
-    threat = _threats(card, suit, trump, _TWO_CARD_VOID_RATE
-                      if cards_per_opponent == 2 else _LAST_CARD_VOID_RATE)
-    # Do not count the second card in our own hand as an opposing threat.
-    if other_own_card >= 0:
-        other_suit = other_own_card // 13
-        other_rank = other_own_card % 13
-        if suit == trump and other_suit == trump and other_rank > card % 13:
-            threat -= 1
-        elif suit != trump:
-            if other_suit == suit and other_rank > card % 13:
-                threat -= 1
-            elif other_suit == trump:
-                threat -= _TWO_CARD_VOID_RATE
-    single_survival = max(0.0, min(1.0, 1.0 - threat / 50.0))
-    return single_survival ** (others * cards_per_opponent)
+    return tuple(
+        (
+            tuple(
+                (max(0.0, 1.0 - (12 - rank + 13 * void_fraction) / 50.0)
+                 ** (opponents * cards_per_opponent))
+                for rank in range(13)
+            ),
+            tuple(
+                ((1.0 - (12 - rank) / 50.0)
+                 ** (opponents * cards_per_opponent))
+                for rank in range(13)
+            )
+        )
+        for opponents in range(7)
+    )
+
+
+# The costly exponentials never happen inside the hot rollout loop.
+_CURRENT_WIN = _win_tables(2, _TWO_CARD_VOID_RATE)
+_LAST_LEAD_WIN = _win_tables(1, _LAST_CARD_VOID_RATE)
+_LAST_FOLLOW_WIN = tuple(
+    (
+        tuple(_LAST_LEAD_WIN[n][0][rank] * 0.25 * ((rank + 1) / 13.0)
+              for rank in range(13)),
+        tuple(_LAST_LEAD_WIN[n][1][rank] *
+              (0.75 + 0.25 * ((rank + 1) / 13.0))
+              for rank in range(13)),
+    )
+    for n in range(7)
+)
 
 
 def _current_win_probability(state, card, other):
-    """Chance candidate wins current trick, given public cards seen so far."""
+    """Survival chance given the public pile; never read hidden hands."""
     pile = state.pile
-    lead = pile[0] // 13 if pile else card // 13
     trump = state.trump
     suit = card // 13
+    lead = pile[0] // 13 if pile else suit
+    rank = card % 13
     if suit == trump:
-        power = 100 + card % 13
+        power = 100 + rank
     elif suit == lead:
-        power = card % 13
+        power = rank
     else:
         return 0.0
-
-    # If an already-played card beats ours, later plays cannot reverse that.
+    # Only public cards already on the table can rule out a win.
     for seen in pile:
-        seen_suit = seen // 13
-        seen_power = (100 + seen % 13 if seen_suit == trump else
-                      seen % 13 if seen_suit == lead else -1)
-        if seen_power > power:
+        other_suit = seen // 13
+        strength = (100 + seen % 13 if other_suit == trump else
+                    seen % 13 if other_suit == lead else -1)
+        if strength > power:
             return 0.0
-    remaining_players = len(state.hands) - len(pile) - 1
-    if remaining_players == 0:
-        return 1.0
-    threat = _threats(card, lead, trump, _TWO_CARD_VOID_RATE)
-    other_suit = other // 13
-    if suit == trump and other_suit == trump and other % 13 > card % 13:
-        threat -= 1
-    elif suit != trump:
-        if other_suit == suit and other % 13 > card % 13:
-            threat -= 1
-        elif other_suit == trump:
-            threat -= _TWO_CARD_VOID_RATE
-    survival = max(0.0, min(1.0, 1.0 - threat / 50.0))
-    return survival ** (2 * remaining_players)
-
-
-def _last_follow_probability(card, trump, others):
-    """Chance to win the final trick after another player leads it."""
-    if others == 0:
-        return 1.0
-    lead_prob = _lead_win_probability(card, trump, others, 1)
-    rank_fraction = (card % 13 + 1) / 13.0
-    if card // 13 == trump:
-        # A trump can ruff non-trump leads, but not necessarily higher trump.
-        return lead_prob * (0.75 + 0.25 * rank_fraction)
-    # Only one remaining card: unknown lead must match suit (~1/4) and
-    # the card must still outrank the leading card.
-    return lead_prob * 0.25 * rank_fraction
+    opponents_after = len(state.hands) - len(pile) - 1
+    return _CURRENT_WIN[opponents_after][int(suit == trump)][rank]
 
 
 def _two_trick_value(p, q_lead, q_follow, needed):
@@ -137,10 +110,13 @@ def two_card_values(state, legal):
     others = len(state.hands) - 1
     pa = _current_win_probability(state, a, b)
     pb = _current_win_probability(state, b, a)
-    qa_lead = _lead_win_probability(b, state.trump, others, 1)
-    qb_lead = _lead_win_probability(a, state.trump, others, 1)
-    qa_follow = _last_follow_probability(b, state.trump, others)
-    qb_follow = _last_follow_probability(a, state.trump, others)
+    # All terminal lead/follow probabilities are table lookups.
+    sa, ra = int(a // 13 == state.trump), a % 13
+    sb, rb = int(b // 13 == state.trump), b % 13
+    qa_lead = _LAST_LEAD_WIN[others][sb][rb]
+    qb_lead = _LAST_LEAD_WIN[others][sa][ra]
+    qa_follow = _LAST_FOLLOW_WIN[others][sb][rb]
+    qb_follow = _LAST_FOLLOW_WIN[others][sa][ra]
     return (a, b,
             _two_trick_value(pa, qa_lead, qa_follow, needed),
             _two_trick_value(pb, qb_lead, qb_follow, needed))
