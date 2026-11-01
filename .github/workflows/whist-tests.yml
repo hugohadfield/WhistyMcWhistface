@@ -24,22 +24,6 @@ jobs:
       - name: Benchmark complete AI versus random 13-round matches
         run: |
           python -m benchmarks.full_game --rollouts 16 128 1024 --bots MonteCarloPlayer SnakeMonteCarloPlayer
-      - name: Replay 250 games and record actual trump selections
-        if: github.event_name == 'pull_request' && github.head_ref == 'experiment/trump-decision-distributions-250'
-        timeout-minutes: 25
-        run: |
-          python -m benchmarks.trump_tournament --games 250 --rollouts 1024 --workers 4 --seed 20261056 --csv /tmp/replayed-250.csv --trumps-csv /tmp/trumps-250.csv | tee /tmp/replay-summary.log
-          grep -q 'h2h_new_wins=130 h2h_old_wins=118 h2h_ties=2' /tmp/replay-summary.log
-          python -m benchmarks.analyze_trump_choices --csv /tmp/trumps-250.csv
-      - name: Archive real 250-game trump choice log
-        if: github.event_name == 'pull_request' && github.head_ref == 'experiment/trump-decision-distributions-250'
-        uses: actions/upload-artifact@v4
-        with:
-          name: trump-choices-250-game-replay
-          path: |
-            /tmp/trumps-250.csv
-            /tmp/replayed-250.csv
-          retention-days: 14
       - name: Report per-card scoring convergence
         run: |
           python -m benchmarks.score_convergence --scenario early --rollouts 16 64 256 1024 4096 --reference 8192

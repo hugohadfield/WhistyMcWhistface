@@ -58,6 +58,13 @@ Despite that win-count edge, the new picker's mean score advantage was
 **−2.46 to +1.81**). The combined 300-game evidence does **not** establish
 that either picker is stronger. The complete 250 scores are preserved in
 that report.
+
+**Do they actually pick different trumps?** Yes: a
+[matched-choice analysis](docs/trump-choice-distribution-analysis-2026-11-01.md)
+replayed the 250 games and inspected every public trump event. On **1,084
+identical dealer hands**, the two policies chose different suits in **418
+cases (38.56%)**. Despite that substantial disagreement, the tournament
+still found no clear playing-strength advantage for either strategy.
 Reproduce with
 `python -m benchmarks.trump_tournament --games 50 --rollouts 1024`.
 

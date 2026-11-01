@@ -331,3 +331,16 @@ python -m benchmarks.trump_tournament \
 The tournament runner preserves game ordering across concurrent worker counts. Because every match independently resets Python's random seed, game scores, winners, seating and paired deals should match for 1, 2, or 4 whole-game workers (apart from per-game wall-clock time). Automated regression tests and the earlier 12-game CPU-scaling experiment verify this determinism.
 
 **Conclusion:** The larger 250-game experiment does **not** corroborate a meaningful performance advantage for the new trump-selection policy. It remains the active default because that was the requested implementation choice, but the original heuristic is preserved for comparison. It would be premature to claim that the new picker is stronger or to revert it solely from this experiment; further work could focus on stronger opponent models, controlling RNG streams, or on the cases where the policies choose different trumps.
+
+## Update: the two selectors choose substantially different trumps
+
+An [instrumented full-game replay](trump-choice-distribution-analysis-2026-11-01.md)
+of all 250 games reproduced the original final scores exactly and compared
+the actual public trump choices in **1,084 matched dealer-hand/round cases**
+(where one policy was dealer in each seat-swapped game). The policies agreed
+**666** times and selected different trump suits **418 times (38.56%)**.
+The new selector selected suits more evenly than the original heuristic,
+which favored hearts and diamonds relative to clubs/spades. Therefore the
+comparable full-game performance does **not** simply reflect identical
+trump decisions. See the linked report for the 4×4 confusion matrix and
+per-hand-size comparison.
