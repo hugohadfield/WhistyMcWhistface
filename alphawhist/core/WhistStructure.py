@@ -287,7 +287,7 @@ class Game():
         for i, player in enumerate(self.players[1:]):
             hand = sampled[i * cardsinround:(i + 1) * cardsinround]
             player.set_hands(hand, unseen)
-        self._begin_observer_round()
+        self._begin_observer_round(cardsinround)
 
     def randomDeal(self, cardsinround):
         """Deal independent real hands; only the observed hand is fully known."""
@@ -298,7 +298,7 @@ class Game():
         unseen = [card for card in all_cards_in_deck if card not in known]
         for i, player in enumerate(self.players):
             player.set_hands(player_hands[i], player_hands[i] if i == 0 else unseen)
-        self._begin_observer_round()
+        self._begin_observer_round(cardsinround)
 
     def processScore(self):
         # Compare the number of tricks that each player has won 
@@ -310,7 +310,7 @@ class Game():
             self.scores[playerIterator] = self.scores[playerIterator] + thisPlayerScore
 
 
-    def _begin_observer_round(self):
+    def _begin_observer_round(self, cards_per_player):
         """Start public inference without ever reading opponents' real hands."""
         previous = getattr(self, "_information_state", None)
         history = (previous.history_json if previous is not None else ())
@@ -321,7 +321,7 @@ class Game():
             round_index=self.roundnumber,
             dealer=self.dealer,
             leader=self.leader,
-            cards_per_player=self.cardnumbers[self.roundnumber],
+            cards_per_player=cards_per_player,
             scores=self.scores,
             previous_history=history,
             policy_state=memory,
