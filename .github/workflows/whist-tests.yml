@@ -24,27 +24,6 @@ jobs:
       - name: Benchmark complete AI versus random 13-round matches
         run: |
           python -m benchmarks.full_game --rollouts 16 128 1024 --bots MonteCarloPlayer SnakeMonteCarloPlayer
-      - name: Benchmark concurrent independent games
-        if: github.event_name == 'pull_request' && github.head_ref == 'performance/concurrent-trump-games'
-        timeout-minutes: 15
-        run: |
-          python -c 'import os; print("RUNNER_CPUS", os.cpu_count(), flush=True)'
-          python -m benchmarks.trump_tournament --games 12 --rollouts 1024 --seed 61234 --workers 1 --csv /tmp/whist-serial.csv
-          python -m benchmarks.trump_tournament --games 12 --rollouts 1024 --seed 61234 --workers 2 --csv /tmp/whist-parallel2.csv
-          python -m benchmarks.trump_tournament --games 12 --rollouts 1024 --seed 61234 --workers 4 --csv /tmp/whist-parallel4.csv
-          python - <<'PY'
-          import csv
-          def load(filename):
-              with open(filename, encoding="utf-8", newline="") as file:
-                  return [
-                      {key: val for key, val in row.items() if key != "seconds"}
-                      for row in csv.DictReader(file)
-                  ]
-          baseline = load("/tmp/whist-serial.csv")
-          for n in (2, 4):
-              assert baseline == load(f"/tmp/whist-parallel{n}.csv")
-          print(f"PARALLEL_SCORE_EQUALITY confirmed games={len(baseline)} workers=1,2,4")
-          PY
       - name: Report per-card scoring convergence
         run: |
           python -m benchmarks.score_convergence --scenario early --rollouts 16 64 256 1024 4096 --reference 8192

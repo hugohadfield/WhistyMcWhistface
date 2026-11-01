@@ -137,3 +137,13 @@ This is a **research baseline**, not a definitive trump-policy tournament. A nat
 This 50-game sample gives an initial **30–19 head-to-head lead** and **+3.26 average match points** for the new picker. However, the 25 deal-paired units favor the new picker only 11–13 with one tie, and the paired bootstrap interval contains zero. Thus the experiment **does not establish** a robust advantage, despite the favorable raw game-win count. This distinction matters when using paired-seed designs; treating all 50 games as independent binomial samples would exaggerate the evidence.
 
 The default implementation was switched to the new expected-score picker as requested, with the original heuristic still available for comparison, and **future tournament results should determine whether the default remains preferable**.
+
+## Parallel whole-game execution (subsequent improvement)
+
+The tournament runner now supports process-parallel full matches with
+`--workers N`, without increasing the one-worker-per-card-decision rollout
+count. A same-run experiment on a 4-CPU GitHub runner achieved **1.97×**
+with two game workers and **2.61×** with four, and all twelve paired-match
+score records were identical to serial mode. See the
+[parallel tournament benchmark](parallel-tournament-benchmark-2026-10-31.md)
+for methodology and 200/500-game runtime estimates.

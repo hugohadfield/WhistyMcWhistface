@@ -62,6 +62,11 @@ In the summary, `wall_seconds` is the actual end-to-end tournament time;
 `total_seconds` adds up match times and is **not** elapsed wall time with
 parallel execution.
 
+The [12-game concurrency benchmark](docs/parallel-tournament-benchmark-2026-10-31.md)
+measured **1.97×** faster execution with two game workers and **2.61×**
+with four on a four-CPU GitHub runner; all game scores matched serial.
+
+
 ## Serializable information state and rollout experiments
 
 The authoritative hard-constraint beliefs of **player 0** are tracked
