@@ -334,29 +334,49 @@ class Game():
             self._information_state = state.apply_public_event(event)
 
     def observe(self, player_id=0):
-        """Immutable view of player zero's current knowledge.
+        """Return a player's public knowledge without inspecting other hands.
 
-        Secret opponent hands are never read here. Additional observers need
-        independent inference states and are deliberately not synthesized.
+        Player 0's incrementally maintained information state is cached.
+        Other observers reconstruct their own beliefs from public events and
+        their personal remaining hand. The complete public timeline is kept.
         """
-        if player_id != 0:
-            raise NotImplementedError("Only player zero's beliefs are tracked")
         state = getattr(self, "_information_state", None)
         if state is None:
             raise ValueError("Deal the round before observing")
-        player = self.players[0]
-        # This is an extensible hook for policy-specific JSON-serializable
-        # memory. Default policies store the bidding counter/configuration.
-        if hasattr(player, "export_policy_state"):
-            policy_memory = player.export_policy_state()
+        if not 0 <= player_id < self.numberofplayers:
+            raise ValueError("Invalid observer player ID")
+
+        if player_id == state.observer_id:
+            observation = state
         else:
-            policy_memory = {
-                "policy": type(player).__name__,
-                "zero_bid_count": player.zero_bid_count,
-            }
-            if hasattr(player, "monteCarloNumber"):
-                policy_memory["monteCarloNumber"] = player.monteCarloNumber
-        return state.with_policy_state(policy_memory)
+            if state.phase not in ("dealt", "bidding", "playing"):
+                raise ValueError("Alternate observers require an active round")
+            events = state.public_history
+            first = max(i for i, event in enumerate(events)
+                        if event["type"] == "round_start")
+            round_events = events[first:]
+            start_event = round_events[0]
+            own_start = list(self.players[player_id].real_hand)
+            own_start.extend(
+                event["card"] for event in round_events[1:]
+                if event["type"] == "card" and event["player"] == player_id
+            )
+            observation = InformationState.new_round(
+                own_hand=own_start,
+                num_players=self.numberofplayers,
+                round_index=start_event["round"],
+                dealer=start_event["dealer"],
+                leader=start_event["leader"],
+                cards_per_player=start_event["cards_per_player"],
+                scores=self.scores,
+                observer_id=player_id,
+                previous_history=state.history_json[:first],
+            )
+            for event in round_events[1:]:
+                observation = observation.apply_public_event(event)
+
+        player = self.players[player_id]
+        return observation.with_policy_state(player.export_policy_state())
 
     @classmethod
     def from_information_state(cls, state, seed=0, player_factory=None):
