@@ -24,6 +24,9 @@ jobs:
       - name: Benchmark complete AI versus random 13-round matches
         run: |
           python -m benchmarks.full_game --rollouts 16 128 1024 --bots MonteCarloPlayer SnakeMonteCarloPlayer
+      - name: Ten full-game matches against random players (experiment only)
+        if: github.event_name == 'pull_request' && github.head_ref == 'experiment/ten-games-vs-random'
+        run: python -m benchmarks.ten_games_vs_random --games 10 --rollouts 1024 --bots MonteCarloPlayer SnakeMonteCarloPlayer
       - name: Report per-card scoring convergence
         run: |
           python -m benchmarks.score_convergence --scenario early --rollouts 16 64 256 1024 4096 --reference 8192
