@@ -79,7 +79,7 @@ def test_nontrivial_one_card_exact_expected_points_and_variance_decreases():
     monotonically.
     """
     state = make_snapshot(
-        hand=("14s",), bids=(1, 0), nplayers=2, trump="h"
+        hand=("14s",), bids=(1, 1), nplayers=2, trump="h"
     )
     exact = 11 * 38 / 51
     seeds = (1, 2, 3, 4, 5, 6, 7, 8)
@@ -133,3 +133,39 @@ def test_different_objectives_share_identical_candidate_score_estimates():
         assert own.mean_round_scores == relative.mean_round_scores
         for row, diff in zip(relative.mean_round_scores, relative.values):
             assert isclose(diff, row[0] - max(row[1:]), abs_tol=1e-12)
+
+
+def test_report_scoring_convergence_rows_and_optional_csv(tmp_path):
+    from benchmarks.score_convergence import convergence_rows, run
+
+    state = make_snapshot()
+    summary, rows, reference = convergence_rows(
+        state, budgets=(8, 32, 128), reference_rollouts=512, seed=42
+    )
+    assert len(summary) == 3
+    assert len(rows) == 3 * len(state.own_hand)
+    assert [entry["rollouts"] for entry in summary] == [8, 32, 128]
+    assert {row["card"] for row in rows} == set(state.own_hand)
+    assert all(row["reference_regret_of_best"] >= -1e-10 for row in rows)
+    assert all(row["reference_best_card"] == reference.best_action()
+               for row in rows)
+
+    output = tmp_path / "convergence.csv"
+    emitted, emitted_rows, _ = run(
+        state, (8, 32), reference_rollouts=512, seed=42,
+        objective="margin", workers=1, csv_path=output
+    )
+    assert len(emitted) == 2
+    assert len(output.read_text().splitlines()) == 1 + len(emitted_rows)
+    assert "objective_value" in output.read_text().splitlines()[0]
+
+
+def test_report_rejects_invalid_budgets():
+    from benchmarks.score_convergence import convergence_rows
+
+    state = make_snapshot()
+    for budgets, reference in [
+        ((0, 16), 512), ((16, 8), 512), ((16, 16), 512), ((16, 32), 8)
+    ]:
+        with pytest.raises(ValueError):
+            convergence_rows(state, budgets, reference_rollouts=reference)

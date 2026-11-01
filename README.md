@@ -115,3 +115,28 @@ The benchmark compares full remaining-round simulations from the same
 snapshot with the original object-based simulation. Process startup overhead
 means multiple workers may be slower for small workloads. Search quality and
 the statistical calibration of the rollout policy are separate issues.
+
+## Monte Carlo card-score convergence
+
+The rollout evaluator produces a separate expected **round point score for
+each legal card**. To inspect how estimates and the chosen card change with
+the rollout budget, run the seeded experiment:
+
+```bash
+python -m benchmarks.score_convergence --scenario early
+python -m benchmarks.score_convergence --scenario mid --objective margin
+python -m benchmarks.score_convergence --snapshot decision_42.json \\
+    --rollouts 16 64 256 1024 4096 --reference 16384 --csv scores.csv
+```
+
+The report shows each candidate's estimated objective value, preferred card,
+mean absolute deviation from a high-rollout reference and estimated regret
+of the chosen card relative to that reference. It supports both `score`
+(own expected round points) and `margin` (own points minus the largest
+opponent **expected** points), and can export per-card CSV data.
+
+All budgets share the same RNG seed and nested sampled worlds. The large
+reference is also a finite Monte Carlo estimate, **not exact ground truth**.
+Individual score estimates need not improve monotonically as N grows; the
+regression tests check exact prefix accounting and aggregate convergence
+against an analytically known one-card expectation.
