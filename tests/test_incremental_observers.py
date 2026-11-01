@@ -66,6 +66,7 @@ def test_cached_observer_refreshed_after_new_private_policy_state():
     game = Game("testConfigFiles/ThreePlayerRandom.json")
     game.cardnumbers = [3]
     game.resetGame()
+    game.resetRound()
     game.randomDeal(3)
     game._record_public_event({
         "type": "trump", "player": game.dealer, "suit": "h",
