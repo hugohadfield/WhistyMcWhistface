@@ -1,5 +1,6 @@
 """Tests for exact-PMF trump-choice objective and paired full-game tournament."""
 import importlib
+from dataclasses import replace
 
 import pytest
 
@@ -111,3 +112,34 @@ def test_invalid_tournament_parameters():
         play_match(0, rollouts=0)
     with pytest.raises(ValueError, match="game_index"):
         play_match(-1, rollouts=4)
+
+def test_parallel_matches_identical_to_serial(tmp_path, capsys):
+    """Match scores/seats/seed/winners must not depend on CPU scheduling."""
+    serial_path = tmp_path / "serial.csv"
+    parallel_path = tmp_path / "parallel.csv"
+    serial = tournament(games=4, rollouts=8, seed=271828,
+                        csv_path=serial_path, workers=1)
+    parallel = tournament(games=4, rollouts=8, seed=271828,
+                          csv_path=parallel_path, workers=2)
+    assert [replace(m, seconds=0) for m in serial] == [
+        replace(m, seconds=0) for m in parallel
+    ]
+    assert [m.game for m in parallel] == [1, 2, 3, 4]
+    assert [m.deal_seed for m in parallel] == [
+        271828, 271828, 271829, 271829
+    ]
+    assert "workers=2" in capsys.readouterr().out
+
+    import csv
+    def rows_without_duration(path):
+        with path.open(newline="", encoding="utf-8") as stream:
+            return [
+                {k: v for k, v in row.items() if k != "seconds"}
+                for row in csv.DictReader(stream)
+            ]
+    assert rows_without_duration(serial_path) == rows_without_duration(parallel_path)
+
+
+def test_tournament_rejects_invalid_worker_count():
+    with pytest.raises(ValueError, match="workers"):
+        tournament(games=2, rollouts=4, workers=0)
