@@ -252,14 +252,18 @@ def test_game_observation_does_not_depend_on_secret_opponent_hands():
     assert "real_hand" not in game.observe().to_json()
 
 
-def test_observe_requires_deal_and_forbids_untracked_observer():
+def test_observe_requires_deal_and_accepts_other_private_observers():
     game = Game("testConfigFiles/ThreePlayerRandom.json")
     with pytest.raises(ValueError, match="Deal"):
         game.observe()
     game.resetRound()
     game.randomDeal(2)
-    with pytest.raises(NotImplementedError):
-        game.observe(player_id=1)
+    other = game.observe(player_id=1)
+    assert other.observer_id == 1
+    assert set(other.own_hand) == set(game.players[1].real_hand)
+    assert not set(other.own_hand) & other.opponents[0].possible_cards
+    with pytest.raises(ValueError, match="Invalid observer"):
+        game.observe(player_id=5)
 
 
 def setup_game(ncards=2, seed=234):
@@ -465,3 +469,26 @@ def test_custom_policy_can_restore_its_own_persistent_state(capsys):
         player_factory=lambda pid, hand: StatefulPlayer(pid, hand)
     )
     assert restored.players[0].cache == [1, 3, 5]
+
+
+def test_other_observer_sees_only_public_cards_not_opponents_secrets():
+    game = setup_game(ncards=3)
+    before = game.observe(player_id=2)
+    first = game.players[0].real_hand
+    second = game.players[1].real_hand
+    # These are both opponents from player 2's perspective.
+    game.players[0].set_hands(second, game.players[0].possible_hand + [
+        card for card in second if card not in game.players[0].possible_hand
+    ])
+    game.players[1].set_hands(first, game.players[1].possible_hand)
+    after = game.observe(player_id=2)
+    assert after == before
+
+
+def test_observer_replay_preserves_void_suit_constraints_for_other_player():
+    game = setup_game(ncards=2)
+    first = game.observe(player_id=1)
+    assert first.phase == "playing"
+    assert len(first.opponents) == 2
+    # The reconstructed history starts with the same public round start.
+    assert first.public_history == game.observe(player_id=0).public_history
