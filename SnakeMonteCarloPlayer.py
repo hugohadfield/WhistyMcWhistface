@@ -19,29 +19,14 @@ class SnakeMonteCarloPlayer(Player):
         return True
 
     def pick_trumps(self, nplayers):
-        # thistrump = self.alternateTrumpPicker(nplayers)
-        thistrump = TrumpPicker.picktrump(self.real_hand)
-        return thistrump
+        # Dealer chooses trumps before any bids have been made.
+        return self.alternateTrumpPicker(nplayers)
 
     def alternateTrumpPicker(self, nplayers):
-        cardsInHand = self.real_hand
-        ncards = len(self.real_hand)
-        possibleTrumps = ['h', 'd', 'c', 's']
-        confidenceList = []
-        for trumpsuit in possibleTrumps:
-            leadingProbList, followingProbList = estimate_card_win_probabilities(
-                cardsInHand, nplayers, ncards, trumpsuit
-            )
-            bidPDF = mini_monte_sim(leadingProbList, followingProbList, 2, 50000)
-            validBids = self.getValidBidOptions(nplayers, ncards, [])
-            for i in range(0, ncards + 1):
-                if i not in validBids:
-                    bidPDF[i] = -1.0
-            [confidence, thisbid] = max_and_index(bidPDF)
-            confidenceList.append(confidence)
-        print("Trump confidences: ", confidenceList)
-        [maxConfidence, trumpIndex] = max_and_index(confidenceList)
-        return possibleTrumps[trumpIndex]
+        """Active exact-DP trump selector (replaces the dormant legacy version)."""
+        return best_trump_by_expected_score(
+            self.real_hand, nplayers, can_bid_zero=self.can_bid_zero
+        )
 
     def snakeFunction(self, p_num, scores):
         not_my_scores = [x for i, x in enumerate(scores) if i != p_num]

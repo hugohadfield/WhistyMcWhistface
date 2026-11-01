@@ -334,6 +334,41 @@ def exact_bid_trick_pdf(leadingProbList, followingProbList, bidPosition):
     return list(solve((1 << n) - 1, bidPosition == 0))
 
 
+def best_trump_by_expected_score(cards_in_hand, nplayers, can_bid_zero=True,
+                                 samples=512):
+    """Pick the suit maximizing expected round points under the bid model.
+
+    Compare all four suits using sampled leading/following card-win rates and
+    the exact trick-count PMF for the existing random-card-order/leader model.
+    Score a candidate as E[tricks] + 10 * P(making its most likely legal bid).
+    The dealer's final-bid no-exact-sum restriction is unknown when trump is
+    chosen; only the known consecutive-zero-bid restriction is applied.
+    Ties in estimated value break deterministically in h,d,c,s order.
+    """
+    hand = tuple(cards_in_hand)
+    if not hand:
+        raise ValueError("Trump choice requires a nonempty hand")
+    if nplayers < 2:
+        raise ValueError("Need at least two players")
+    n = len(hand)
+    bids = range(0 if can_bid_zero else 1, n + 1)
+    best_suit = None
+    best_expected_score = float("-inf")
+    for suit in ("h", "d", "c", "s"):
+        leading, following = estimate_card_win_probabilities(
+            hand, nplayers, n, suit, samples=samples
+        )
+        # The dealer bids last and the initial trick leader is dealer+1.
+        pmf = exact_bid_trick_pdf(leading, following, bidPosition=nplayers - 1)
+        expected_tricks = sum(i * p for i, p in enumerate(pmf))
+        best_bid = max(bids, key=lambda bid: pmf[bid])
+        expected_score = expected_tricks + 10.0 * pmf[best_bid]
+        if expected_score > best_expected_score:
+            best_expected_score = expected_score
+            best_suit = suit
+    return best_suit
+
+
 def mini_monte_sim(leadingProbList, followingProbList, bidPosition, mcnumber):
     """Approximate trick-count distribution with a changing leader.
 
