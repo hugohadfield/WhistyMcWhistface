@@ -14,10 +14,34 @@ SUITS = frozenset("hcsd")
 DECK = frozenset(all_cards_in_deck)
 
 
+
+# Only publicly observable fields may enter the event log.
+PUBLIC_EVENT_FIELDS = {
+    "round_start": frozenset({"type", "round", "cards_per_player", "dealer", "leader"}),
+    "trump": frozenset({"type", "player", "suit"}),
+    "bid": frozenset({"type", "player", "bid"}),
+    "card": frozenset({"type", "player", "card"}),
+    "trick_end": frozenset({"type", "winner"}),
+    "round_end": frozenset({"type", "scores"}),
+}
+
+
+def _validate_public_event(event):
+    if not isinstance(event, dict):
+        raise ValueError("Public event must be an object")
+    expected = PUBLIC_EVENT_FIELDS.get(event.get("type"))
+    if expected is None or set(event) != expected:
+        raise ValueError("Unexpected public event schema")
+    return event
+
+def _json_payload(value):
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+
 def _event(event):
-    # A canonical string makes history deeply immutable, while JSON remains
-    # independent of Python object identities, classes and pickle.
-    return json.dumps(event, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    # Event schemas are deliberately restrictive: hidden-card fields may not
+    # accidentally hitch a ride on the public history.
+    return _json_payload(_validate_public_event(event))
 
 
 def _unique_cards(cards):
@@ -126,8 +150,7 @@ class InformationState:
         if sum(p.remaining_count for p in self.opponents) + len(own) > 52 - len(played):
             raise ValueError("Insufficient unseen cards")
         for event in self.history_json:
-            if not isinstance(json.loads(event), dict):
-                raise ValueError("Invalid public event")
+            _validate_public_event(json.loads(event))
         if self.policy_state_json is not None:
             json.loads(self.policy_state_json)
 
@@ -155,7 +178,7 @@ class InformationState:
             bids=(None,) * num_players, tricks_won=(0,) * num_players,
             scores=tuple(scores if scores is not None else (0,) * num_players),
             history_json=tuple(previous_history) + (_event(event),),
-            policy_state_json=None if policy_state is None else _event(policy_state),
+            policy_state_json=None if policy_state is None else _json_payload(policy_state),
         )
 
     @property
@@ -168,11 +191,12 @@ class InformationState:
                 else json.loads(self.policy_state_json))
 
     def with_policy_state(self, state):
-        return replace(self, policy_state_json=None if state is None else _event(state))
+        return replace(self, policy_state_json=None if state is None else _json_payload(state))
 
     def apply_public_event(self, event):
         """Pure reducer for public events. Caller may never pass hidden cards."""
-        kind = event.get("type")
+        _validate_public_event(event)
+        kind = event["type"]
         if kind == "trump":
             if self.phase != "dealt" or event.get("player") != self.dealer:
                 raise ValueError("Unexpected trump choice")
@@ -315,7 +339,7 @@ class InformationState:
             scores=tuple(data["scores"]),
             history_json=tuple(_event(e) for e in data["public_history"]),
             policy_state_json=(None if data["policy_state"] is None
-                               else _event(data["policy_state"])),
+                               else _json_payload(data["policy_state"])),
         )
 
     def to_json(self, **kwargs):
