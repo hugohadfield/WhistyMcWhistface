@@ -75,3 +75,37 @@ jobs:
         run: python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Exercise neural encoder and actual MLP training/inference
         run: python -m pytest -q tests/test_learning_encoding.py tests/test_learning_model.py
+
+  training_data_smoke:
+    name: Training trace and histogram export smoke test
+    if: github.event_name == 'pull_request' && github.head_ref == 'feature/training-traces-and-mc-labels'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Generate real multi-policy games
+        run: |
+          python -m benchmarks.generate_training_games --games 2 \
+            --seed 2026411 --players 3 --workers 2 \
+            --agents random,mc_random,mc_aware --rollouts 8 \
+            --output-dir training-example/traces
+      - name: Generate supervised Monte Carlo training shards
+        run: |
+          python -m benchmarks.export_training_labels \
+            --traces 'training-example/traces/*.jsonl' \
+            --output-dir training-example/labeled \
+            --policy bid_aware_2 --rollouts 32 --workers 2 \
+            --max-states 40 --shard-size 10
+      - name: Archive actual training samples and manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: neural-training-data-smoke
+          path: training-example/
+          if-no-files-found: warn
+          retention-days: 14
