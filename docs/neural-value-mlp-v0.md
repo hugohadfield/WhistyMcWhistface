@@ -66,7 +66,7 @@ card choice. For supervised learning use `distributional_loss` on
 per-card future-win histograms from Monte Carlo rollouts. Forced actions
 still respect the legality mask.
 
-The default architecture is only about **340k trainable parameters**.
+The default architecture is only **316,448 trainable parameters**.
 The true parameter count can be inspected with
 `sum(p.numel() for p in model.parameters())`.
 
