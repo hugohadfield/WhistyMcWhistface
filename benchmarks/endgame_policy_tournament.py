@@ -48,7 +48,7 @@ class Match:
     seconds: float
 
 
-def play_match(game_index, seed=20261301, rollouts=1024):
+def play_match(game_index, seed=20261301, rollouts=1024, training_dir=None):
     if game_index < 0 or rollouts < 1:
         raise ValueError("Game index must be nonnegative; rollouts positive")
     pair = game_index // 2
@@ -85,9 +85,30 @@ def play_match(game_index, seed=20261301, rollouts=1024):
 
     game.randomDeal = fixed_round_deal
     started = time.perf_counter()
-    with open(os.devnull, "w", encoding="utf-8") as sink:
-        with contextlib.redirect_stdout(sink):
-            game.playFullGame()
+    # Each match owns its own trace file: safe across parallel game workers.
+    if training_dir is not None:
+        from alphawhist.learning.recording import TrainingRecorder
+        training_dir = Path(training_dir)
+        training_dir.mkdir(parents=True, exist_ok=True)
+        recorder_context = TrainingRecorder(
+            training_dir / f"match-{game_index:07d}.jsonl",
+            game_id=f"tournament-{seed}-pair-{pair}-seat-swap-{game_index % 2}",
+            metadata={
+                "seed": seed, "deal_seed": deal_seed, "game_index": game_index,
+                "rollouts": rollouts, "agents": {
+                    "aware": aware_seat, "random_policy": random_policy_seat,
+                    "random_opponent": third,
+                },
+            },
+        )
+    else:
+        recorder_context = contextlib.nullcontext(None)
+    with recorder_context as recorder:
+        if recorder is not None:
+            game.training_recorder = recorder
+        with open(os.devnull, "w", encoding="utf-8") as sink:
+            with contextlib.redirect_stdout(sink):
+                game.playFullGame()
     elapsed = time.perf_counter() - started
     assert game.roundnumber == 13
     history = game.observe(0).public_history
@@ -158,7 +179,7 @@ def summary(results, seed=20261301, bootstrap=20000):
 
 
 def tournament(games=250, seed=20261301, rollouts=1024, workers=4,
-               csv_path=None, bootstrap=20000):
+               csv_path=None, bootstrap=20000, training_dir=None):
     if games < 2 or games % 2:
         raise ValueError("Games must be positive and even")
     if workers < 1 or rollouts < 1 or bootstrap < 100:
@@ -166,7 +187,7 @@ def tournament(games=250, seed=20261301, rollouts=1024, workers=4,
     started = time.perf_counter()
     matches = []
     if workers == 1:
-        iterator = (play_match(i, seed, rollouts) for i in range(games))
+        iterator = (play_match(i, seed, rollouts, training_dir) for i in range(games))
         for m in iterator:
             matches.append(m)
             print(f"MATCH {m.game} pair={m.pair} seed={m.deal_seed} "
@@ -178,7 +199,7 @@ def tournament(games=250, seed=20261301, rollouts=1024, workers=4,
         with ProcessPoolExecutor(max_workers=workers) as executor:
             for m in executor.map(play_match, range(games),
                                   repeat(seed), repeat(rollouts),
-                                  chunksize=1):
+                                  repeat(training_dir), chunksize=1):
                 matches.append(m)
                 print(f"MATCH {m.game} pair={m.pair} seed={m.deal_seed} "
                       f"seats=aware:{m.aware_seat},random:{m.random_policy_seat} "
@@ -210,9 +231,11 @@ def main():
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--csv", type=Path)
     parser.add_argument("--bootstrap", type=int, default=20000)
+    parser.add_argument("--training-dir", type=Path,
+                        help="Optional per-game information-safe training traces")
     args = parser.parse_args()
     tournament(args.games, args.seed, args.rollouts, args.workers,
-               args.csv, args.bootstrap)
+               args.csv, args.bootstrap, args.training_dir)
 
 
 if __name__ == "__main__":
