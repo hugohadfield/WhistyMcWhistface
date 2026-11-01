@@ -101,6 +101,7 @@ def test_reordered_hand_and_policy_memory_do_not_change_features():
 
 def test_game_secret_opponent_hand_swap_cannot_change_encoding():
     game = Game("testConfigFiles/ThreePlayerRandom.json")
+    game.cardnumbers = [3]
     game.resetRound()
     random.seed(20263311)
     game.randomDeal(3)
@@ -109,12 +110,7 @@ def test_game_secret_opponent_hand_swap_cannot_change_encoding():
         "type": "trump", "player": game.dealer, "suit": "h",
     })
     game.getPlayerBids()
-    left, right = game.players[1], game.players[2]
-    before = encode_decision(game.observe(0))
-    a, b = left.real_hand, right.real_hand
-    left.set_hands(b, left.possible_hand)
-    right.set_hands(a, right.possible_hand)
-    after = encode_decision(game.observe(0))
+    # The actor is seat 1 at round start; swap ONLY the other players.\n    left, right = game.players[0], game.players[2]\n    before = encode_decision(game.observe(1))\n    a, b = left.real_hand, right.real_hand\n    left.set_hands(b)\n    right.set_hands(a)\n    after = encode_decision(game.observe(1))
     np.testing.assert_array_equal(before.features, after.features)
     np.testing.assert_array_equal(before.legal_mask, after.legal_mask)
 
@@ -131,7 +127,7 @@ def test_batch_and_input_guards():
         encode_batch([])
     with pytest.raises(TypeError, match="InformationState"):
         encode_decision(object())
-    with pytest.raises(ValueError, match="actor"):
+    with pytest.raises(ValueError, match="observer"):
         encode_decision(started(observer=1, leader=0))
     with pytest.raises(ValueError, match="hand size"):
         encode_decision(replace(state, trick_number=1))
