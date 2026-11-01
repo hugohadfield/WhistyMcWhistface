@@ -36,6 +36,23 @@ card-evaluation scores**. You can run the fixed-position benchmark with
 `python -m benchmarks.measure_evaluator --scenario early --rollouts 4096`.
 
 
+## Trump selection: expected-score picker (November 2026)
+
+Both Monte Carlo bots now actively choose trumps by evaluating all four suits
+with 512 samples of card win probabilities and the exact trick-count subset DP,
+then maximizing modeled expected round score (expected tricks plus the
+10-point bonus probability for the best provisional bid). The dealer picks
+trumps before bids have been placed, so the final-bid no-exact-sum
+restriction cannot yet be predicted by this model.
+
+The original `TrumpPicker.picktrump()` heuristic remains available, and the
+[50-game paired-seat tournament report](docs/trump-choice-tournament-2026-10-31.md)
+compares the two using identical 1,024-rollout bidding/card-play policies.
+The new version won **30** head-to-head games versus **19** for the heuristic,
+with **one tie**, but the 25 paired deal-level results are inconclusive.
+Reproduce with
+`python -m benchmarks.trump_tournament --games 50 --rollouts 1024`.
+
 ## Serializable information state and rollout experiments
 
 The authoritative hard-constraint beliefs of **player 0** are tracked

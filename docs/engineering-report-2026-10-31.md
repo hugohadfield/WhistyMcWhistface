@@ -307,3 +307,24 @@ See the [follow-up optimization report](rollout-and-bidding-optimization-2026-10
 for the measurements, validation and methodology. This change supersedes
 the earlier descriptions of a 20,000-simulation active bid-distribution
 estimator, but not the historical benchmarks recorded above.
+
+## 14. Trump-selection policy and paired-seat 50-game comparison
+
+Following the rollout and bidding optimization, we replaced the unused
+`alternateTrumpPicker()` in both Monte Carlo bots with a production-active
+expected-score selector. It evaluates each candidate trump suit using the
+same 512-sample card-strength model and exact bid-distribution subset DP
+as bidding, choosing the suit with the highest modeled
+`E[tricks] + 10 * P(exactly making the best provisional bid)`. Because
+the dealer picks trumps before anyone has bid, the dealer's final forbidden
+bid-total cannot yet be incorporated exactly.
+
+A 50-game, 25-deal-pair seat-swapped comparison against the original
+heuristic (with a third random player) produced **30–19–1** head-to-head
+results in favor of the new selector and a **+3.26** average match-score
+margin. However, the **25 paired units** favored it only **11–13–1**,
+and the paired bootstrap 95% interval for the average margin is roughly
+**−1.76 to +8.80**. This evidence is suggestive, not conclusive.
+
+See the [complete tournament report](trump-choice-tournament-2026-10-31.md)
+for the 50 individual scores, methodology, CI log, full code and caveats.
