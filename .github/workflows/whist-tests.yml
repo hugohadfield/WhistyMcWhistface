@@ -21,3 +21,6 @@ jobs:
           python -m benchmarks.rollouts --rollouts 80 --workers 1 --cards 7
           python -m benchmarks.rollouts --rollouts 80 --workers 1 --cards 3
           python -m benchmarks.rollouts --rollouts 80 --workers 1 --cards 1
+      - name: Benchmark complete AI versus random 13-round matches
+        run: |
+          python -m benchmarks.full_game --rollouts 16 128 1024 --bots MonteCarloPlayer SnakeMonteCarloPlayer
