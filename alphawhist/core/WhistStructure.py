@@ -2,6 +2,7 @@ from alphawhist.core.WhistPlayer import *
 import sys
 import json
 import random
+from alphawhist.core.InformationState import InformationState
 
 class Game():
     def __init__(self, playerConfigFileName):
@@ -69,6 +70,9 @@ class Game():
 
         # The dealer picks trumps
         self.trumpsuit = self.players[self.dealer].pick_trumps(self.numberofplayers)
+        self._record_public_event({
+            "type": "trump", "player": self.dealer, "suit": self.trumpsuit
+        })
         print("Trumps: ", self.trumpsuit)
         
         # Get all the bids
@@ -116,6 +120,9 @@ class Game():
             cardPlayed = player.makeMove(self.pile.copy(), self.trumpsuit, self)
 
             self.pile.append( cardPlayed )
+            self._record_public_event({
+                "type": "card", "player": player.playerNumber, "card": cardPlayed
+            })
             print("Player: ", player.playerNumber, " played: ", end=' ')
             print(cardPlayed)
 
@@ -126,6 +133,10 @@ class Game():
         # See who has won and move on
         winningplay = self.extractTrickWinner()
         self.updateTricksWon(winningplay)
+        self._record_public_event({
+            "type": "trick_end",
+            "winner": (self.leader + winningplay) % self.numberofplayers
+        })
         print("#############################################")
         self.setTurnToWinner()
         self.trickNumber = self.trickNumber + 1
@@ -136,6 +147,9 @@ class Game():
         player = self.players[ self.turn ]
         if player.playCard(specificCard):
             self.pile.append(specificCard)
+            self._record_public_event({
+                "type": "card", "player": player.playerNumber, "card": specificCard
+            })
             self.incrementTurn()
         else:
             print("Error")
@@ -156,6 +170,9 @@ class Game():
 
 
             self.pile.append( cardPlayed )
+            self._record_public_event({
+                "type": "card", "player": player.playerNumber, "card": cardPlayed
+            })
 
             print("Player: ", player.playerNumber, " played: ", end=' ')
             print(cardPlayed)
@@ -165,7 +182,12 @@ class Game():
             self.incrementTurn()
 
         # See who has won and move on
-        self.updateTricksWon(self.extractTrickWinner())
+        winningplay = self.extractTrickWinner()
+        self.updateTricksWon(winningplay)
+        self._record_public_event({
+            "type": "trick_end",
+            "winner": (self.leader + winningplay) % self.numberofplayers
+        })
         print("#############################################")
         self.setTurnToWinner()
         self.trickNumber = self.trickNumber + 1
@@ -186,6 +208,7 @@ class Game():
 
 
     def endRound(self):
+        self._record_public_event({"type": "round_end", "scores": list(self.scores)})
         # Increment the round number and the dealer number
         self.trickNumber = 0
         self.roundnumber = self.roundnumber + 1
@@ -222,6 +245,9 @@ class Game():
             thisPlayerBid = player.makeBid(self.numberofplayers, ncards, self.trumpsuit, currentBids.copy())
             currentBids.append(thisPlayerBid)
             self.bids[bidno] = thisPlayerBid
+            self._record_public_event({
+                "type": "bid", "player": bidno, "bid": thisPlayerBid
+            })
 
     def resetRound(self):
         # Empty the tricks and the bids
@@ -244,6 +270,7 @@ class Game():
         self.trumpsuit = 'h'
         self.roundnumber = 0
         self.trickNumber = 0
+        self._information_state = None
 
     def manualDeal(self, cardsinround):
         """Use the entered first hand and deal non-overlapping opponent hands."""
@@ -260,6 +287,7 @@ class Game():
         for i, player in enumerate(self.players[1:]):
             hand = sampled[i * cardsinround:(i + 1) * cardsinround]
             player.set_hands(hand, unseen)
+        self._begin_observer_round()
 
     def randomDeal(self, cardsinround):
         """Deal independent real hands; only the observed hand is fully known."""
@@ -270,6 +298,7 @@ class Game():
         unseen = [card for card in all_cards_in_deck if card not in known]
         for i, player in enumerate(self.players):
             player.set_hands(player_hands[i], player_hands[i] if i == 0 else unseen)
+        self._begin_observer_round()
 
     def processScore(self):
         # Compare the number of tricks that each player has won 
@@ -279,6 +308,102 @@ class Game():
             thisBid = self.bids[playerIterator]
             thisPlayerScore = tricksToScore(thisBid,thisTrickCount)
             self.scores[playerIterator] = self.scores[playerIterator] + thisPlayerScore
+
+
+    def _begin_observer_round(self):
+        """Start public inference without ever reading opponents' real hands."""
+        previous = getattr(self, "_information_state", None)
+        history = (previous.history_json if previous is not None else ())
+        memory = previous.policy_state if previous is not None else None
+        self._information_state = InformationState.new_round(
+            own_hand=self.players[0].real_hand,
+            num_players=self.numberofplayers,
+            round_index=self.roundnumber,
+            dealer=self.dealer,
+            leader=self.leader,
+            cards_per_player=self.cardnumbers[self.roundnumber],
+            scores=self.scores,
+            previous_history=history,
+            policy_state=memory,
+        )
+
+    def _record_public_event(self, event):
+        """Update beliefs using *only* the public event."""
+        state = getattr(self, "_information_state", None)
+        if state is not None:
+            self._information_state = state.apply_public_event(event)
+
+    def observe(self, player_id=0):
+        """Immutable view of player zero's current knowledge.
+
+        Secret opponent hands are never read here. Additional observers need
+        independent inference states and are deliberately not synthesized.
+        """
+        if player_id != 0:
+            raise NotImplementedError("Only player zero's beliefs are tracked")
+        state = getattr(self, "_information_state", None)
+        if state is None:
+            raise ValueError("Deal the round before observing")
+        player = self.players[0]
+        # This is an extensible hook for policy-specific JSON-serializable
+        # memory. Default policies store the bidding counter/configuration.
+        if hasattr(player, "export_policy_state"):
+            policy_memory = player.export_policy_state()
+        else:
+            policy_memory = {
+                "policy": type(player).__name__,
+                "zero_bid_count": player.zero_bid_count,
+            }
+            if hasattr(player, "monteCarloNumber"):
+                policy_memory["monteCarloNumber"] = player.monteCarloNumber
+        return state.with_policy_state(policy_memory)
+
+    @classmethod
+    def from_information_state(cls, state, seed=0, player_factory=None):
+        """Construct an independent, determinized card-decision rollout.
+
+        No source Game is required. This supports states in the 'playing'
+        phase, including partially played tricks. RNG used by policies
+        during rollout must be seeded independently by the caller/worker.
+        """
+        if state.phase != "playing":
+            raise ValueError("Rollout requires a playing-phase snapshot")
+        from RandomPlayer import RandomPlayer
+        hands = state.sample_hands(random.Random(seed))
+        instance = cls.__new__(cls)
+        schedule = [7, 6, 5, 4, 3, 2, 1, 2, 3, 4, 5, 6, 7]
+        if state.round_index >= len(schedule) or (
+            schedule[state.round_index] != state.cards_per_player
+        ):
+            schedule = [state.cards_per_player] * (state.round_index + 1)
+        instance.cardnumbers = schedule
+        instance.playerConfigFileName = ""
+        instance.numberofplayers = state.num_players
+        factory = player_factory or (lambda pid, hand: RandomPlayer(pid, list(hand)))
+        instance.players = [factory(pid, hand) for pid, hand in enumerate(hands)]
+        for player, hand in zip(instance.players, hands):
+            player.set_hands(hand)
+        zero_counters = [0] * state.num_players
+        for event in state.public_history:
+            if event["type"] == "bid":
+                pid = event["player"]
+                zero_counters[pid] = (
+                    zero_counters[pid] + 1 if event["bid"] == 0 else 0
+                )
+        for pid, player in enumerate(instance.players):
+            player.resetZeroCounter(zero_counters[pid])
+        instance.dealer = state.dealer
+        instance.leader = state.leader
+        instance.turn = state.turn
+        instance.roundnumber = state.round_index
+        instance.trickNumber = state.trick_number
+        instance.trumpsuit = state.trump
+        instance.pile = [card for _, card in state.pile]
+        instance.bids = [(-1 if b is None else b) for b in state.bids]
+        instance.tricksWon = list(state.tricks_won)
+        instance.scores = list(state.scores)
+        instance._information_state = state
+        return instance
 
     def convertToDeterministicGame(self):
         """Sample mutually consistent hands for a Monte Carlo rollout.
