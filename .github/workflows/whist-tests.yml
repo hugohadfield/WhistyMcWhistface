@@ -28,16 +28,33 @@ jobs:
         run: |
           python -m benchmarks.score_convergence --scenario early --rollouts 16 64 256 1024 4096 --reference 8192
           python -m benchmarks.score_convergence --scenario mid --rollouts 16 64 256 1024 4096 --reference 8192
-      - name: Experimental matched-round policy A/B benchmark
-        if: github.event_name == 'pull_request' && github.head_ref == 'experiment/matched-round-policy-benchmark'
-        timeout-minutes: 20
+  matched_round_1024:
+    name: Matched rounds 1024 vs ${{ matrix.opponents }} opponents
+    if: github.event_name == 'pull_request' && github.head_ref == 'experiment/matched-round-1024-strong'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        opponents: [random, monte_carlo]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Run 1024-rollout matched-round experiment
         run: |
-          python -m benchmarks.paired_round_policy --rounds-per-size 100 --cards 1 2 3 4 5 6 7 --rollouts 512 --players 3 --workers 4 --seed 20261102 --csv paired-round-policy.csv
-      - name: Archive matched-round A/B results, including partial results on failure
-        if: ${{ always() && github.event_name == 'pull_request' && github.head_ref == 'experiment/matched-round-policy-benchmark' }}
+          python -m benchmarks.paired_round_policy --rounds-per-size 200 \
+            --cards 3 4 5 6 7 --rollouts 1024 --players 3 --workers 4 \
+            --seed 20262817 --opponents ${{ matrix.opponents }} \
+            --csv paired-${{ matrix.opponents }}-1024.csv
+      - name: Archive completed and partial matched-round data
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: matched-round-policy-raw-results
-          path: paired-round-policy.csv
+          name: paired-${{ matrix.opponents }}-1024-results
+          path: paired-${{ matrix.opponents }}-1024.csv
           if-no-files-found: warn
           retention-days: 14
