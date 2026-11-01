@@ -127,7 +127,8 @@ def _label_state_batch(task):
     Rollout workers MUST be one: parallelism happens across independent
     decision states, never with nested per-state process pools.
     """
-    records, rollouts, seed, policy, batch_size, timed = task
+    records, rollouts, seed, policy, batch_size, *options = task
+    timed = bool(options[0]) if options else False
     return [
         (split, _label_one(rec, rollouts, 1, seed, policy, batch_size, timed))
         for split, rec in records
