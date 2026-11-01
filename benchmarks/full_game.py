@@ -4,8 +4,8 @@ Run from the repository root:
     python -m benchmarks.full_game --rollouts 16 128 1024
     python -m benchmarks.full_game --rollouts 1024 --repeats 3 --seat 0
 
-Reported times include all 13 rounds, 147 card plays, dealing, bids and scoring.
-This is a serial one-worker benchmark and suppresses gameplay printing.
+Reported times include all 13 rounds, 55 tricks, 165 card plays, dealing, bids and scoring.
+The default uses one worker and suppresses gameplay printing; --workers overrides it.
 """
 import argparse
 import contextlib
