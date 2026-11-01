@@ -434,3 +434,34 @@ def test_snapshot_pickle_not_required_and_independent_of_policy_class(tmp_path):
     assert "custom-agent" in source
     assert "pickle" not in source.lower()
     assert InformationState.load(path).policy_state["internal"]["x"] == 17
+
+
+def test_policy_export_and_restore_memory(capsys):
+    game = setup_game(ncards=2)
+    game.players[0].resetZeroCounter(1)
+    snapshot = game.observe()
+    assert snapshot.policy_state["zero_bid_count"] == 1
+    restored = Game.from_information_state(snapshot, seed=1)
+    assert restored.players[0].zero_bid_count == 1
+
+
+def test_custom_policy_can_restore_its_own_persistent_state(capsys):
+    from RandomPlayer import RandomPlayer
+
+    class StatefulPlayer(RandomPlayer):
+        def export_policy_state(self):
+            return {"policy": "stateful", "zero_bid_count": self.zero_bid_count,
+                    "cache": [1, 3, 5]}
+
+        def load_policy_state(self, state):
+            super().load_policy_state(state)
+            self.cache = list(state["cache"])
+
+    game = setup_game(ncards=2)
+    game.players[0] = StatefulPlayer(0, game.players[0].real_hand)
+    snapshot = game.observe()
+    restored = Game.from_information_state(
+        InformationState.from_json(snapshot.to_json()), seed=2,
+        player_factory=lambda pid, hand: StatefulPlayer(pid, hand)
+    )
+    assert restored.players[0].cache == [1, 3, 5]

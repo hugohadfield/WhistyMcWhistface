@@ -62,6 +62,29 @@ class Player():
     def can_bid_zero(self):
         return self._zero_bid_count < 2
 
+
+    def export_policy_state(self):
+        """JSON-compatible persistent memory; subclasses may extend this."""
+        result = {
+            "policy": type(self).__name__,
+            "zero_bid_count": self.zero_bid_count,
+        }
+        if hasattr(self, "monteCarloNumber"):
+            result["monteCarloNumber"] = self.monteCarloNumber
+        return result
+
+    def load_policy_state(self, state):
+        """Restore supported persistent fields into a compatible policy.
+
+        Custom algorithms should override this and export_policy_state to
+        restore their own versioned memory.
+        """
+        if state is None:
+            return
+        self.resetZeroCounter(state["zero_bid_count"])
+        if "monteCarloNumber" in state and hasattr(self, "monteCarloNumber"):
+            self.monteCarloNumber = state["monteCarloNumber"]
+
     def handleAdditionalParamaters(self, parameters):
         return True
 

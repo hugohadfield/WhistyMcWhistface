@@ -392,6 +392,12 @@ class Game():
                 )
         for pid, player in enumerate(instance.players):
             player.resetZeroCounter(zero_counters[pid])
+        # Restore the observer policy's own JSON-compatible memory when that
+        # policy is available. The factory may intentionally substitute a
+        # different algorithm for counterfactual experiments.
+        observer_policy = instance.players[state.observer_id]
+        if state.policy_state is not None and hasattr(observer_policy, "load_policy_state"):
+            observer_policy.load_policy_state(state.policy_state)
         instance.dealer = state.dealer
         instance.leader = state.leader
         instance.turn = state.turn
