@@ -9,13 +9,17 @@ class MonteCarloPlayer(Player):
     # Defaults also apply when no additionalParameters are supplied.
     monteCarloNumber = DEFAULT_ROLLOUTS
     monteCarloWorkers = 1
+    monteCarloPolicy = "random"
 
 
     def handleAdditionalParamaters(self, parameters):
         self.monteCarloNumber = int(parameters.get("monteCarloNumber", DEFAULT_ROLLOUTS))
         self.monteCarloWorkers = int(parameters.get("monteCarloWorkers", 1))
+        self.monteCarloPolicy = parameters.get("monteCarloPolicy", "random")
         if self.monteCarloNumber < 1 or self.monteCarloWorkers < 1:
             raise ValueError("Monte Carlo rollouts and workers must be positive")
+        if self.monteCarloPolicy not in ("random", "highest", "bid_aware_2"):
+            raise ValueError("Unknown Monte Carlo rollout policy")
         return True
 
     def pick_trumps(self, nplayers):
@@ -47,6 +51,7 @@ class MonteCarloPlayer(Player):
                 seed=random.getrandbits(64),
                 workers=self.monteCarloWorkers,
                 objective="score",
+                policy=self.monteCarloPolicy,
             )
             card = result.best_action()
         if not self.playCard(card):
@@ -67,6 +72,7 @@ class MonteCarloPlayer(Player):
             seed=random.getrandbits(64),
             workers=self.monteCarloWorkers,
             objective="score",
+            policy=self.monteCarloPolicy,
         )
         return list(result.mean_round_scores[0]), 0
 

@@ -10,6 +10,7 @@ import random
 from typing import Callable
 
 from alphawhist.core.WhistLib import all_cards_in_deck
+from alphawhist.core.EndgamePolicy import pick_bid_aware_two_card
 
 CARDS = tuple(all_cards_in_deck)
 CARD_ID = {card: i for i, card in enumerate(CARDS)}
@@ -151,6 +152,8 @@ def _choose_card(state, legal, rng, policy):
         return (legal & -legal).bit_length() - 1
     if policy == "highest":
         return legal.bit_length() - 1
+    if policy == "bid_aware_2":
+        return pick_bid_aware_two_card(state, legal, rng)
     if callable(policy):
         card = policy(state, legal, rng)
         if not isinstance(card, int) or not (legal & (1 << card)):
@@ -219,6 +222,9 @@ def evaluate_actions(snapshot, actions=None, n_rollouts=DEFAULT_ROLLOUTS, seed=0
 
     'score' maximizes our expected round points; 'margin' maximizes our
     expected points minus the strongest *opponent expected score*.
+    'bid_aware_2' chooses between two legal cards using a cheap bid-aware
+    stochastic heuristic; other hand sizes use uniform random play.
+    Random remains the default (backwards-compatible).
     This is not the mean of the per-rollout minimum score margin.
     """
     if snapshot.phase != "playing" or snapshot.turn != snapshot.observer_id:
@@ -227,6 +233,9 @@ def evaluate_actions(snapshot, actions=None, n_rollouts=DEFAULT_ROLLOUTS, seed=0
         raise ValueError("Rollouts, workers and batch size must be positive")
     if objective not in ("score", "margin"):
         raise ValueError("Objective must be 'score' or 'margin'")
+    if not (policy in ("random", "highest", "bid_aware_2")
+            if isinstance(policy, str) else callable(policy)):
+        raise ValueError("Unknown rollout policy")
     own_id = snapshot.observer_id
     pile = [CARD_ID[card] for _, card in snapshot.pile]
     allowed = legal_mask(hand_mask(snapshot.own_hand), pile)
