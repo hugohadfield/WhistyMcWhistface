@@ -366,6 +366,40 @@ class InformationState:
         as calibrated beliefs about opponents.
         """
         rng = rng if rng is not None else random.Random()
+        counts = [opp.remaining_count for opp in self.opponents]
+        candidates = [tuple(sorted(opp.possible_cards)) for opp in self.opponents]
+        total = sum(counts)
+
+        def form_hands(draws):
+            hands = [[] for _ in range(self.num_players)]
+            hands[self.observer_id] = list(self.own_hand)
+            for opp, cards in zip(self.opponents, draws):
+                hands[opp.player_id] = list(cards)
+            return tuple(tuple(hand) for hand in hands)
+
+        # If candidate sets are identical, one shuffled deal is exactly
+        # uniform and avoids constructing/searching a matching graph.
+        if all(options == candidates[0] for options in candidates):
+            if total > len(candidates[0]):
+                raise ValueError("No consistent hidden-hand assignment")
+            chosen = rng.sample(candidates[0], total)
+            offset = 0
+            draws = []
+            for count in counts:
+                draws.append(chosen[offset:offset + count])
+                offset += count
+            return form_hands(draws)
+
+        # Independent, uniformly sampled hands conditioned on no duplicates
+        # give a uniform feasible deal. Bound rejection attempts so highly
+        # constrained states still terminate via the matching fallback.
+        for _ in range(24):
+            draws = [rng.sample(options, count)
+                     for options, count in zip(candidates, counts)]
+            merged = [card for hand in draws for card in hand]
+            if len(merged) == len(set(merged)):
+                return form_hands(draws)
+
         slots = []
         for opponent in self.opponents:
             candidates = list(sorted(opponent.possible_cards))
