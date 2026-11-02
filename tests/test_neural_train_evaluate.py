@@ -189,3 +189,35 @@ def test_interrupted_export_resumes_without_relabeling_or_losing_rows(trained, t
             paths, bad, rollouts=8, workers=1, shard_size=32,
             seed=20262002, policy="random", resume=True,
         )
+
+def test_mixed_rollout_budget_resume_requires_opt_in(trained, tmp_path):
+    """Earlier high-precision labels coexist with quicker, noisier new labels."""
+    import shutil
+
+    directory, complete, _, _ = trained
+    mixed = tmp_path / "mixed-budgets"
+    mixed.mkdir()
+    for split in ("train", "val", "test"):
+        source = complete / f"{split}-00000.npz"
+        shutil.copy2(source, mixed / source.name)
+    traces = sorted((directory / "traces").glob("*.jsonl"))
+
+    with pytest.raises(ValueError, match="rollout budget"):
+        label_traces(traces, mixed, rollouts=4, shard_size=32,
+                     seed=20262001, policy="random", resume=True)
+
+    with contextlib.redirect_stdout(io.StringIO()):
+        manifest = label_traces(
+            traces, mixed, rollouts=4, workers=2, shard_size=32,
+            seed=20262001, policy="random", resume=True,
+            allow_mixed_rollouts=True,
+        )
+    assert manifest["rollouts_per_action"] == "mixed"
+    assert manifest["rollout_budgets"] == [4, 8]
+    assert manifest["total_states"] == read_manifest(complete)["total_states"]
+    budgets = set()
+    for split in ("train", "val", "test"):
+        for path in split_files(mixed, read_manifest(mixed), split):
+            data = load_shard(path)  # validates each row's individual budget
+            budgets.update(np.unique(data["n_rollouts"]).tolist())
+    assert budgets == {4, 8}
