@@ -339,3 +339,40 @@ jobs:
           path: mc-bid-experiment/
           retention-days: 14
           if-no-files-found: warn
+
+  standalone_bid_aware_2:
+    name: Bid-aware 2-card player vs random (2P and 3P)
+    if: github.event_name == 'pull_request' && github.head_ref == 'experiment/bid-aware-2-vs-random-20261102'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Verify policy match, private-information safety, and real games
+        run: python -m pytest -v tests/test_bid_aware_2_player.py
+      - name: 600 matched full games: one bid-aware 2 vs two random
+        run: |
+          python -m benchmarks.bid_aware_2_vs_random \
+            --players 3 --games 600 --workers 4 --seed 20261116 \
+            --progress-every 60 \
+            --json bid-aware-2-results/three-player.json \
+            --csv bid-aware-2-results/three-player.csv
+      - name: 400 matched full games: bid-aware 2 vs random head to head
+        run: |
+          python -m benchmarks.bid_aware_2_vs_random \
+            --players 2 --games 400 --workers 4 --seed 20261117 \
+            --progress-every 40 \
+            --json bid-aware-2-results/two-player.json \
+            --csv bid-aware-2-results/two-player.csv
+      - name: Archive bid-aware comparisons
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bid-aware-2-vs-random-matched-results
+          path: bid-aware-2-results/
+          retention-days: 30
+          if-no-files-found: warn
