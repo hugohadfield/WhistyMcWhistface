@@ -26,9 +26,10 @@ from alphawhist.learning.recording import TrainingRecorder
 from alphawhist.learning.timing import TimingCounters
 from MonteCarloPlayer import MonteCarloPlayer
 from RandomPlayer import RandomPlayer
+from BidAware3Player import BidAware3Player
 
 SCHEDULE = (7, 6, 5, 4, 3, 2, 1, 2, 3, 4, 5, 6, 7)
-AGENTS = ("random", "mc_random", "mc_aware")
+AGENTS = ("random", "aware3", "mc_random", "mc_aware")
 
 
 def play_training_game(index, seed=20261102, players=3,
@@ -59,6 +60,8 @@ def play_training_game(index, seed=20261102, players=3,
     for pid, agent in enumerate(names):
         if agent == "random":
             player = RandomPlayer(pid)
+        elif agent == "aware3":
+            player = BidAware3Player(pid)
         else:
             params = {
                 "monteCarloNumber": str(rollouts), "monteCarloWorkers": "1",
@@ -153,7 +156,7 @@ def main():
     parser.add_argument("--seed", type=int, default=20261102)
     parser.add_argument("--players", type=int, default=3)
     parser.add_argument("--agents", default="random",
-                        help="Comma-separated random,mc_random,mc_aware")
+                        help="Comma-separated random,aware3,mc_random,mc_aware")
     parser.add_argument("--rollouts", type=int, default=256)
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--output-dir", type=Path, required=True)
