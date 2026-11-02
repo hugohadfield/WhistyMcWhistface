@@ -178,8 +178,15 @@ class Player():
             return False
         if len(previousbids) > nplayers - 1:
             return False
-        if not self.can_bid_zero:
-            if bid == 0:
+        if not self.can_bid_zero and bid == 0:
+            # In a one-card round, if all earlier players bid zero,
+            # a zero-banned dealer has NO possible bid: 1 is forbidden
+            # by the last-bidder sum rule. Permit this forced zero as
+            # the narrow exception so the round remains playable.
+            forced_dealer_zero = (
+                len(previousbids) == nplayers - 1
+                and ncards == 1 and sum(previousbids) == 0)
+            if not forced_dealer_zero:
                 return False
         if len(previousbids) < nplayers - 1:
             return True

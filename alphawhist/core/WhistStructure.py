@@ -261,7 +261,16 @@ class Game():
             bidno = (bidno + 1) % self.numberofplayers
             player = self.players[bidno]
             ncards = self.cardnumbers[self.roundnumber]
-            thisPlayerBid = player.makeBid(self.numberofplayers, ncards, self.trumpsuit, currentBids.copy())
+            # Optional information-safe bid search: only give the bidding
+            # player its own hand plus public bidding history, never Game.
+            if hasattr(player, "makeBidWithObservation"):
+                thisPlayerBid = player.makeBidWithObservation(
+                    self.numberofplayers, ncards, self.trumpsuit,
+                    currentBids.copy(), self.observe(bidno))
+            else:
+                thisPlayerBid = player.makeBid(
+                    self.numberofplayers, ncards, self.trumpsuit,
+                    currentBids.copy())
             currentBids.append(thisPlayerBid)
             self.bids[bidno] = thisPlayerBid
             self._record_public_event({
