@@ -204,14 +204,27 @@ python -m benchmarks.neural_rollout_tournament \
   --json runs/large-190k-v1/all-neural-vs-mc-128.json
 ```
 
-If practical, compare at 1,024 challenger rollouts on independently seeded,
-matched-deal, seat-swapped games. To compare against the OLD rollout
-assumption, change `--opponent-policy neural` to `bid_aware_2`, keeping
-the remaining settings unchanged. Head-to-head wins, outright game wins,
-first-place share (tie-split) and margin over the strongest opponent are
-reported alongside mean score difference and paired-bootstrap confidence
+**The most informative direct ablation** is all-neural MC against the same
+neural-self MC player with heuristic simulated opponents, using identical
+search budgets and the same checkpoint:
+
+```bash
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+python -m benchmarks.neural_rollout_tournament \
+  --checkpoint runs/large-190k-v1/best.pt \
+  --opponent-policy neural \
+  --baseline neural_mc --baseline-rollouts 128 \
+  --games 20 --rollouts 128 --workers 4 --seed 93261102 \
+  --json runs/large-190k-v1/all-neural-vs-heuristic-neural-mc-128.json
+```
+
+If practical, increase both search budgets to 1,024 and run at least 100 games
+with additional independent seeds. You can also compare directly against
+ordinary MC via `--baseline mc`. The JSON reports head-to-head wins,
+outright game wins, first-place share (tie-split) and margin over the strongest
+opponent, alongside mean score difference and paired-bootstrap confidence
 interval. **The real third player stays random** in the existing tournament;
-the `--opponent-policy` flag affects only simulated continuation.
+`--opponent-policy` changes only the simulated continuations.
 
 The new opponent model predicts what a strong self-interested neural player
 would do, not necessarily what a particular human or Monte Carlo player will
