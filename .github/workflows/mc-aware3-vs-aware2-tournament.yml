@@ -1,0 +1,62 @@
+name: MC 3-card vs MC 2-card vs random
+on:
+  push:
+    branches: ['experiment/mc-aware3-vs-aware2-vs-random-20261102']
+  pull_request:
+
+jobs:
+  tournament-256:
+    name: 360 complete games 256-rollout MC, six-seat rotation
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Verify three-way comparison and MC3 integration
+        run: python -m pytest -v tests/test_mc_aware3_aware2_random.py
+      - name: 360 complete matches, 60 independent deals, every role in every seat
+        run: |
+          python -m benchmarks.mc_aware3_aware2_random \
+            --games 360 --rollouts 256 --workers 4 \
+            --seed 20261148 --progress-every 30 \
+            --json mc-comparison-256/summary.json \
+            --csv mc-comparison-256/games.csv
+      - name: Archive summary and all full games
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mc3-vs-mc2-vs-random-256
+          path: mc-comparison-256/
+          retention-days: 30
+          if-no-files-found: warn
+
+  tournament-1024:
+    name: 120 complete games 1024-rollout MC, six-seat rotation
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: 120 complete matches, 20 independent deals, every role in every seat
+        run: |
+          python -m benchmarks.mc_aware3_aware2_random \
+            --games 120 --rollouts 1024 --workers 4 \
+            --seed 20261149 --progress-every 12 \
+            --json mc-comparison-1024/summary.json \
+            --csv mc-comparison-1024/games.csv
+      - name: Archive summary and all full games
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mc3-vs-mc2-vs-random-1024
+          path: mc-comparison-1024/
+          retention-days: 30
+          if-no-files-found: warn
