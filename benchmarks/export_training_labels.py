@@ -217,7 +217,7 @@ def _write_shard(directory, split, index, rows):
     return path
 
 
-def _resume_shards(directory, rollouts, shard_size):
+def _resume_shards(directory, rollouts, shard_size, allow_mixed_rollouts=False):
     """Recover fully flushed shards from a stopped export.
 
     Keep per-split decision seeds to verify that replaying the source records
@@ -232,6 +232,7 @@ def _resume_shards(directory, rollouts, shard_size):
     indices = dict.fromkeys(SPLITS, 0)
     names = []
     seeds = {}
+    saved_budgets = set()
     for split in SPLITS:
         paths = sorted(directory.glob(f"{split}-*.npz"))
         pieces = []
@@ -245,8 +246,10 @@ def _resume_shards(directory, rollouts, shard_size):
                 row_seeds = data["teacher_seed"]
                 if (len(budgets) != shard_size or
                         len(row_seeds) != shard_size or
-                        not np.all(budgets == rollouts)):
+                        not np.all(budgets > 0) or
+                        (not allow_mixed_rollouts and not np.all(budgets == rollouts))):
                     raise ValueError(f"Wrong shard size or rollout budget: {path}")
+                saved_budgets.update(int(x) for x in np.unique(budgets))
                 pieces.append(row_seeds.astype(np.uint64))
             counts[split] += shard_size
             names.append(path.name)
@@ -256,17 +259,20 @@ def _resume_shards(directory, rollouts, shard_size):
                   if p.is_file() and p.suffix != ".npz"]
     if unexpected:
         raise ValueError(f"Unrecognized files in resume directory: {unexpected}")
-    return counts, indices, names, seeds
+    return counts, indices, names, seeds, saved_budgets
 
 
 def label_traces(paths, output_dir, rollouts=1024, workers=1,
                  seed=20261102, policy="bid_aware_2", batch_size=256,
                  shard_size=256, max_states=None, include_forced=False,
                  state_batch_size=4, prefetch_batches=2,
-                 timings_json=None, resume=False):
+                 timings_json=None, resume=False,
+                 allow_mixed_rollouts=False):
     if (rollouts < 1 or workers < 1 or batch_size < 1 or shard_size < 1
             or state_batch_size < 1 or prefetch_batches < 1):
         raise ValueError("Rollout, worker, shard and prefetch counts must be positive")
+    if allow_mixed_rollouts and not resume:
+        raise ValueError("--allow-mixed-rollouts requires --resume")
     if max_states is not None and max_states < 1:
         raise ValueError("max_states must be positive")
     if policy not in ("random", "highest", "bid_aware_2"):
@@ -283,8 +289,8 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
     timings = TimingCounters() if timings_json is not None else None
     buffers = defaultdict(list)
     if resume:
-        counts, indices, shard_names, existing_seeds = _resume_shards(
-            out, rollouts, shard_size)
+        counts, indices, shard_names, existing_seeds, saved_budgets = _resume_shards(
+            out, rollouts, shard_size, allow_mixed_rollouts=allow_mixed_rollouts)
         print(f"RESUME completed_shards={len(shard_names)} "
               f"saved_states={sum(counts.values())}", flush=True)
     else:
@@ -292,6 +298,7 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
         indices = dict.fromkeys(SPLITS, 0)
         shard_names = []
         existing_seeds = None
+        saved_budgets = set()
     existing_counts = counts.copy()
     processed = sum(counts.values())
     manifest_path = out / "manifest.json"
@@ -357,7 +364,10 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
         "trace_schema": TRACE_SCHEMA_VERSION,
         "input_traces": [str(p) for p in paths],
         "teacher_policy": policy,
-        "rollouts_per_action": rollouts, "teacher_seed": seed,
+        "rollouts_per_action": (rollouts if not saved_budgets or
+                                saved_budgets == {rollouts} else "mixed"),
+        "rollout_budgets": sorted(saved_budgets | {rollouts}),
+        "teacher_seed": seed,
         "shard_size": shard_size, "counts_by_split": counts,
         "shards": shard_names, "include_forced": include_forced,
         "total_states": processed,
@@ -406,6 +416,9 @@ def main():
                         help="Outstanding tasks per worker (bounded streaming)")
     parser.add_argument("--resume", action="store_true",
                         help="Continue from complete shards in an interrupted export")
+    parser.add_argument("--allow-mixed-rollouts", action="store_true",
+                        help="With --resume, allow different rollout budgets in saved shards; "
+                             "new rows use --rollouts and may be noisier")
     parser.add_argument("--timings-json", type=Path,
                         help="Opt-in per-stage timing summary, no per-row timing storage")
     args = parser.parse_args()
@@ -414,7 +427,7 @@ def main():
                  args.seed, args.policy, args.batch_size, args.shard_size,
                  args.max_states, args.include_forced,
                  args.state_batch_size, args.prefetch_batches,
-                 args.timings_json, args.resume)
+                 args.timings_json, args.resume, args.allow_mixed_rollouts)
 
 
 if __name__ == "__main__":
