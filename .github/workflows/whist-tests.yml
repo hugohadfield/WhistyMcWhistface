@@ -327,8 +327,8 @@ jobs:
       - name: Full-game seat-swapped comparison with stronger card play
         run: |
           python -m benchmarks.mc_bid_tournament \
-            --games 20 --seed 20261108 --workers 4 \
-            --play-rollouts 128 --bid-rollouts 512 \
+            --games 100 --seed 20261109 --workers 4 \
+            --play-rollouts 256 --bid-rollouts 512 \
             --json mc-bid-experiment/tournament.json \
             --csv mc-bid-experiment/games.csv
       - name: Archive paired games and score/win summary
