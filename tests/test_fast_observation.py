@@ -157,8 +157,8 @@ def test_fast_and_reference_rollouts_produce_bit_identical_training_targets(
         checkpoint):
     # Controlled RNG and frozen net; changing observation encoding must not
     # change any sampled world, continuation policy or resulting histogram.
-    snapshot = initial_information(3, 4, 0, 1173)
-    assert snapshot.turn == snapshot.observer_id  # choose 1173%3=0 as dealer
+    snapshot = initial_information(3, 4, 1, 1173)
+    assert snapshot.turn == snapshot.observer_id
     seed, count = 66512, 13
     old_sums, old_counts = reference_rollouts(snapshot, checkpoint, count, seed)
     new = evaluate_neural_self(
