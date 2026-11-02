@@ -151,3 +151,41 @@ def test_dataset_guards_checkpoint_version_and_no_test_split(tmp_path, trained):
         for shard in source_manifest["shards"]:
             (bad_data / shard).symlink_to((labels / shard).resolve())
         evaluate(bad_data, good)
+
+def test_interrupted_export_resumes_without_relabeling_or_losing_rows(trained, tmp_path):
+    """Three independent split buffers resume to the exact complete dataset."""
+    import shutil
+
+    directory, complete, _, _ = trained
+    resume = tmp_path / "resume"
+    resume.mkdir()
+    full_manifest = read_manifest(complete)
+    # Simulate an interruption at different split-buffer boundaries.
+    for split, keep in (("train", 3), ("val", 1), ("test", 2)):
+        for path in sorted(complete.glob(f"{split}-*.npz"))[:keep]:
+            shutil.copy2(path, resume / path.name)
+
+    paths = sorted((directory / "traces").glob("*.jsonl"))
+    with contextlib.redirect_stdout(io.StringIO()):
+        manifest = label_traces(
+            paths, resume, rollouts=8, workers=2, shard_size=32,
+            seed=20262001, policy="random", resume=True,
+        )
+    assert manifest["counts_by_split"] == full_manifest["counts_by_split"]
+    assert manifest["total_states"] == full_manifest["total_states"]
+    for name in full_manifest["shards"]:
+        with np.load(complete / name, allow_pickle=False) as a:
+            with np.load(resume / name, allow_pickle=False) as b:
+                assert set(a.files) == set(b.files)
+                for key in a.files:
+                    np.testing.assert_array_equal(a[key], b[key])
+
+    # A changed seed must fail rather than mixing incompatible labels.
+    bad = tmp_path / "wrong-seed"
+    bad.mkdir()
+    shutil.copy2(complete / "train-00000.npz", bad / "train-00000.npz")
+    with pytest.raises(ValueError, match="mismatch"):
+        label_traces(
+            paths, bad, rollouts=8, workers=1, shard_size=32,
+            seed=20262002, policy="random", resume=True,
+        )
