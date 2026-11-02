@@ -53,7 +53,8 @@ def _split_for_game(seed, rec):
     return "train" if fraction < .8 else "val" if fraction < .9 else "test"
 
 
-def _label_one(rec, rollouts, workers, seed, policy, batch_size, timed=False):
+def _label_one(rec, rollouts, workers, seed, policy, batch_size, timed=False,
+               self_checkpoint=None):
     last = time.perf_counter_ns() if timed else None
     stages = {} if timed else None
 
@@ -75,11 +76,20 @@ def _label_one(rec, rollouts, workers, seed, policy, batch_size, timed=False):
         raise ValueError("Recorded legal actions contradict encoded legal mask")
 
     rollout_seed = _seed_for_decision(seed, rec)
-    evaluation = evaluate_actions(
-        snapshot, actions, n_rollouts=rollouts, seed=rollout_seed,
-        workers=workers, batch_size=batch_size, policy=policy,
-        collect_trick_histograms=True,
-    )
+    if policy == "self_neural":
+        from alphawhist.learning.neural_rollout import evaluate_neural_self
+        evaluation = evaluate_neural_self(
+            snapshot, actions, checkpoint=self_checkpoint,
+            n_rollouts=rollouts, seed=rollout_seed, workers=workers,
+            batch_size=batch_size, opponent_policy="bid_aware_2",
+            collect_trick_histograms=True,
+        )
+    else:
+        evaluation = evaluate_actions(
+            snapshot, actions, n_rollouts=rollouts, seed=rollout_seed,
+            workers=workers, batch_size=batch_size, policy=policy,
+            collect_trick_histograms=True,
+        )
     mark("monte_carlo")
     labels = np.zeros((52, 8), dtype=np.uint32)
     for action, counts, expected_score in zip(
@@ -129,8 +139,10 @@ def _label_state_batch(task):
     """
     records, rollouts, seed, policy, batch_size, *options = task
     timed = bool(options[0]) if options else False
+    self_checkpoint = options[1] if len(options) > 1 else None
     return [
-        (split, _label_one(rec, rollouts, 1, seed, policy, batch_size, timed))
+        (split, _label_one(rec, rollouts, 1, seed, policy, batch_size,
+                           timed, self_checkpoint))
         for split, rec in records
     ]
 
@@ -144,7 +156,7 @@ def _record_batches(records, state_batch_size):
 
 def _iter_labeled_states(records, rollouts, workers, seed, policy,
                          batch_size, state_batch_size, prefetch_batches,
-                         timed=False):
+                         timed=False, self_checkpoint=None):
     """Stream deterministic labels, preserving input order across workers.
 
     At most workers * prefetch_batches * state_batch_size decisions are
@@ -155,7 +167,7 @@ def _iter_labeled_states(records, rollouts, workers, seed, policy,
     if workers == 1:
         for split, rec in records:
             yield split, _label_one(rec, rollouts, 1, seed, policy, batch_size,
-                                    timed)
+                                    timed, self_checkpoint)
         return
 
     batches = iter(_record_batches(records, state_batch_size))
@@ -170,7 +182,8 @@ def _iter_labeled_states(records, rollouts, workers, seed, policy,
                 return False
             pending.append(pool.submit(
                 _label_state_batch,
-                (batch, rollouts, seed, policy, batch_size, timed),
+                (batch, rollouts, seed, policy, batch_size, timed,
+                 self_checkpoint),
             ))
             return True
 
@@ -256,7 +269,8 @@ def _resume_shards(directory, rollouts, shard_size, allow_mixed_rollouts=False):
         indices[split] = len(paths)
         seeds[split] = np.concatenate(pieces) if pieces else np.empty(0, dtype=np.uint64)
     unexpected = [p.name for p in directory.iterdir()
-                  if p.is_file() and p.suffix != ".npz"]
+                  if p.is_file() and p.suffix != ".npz"
+                  and p.name != "teacher-policy.json"]
     if unexpected:
         raise ValueError(f"Unrecognized files in resume directory: {unexpected}")
     return counts, indices, names, seeds, saved_budgets
@@ -267,7 +281,7 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
                  shard_size=256, max_states=None, include_forced=False,
                  state_batch_size=4, prefetch_batches=2,
                  timings_json=None, resume=False,
-                 allow_mixed_rollouts=False):
+                 allow_mixed_rollouts=False, self_checkpoint=None):
     if (rollouts < 1 or workers < 1 or batch_size < 1 or shard_size < 1
             or state_batch_size < 1 or prefetch_batches < 1):
         raise ValueError("Rollout, worker, shard and prefetch counts must be positive")
@@ -275,7 +289,7 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
         raise ValueError("--allow-mixed-rollouts requires --resume")
     if max_states is not None and max_states < 1:
         raise ValueError("max_states must be positive")
-    if policy not in ("random", "highest", "bid_aware_2"):
+    if policy not in ("random", "highest", "bid_aware_2", "self_neural"):
         raise ValueError("Invalid teacher continuation policy")
     paths = sorted(map(Path, paths))
     if not paths:
@@ -284,6 +298,33 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
     out.mkdir(parents=True, exist_ok=True)
     if not resume and any(out.iterdir()):
         raise FileExistsError("Output directory must be empty (use --resume for interrupted exports)")
+
+    # Checkpoint provenance survives interruptions: using a different neural
+    # policy for resumed shards would silently mix incompatible targets.
+    teacher_metadata_path = out / "teacher-policy.json"
+    teacher_metadata = None
+    if policy == "self_neural":
+        if self_checkpoint is None:
+            raise ValueError("--self-checkpoint is required for self_neural")
+        checkpoint_path = Path(self_checkpoint).resolve()
+        if not checkpoint_path.is_file():
+            raise FileNotFoundError(checkpoint_path)
+        teacher_metadata = {
+            "policy": policy,
+            "opponents": "bid_aware_2",
+            "checkpoint_sha256": hashlib.sha256(checkpoint_path.read_bytes()).hexdigest(),
+        }
+        if resume:
+            if not teacher_metadata_path.is_file():
+                raise ValueError("Cannot resume neural labels without checkpoint provenance")
+            if json.loads(teacher_metadata_path.read_text()) != teacher_metadata:
+                raise ValueError("Neural checkpoint/policy mismatch on resumed export")
+        else:
+            teacher_metadata_path.write_text(
+                json.dumps(teacher_metadata, indent=2) + "\n", encoding="utf-8")
+        self_checkpoint = str(checkpoint_path)
+    elif resume and teacher_metadata_path.exists():
+        raise ValueError("Cannot resume neural teacher shards with another policy")
 
     started = time.perf_counter()
     timings = TimingCounters() if timings_json is not None else None
@@ -345,7 +386,7 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
     for split, row in _iter_labeled_states(
             records, rollouts, workers, seed, policy, batch_size,
             state_batch_size, prefetch_batches,
-            timings is not None):
+            timings is not None, self_checkpoint):
         if timings is not None:
             for stage, nanoseconds in row.pop("_timing_ns").items():
                 timings.add("worker." + stage, nanoseconds)
@@ -364,6 +405,7 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
         "trace_schema": TRACE_SCHEMA_VERSION,
         "input_traces": [str(p) for p in paths],
         "teacher_policy": policy,
+        "teacher_provenance": teacher_metadata,
         "rollouts_per_action": (rollouts if not saved_budgets or
                                 saved_budgets == {rollouts} else "mixed"),
         "rollout_budgets": sorted(saved_budgets | {rollouts}),
@@ -405,7 +447,9 @@ def main():
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--seed", type=int, default=20261102)
     parser.add_argument("--policy", default="bid_aware_2",
-                        choices=("random", "highest", "bid_aware_2"))
+                        choices=("random", "highest", "bid_aware_2", "self_neural"))
+    parser.add_argument("--self-checkpoint", type=Path,
+                        help="Frozen neural model for our future simulated moves")
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--shard-size", type=int, default=256)
     parser.add_argument("--max-states", type=int)
@@ -427,7 +471,8 @@ def main():
                  args.seed, args.policy, args.batch_size, args.shard_size,
                  args.max_states, args.include_forced,
                  args.state_batch_size, args.prefetch_batches,
-                 args.timings_json, args.resume, args.allow_mixed_rollouts)
+                 args.timings_json, args.resume, args.allow_mixed_rollouts,
+                 args.self_checkpoint)
 
 
 if __name__ == "__main__":
