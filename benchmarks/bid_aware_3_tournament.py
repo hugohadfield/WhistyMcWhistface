@@ -25,10 +25,13 @@ import time
 from alphawhist.core.WhistStructure import Game
 from BidAware2Player import BidAware2Player
 from BidAware3Player import BidAware3Player
+from AnalyticBidAware3Player import AnalyticBidAware3Player
 from RandomPlayer import RandomPlayer
 
 SCHEDULE = (7, 6, 5, 4, 3, 2, 1, 2, 3, 4, 5, 6, 7)
-BASELINES = {"aware2": BidAware2Player, "random": RandomPlayer}
+BASELINES = {"aware2": BidAware2Player, "aware3": BidAware3Player,
+             "random": RandomPlayer}
+CHALLENGERS = {"aware3": BidAware3Player, "analytic3": AnalyticBidAware3Player}
 
 
 @dataclass(frozen=True)
@@ -61,8 +64,10 @@ class Match:
         return self.challenger_score - max(self.baseline_scores)
 
 
-def play_match(index, players=3, baseline="aware2", seed=20261120):
-    if not 2 <= players <= 7 or index < 0 or baseline not in BASELINES:
+def play_match(index, players=3, baseline="aware2", seed=20261120,
+               challenger="aware3"):
+    if (not 2 <= players <= 7 or index < 0 or baseline not in BASELINES
+            or challenger not in CHALLENGERS):
         raise ValueError("Invalid players, index or baseline")
     deal_group, seat = divmod(index, players)
     deal_seed = seed + deal_group
@@ -70,7 +75,7 @@ def play_match(index, players=3, baseline="aware2", seed=20261120):
     game.cardnumbers = list(SCHEDULE)
     game.playerConfigFileName = ""
     game.numberofplayers = players
-    game.players = [BidAware3Player(i) if i == seat else BASELINES[baseline](i)
+    game.players = [CHALLENGERS[challenger](i) if i == seat else BASELINES[baseline](i)
                     for i in range(players)]
     game.resetGame()
 
@@ -170,23 +175,25 @@ def summarize(matches, *, seed=20261120, bootstrap=2000):
     }
 
 
-def tournament(*, baseline="aware2", players=3, games=600, seed=20261120,
+def tournament(*, baseline="aware2", challenger="aware3", players=3,
+               games=600, seed=20261120,
                workers=4, bootstrap=2000, progress_every=60,
                json_path=None, csv_path=None):
-    if (baseline not in BASELINES or players < 2 or players > 7 or
+    if (baseline not in BASELINES or challenger not in CHALLENGERS
+            or players < 2 or players > 7 or
             games < players or games % players or workers < 1):
         raise ValueError("Games must form complete seat-rotation groups; check inputs")
     start = time.perf_counter()
     results = []
     if workers == 1:
         pool = None
-        iterator = (play_match(i, players, baseline, seed) for i in range(games))
+        iterator = (play_match(i, players, baseline, seed, challenger) for i in range(games))
     else:
         pool = ProcessPoolExecutor(max_workers=workers,
                                    mp_context=mp.get_context("spawn"))
         iterator = pool.map(
             play_match, range(games), repeat(players), repeat(baseline),
-            repeat(seed), chunksize=1)
+            repeat(seed), repeat(challenger), chunksize=1)
     try:
         for result in iterator:
             results.append(result)
@@ -208,7 +215,7 @@ def tournament(*, baseline="aware2", players=3, games=600, seed=20261120,
 
     summary = summarize(results, seed=seed, bootstrap=bootstrap)
     summary.update({
-        "challenger": "bid_aware_3", "baseline": baseline,
+        "challenger": challenger, "baseline": baseline,
         "bidding_policy": "RandomPlayer.makeAverageBid",
         "trump_policy": "RandomPlayer.pick_trumps",
         "seed":seed, "workers":workers,
@@ -235,6 +242,7 @@ def tournament(*, baseline="aware2", players=3, games=600, seed=20261120,
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--baseline",choices=tuple(BASELINES),default="aware2")
+    p.add_argument("--challenger",choices=tuple(CHALLENGERS),default="aware3")
     p.add_argument("--players",type=int,default=3)
     p.add_argument("--games",type=int,default=600)
     p.add_argument("--seed",type=int,default=20261120)
@@ -244,7 +252,8 @@ def main():
     p.add_argument("--json",type=Path)
     p.add_argument("--csv",type=Path)
     a=p.parse_args()
-    tournament(baseline=a.baseline,players=a.players,games=a.games,
+    tournament(baseline=a.baseline,challenger=a.challenger,
+               players=a.players,games=a.games,
                seed=a.seed,workers=a.workers,bootstrap=a.bootstrap,
                progress_every=a.progress_every,
                json_path=a.json,csv_path=a.csv)
