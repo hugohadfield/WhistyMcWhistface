@@ -273,3 +273,23 @@ def test_optimized_batch_is_bit_identical_to_original_reference():
                         expected[i][j] += value
             observed = _batch((snapshot_state, actions, 0, 17, seed, policy))
             assert observed == expected
+
+def test_bid_aware_fast_finish_keeps_seeded_reference_identical():
+    """Hoisted-policy hot loop must not change a single teacher label."""
+    from alphawhist.core.FastRollout import _batch, _mix, _choose_card
+    s = snapshot(hand=("14h", "7h", "2s", "9c", "3d"))
+    actions = tuple(s.own_hand)
+    seed = 81233
+    expected = [[0] * len(s.bids) for _ in actions]
+    for index in range(21):
+        world = s.sample_hands(random.Random(_mix(seed, 2 * index)))
+        for i, card in enumerate(actions):
+            sim = SimState.from_snapshot(s, world)
+            sim.play(CARD_ID[card])
+            rng = random.Random(_mix(seed, 2 * index + 1))
+            while sim.pile or any(sim.hands):
+                legal = legal_mask(sim.hands[sim.turn], sim.pile)
+                sim.play(_choose_card(sim, legal, rng, "bid_aware_2"))
+            for j, value in enumerate(sim.round_scores()):
+                expected[i][j] += value
+    assert _batch((s, actions, 0, 21, seed, "bid_aware_2")) == expected
