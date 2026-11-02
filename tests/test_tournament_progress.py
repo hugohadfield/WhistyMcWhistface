@@ -31,6 +31,7 @@ def test_progress_prints_correct_real_win_rates_and_best_rival_margin():
     assert "first_share=33.3%/33.3% " in line  # 1 win + 1/3 tied win
     assert "outright=1-1-1 " in line
     assert "paired=1-1-0 " in line
+    assert "scores=96.25/95.00 " in line
     assert "margin=+1.25 " in line
     assert "vs_best=-6.25 " in line
     assert "elapsed=8.0s eta~8s" in line
