@@ -20,6 +20,7 @@ from alphawhist.core.FastRollout import (
     hand_mask, legal_mask,
 )
 from alphawhist.core.InformationState import InformationState
+from alphawhist.learning.fast_observation import FastObserver, encode_fast_batch
 
 _OPPONENT_POLICIES = ("random", "highest", "bid_aware_2")
 
@@ -27,7 +28,7 @@ _OPPONENT_POLICIES = ("random", "highest", "bid_aware_2")
 @dataclass
 class _Branch:
     state: SimState
-    observation: InformationState
+    observation: InformationState | FastObserver
     rng: random.Random
     action_index: int
 
@@ -51,12 +52,22 @@ def _advance(branch, card):
     if not legal_mask(state.hands[state.turn], state.pile) & (1 << card):
         raise ValueError("Continuation selected an illegal card")
     actor = state.turn
-    observation = branch.observation.apply_public_event(
-        {"type": "card", "player": actor, "card": CARDS[card]})
-    state._play_legal(card)
-    if not state.pile:
+    observation = branch.observation
+    if isinstance(observation, FastObserver):
+        # The hot rollout path maintains only observable information.
+        # No simulated opponent hand ever enters the neural feature encoder.
+        observation.play_card(actor, card)
+        state._play_legal(card)
+        if not state.pile:
+            observation.end_trick(state.leader)
+    else:
+        # Slow reference path retained for differential correctness tests.
         observation = observation.apply_public_event(
-            {"type": "trick_end", "winner": state.leader})
+            {"type": "card", "player": actor, "card": CARDS[card]})
+        state._play_legal(card)
+        if not state.pile:
+            observation = observation.apply_public_event(
+                {"type": "trick_end", "winner": state.leader})
     if observation.turn != state.turn or observation.leader != state.leader:
         raise AssertionError("Public observation diverged from simulated game")
     branch.observation = observation
@@ -105,7 +116,10 @@ def _finish_group(branches, model, opponent_policy, sums, counts, previous_won):
                     counts[i][additional] += 1
         if not waiting:
             break
-        encoded = encode_batch([b.observation for b in waiting])
+        observations = [b.observation for b in waiting]
+        encoded = (encode_fast_batch(observations)
+                   if isinstance(observations[0], FastObserver)
+                   else encode_batch(observations))
         predictions = model.predict_encoded(encoded)
         selected = predictions.best_card_ids().cpu().tolist()
         for index, (branch, card) in enumerate(zip(waiting, selected)):
@@ -128,6 +142,7 @@ def _neural_batch(args, collect_histograms=False):
     counts = [[0] * 8 for _ in actions] if collect_histograms else None
     deal_rng = random.Random()
     previous_won = snapshot.tricks_won[own]
+    observer_template = FastObserver.from_snapshot(snapshot)
 
     for first in range(start, stop, worlds_per_batch):
         branches = []
@@ -141,7 +156,7 @@ def _neural_batch(args, collect_histograms=False):
                     state=SimState(base.hands.copy(), base.pile.copy(),
                                    base.bids, base.tricks_won.copy(),
                                    base.leader, base.turn, base.trump),
-                    observation=snapshot,
+                    observation=observer_template.fork(),
                     rng=random.Random(policy_seed),
                     action_index=action_index,
                 )
