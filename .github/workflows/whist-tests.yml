@@ -112,7 +112,7 @@ jobs:
 
   parallel_training_labels:
     name: Parallel teacher labeling throughput and equivalence
-    if: github.event_name == 'pull_request' && (github.head_ref == 'perf/persistent-parallel-label-export' || github.head_ref == 'perf/resume-and-fast-label-rollouts-20261102' || github.head_ref == 'feature/neural-self-continuation-20261102')
+    if: github.event_name == 'pull_request' && (github.head_ref == 'perf/persistent-parallel-label-export' || github.head_ref == 'perf/resume-and-fast-label-rollouts-20261102' || github.head_ref == 'feature/neural-self-continuation-20261102' || github.head_ref == 'feature/neural-rollout-player-tournament-20261102')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -229,7 +229,7 @@ jobs:
       - name: Install CPU PyTorch
         run: python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Run real-simulator neural learning integration tests
-        run: python -m pytest -q tests/test_neural_train_evaluate.py tests/test_learning_model.py tests/test_neural_self_rollout.py
+        run: python -m pytest -q tests/test_neural_train_evaluate.py tests/test_learning_model.py tests/test_neural_self_rollout.py tests/test_neural_rollout_tournament.py
       - name: Generate real independent game trajectories
         run: |
           python -m benchmarks.generate_training_games \
