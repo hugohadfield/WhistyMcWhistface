@@ -112,7 +112,7 @@ jobs:
 
   parallel_training_labels:
     name: Parallel teacher labeling throughput and equivalence
-    if: github.event_name == 'pull_request' && github.head_ref == 'perf/persistent-parallel-label-export'
+    if: github.event_name == 'pull_request' && (github.head_ref == 'perf/persistent-parallel-label-export' || github.head_ref == 'perf/resume-and-fast-label-rollouts-20261102')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -216,7 +216,7 @@ jobs:
 
   neural_training_end_to_end:
     name: Neural ML train/evaluate/tournament CPU smoke
-    if: github.event_name == 'pull_request' && github.head_ref == 'feature/train-evaluate-neural-policy'
+    if: github.event_name == 'pull_request' && (github.head_ref == 'feature/train-evaluate-neural-policy' || github.head_ref == 'perf/resume-and-fast-label-rollouts-20261102')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
