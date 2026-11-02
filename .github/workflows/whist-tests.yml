@@ -309,3 +309,33 @@ jobs:
           path: mc-five-games/
           if-no-files-found: warn
           retention-days: 30
+
+  mc_bidder_experiment:
+    name: MC bid simulation integration and paired tournament
+    if: github.event_name == 'pull_request' && github.head_ref == 'feature/mc-bidder-heuristic-continuations-20261102'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Run bidding-specific unit/integration tests
+        run: python -m pytest -v tests/test_mc_bid_rollout.py
+      - name: Full-game seat-swapped comparison with stronger card play
+        run: |
+          python -m benchmarks.mc_bid_tournament \
+            --games 20 --seed 20261108 --workers 4 \
+            --play-rollouts 128 --bid-rollouts 512 \
+            --json mc-bid-experiment/tournament.json \
+            --csv mc-bid-experiment/games.csv
+      - name: Archive paired games and score/win summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mc-bidder-versus-original-results
+          path: mc-bid-experiment/
+          retention-days: 14
+          if-no-files-found: warn
