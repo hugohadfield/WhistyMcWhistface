@@ -180,6 +180,44 @@ especially frequent small methods, so use the normal **unprofiled**
 tournament to measure real end-to-end throughput. Use this diagnostic
 profile primarily to identify the highest-impact optimization.
 
+## Test all-neural future play (including simulated opponents)
+
+No retraining needed: the **same frozen checkpoint** controls every
+nonforced future action, but each simulated seat receives its **own**
+`FastObserver`. An opponent's observer is reconstructed from *only that
+opponent's sampled remaining hand* plus that player's already publicly played
+cards, followed by a replay of the current round's public history. No one sees
+other sampled hands. Every simulated public card/trick event advances all
+perspectives, and PyTorch calls are batched across actors and possible worlds.
+The original `bid_aware_2` simulated-opponent option remains the default.
+
+For a quick same-budget trial against ordinary 1,024-rollout MC, use a small
+all-neural search budget first to check the runtime:
+
+```bash
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+python -m benchmarks.neural_rollout_tournament \
+  --checkpoint runs/large-190k-v1/best.pt \
+  --baseline mc --baseline-rollouts 1024 \
+  --opponent-policy neural \
+  --games 20 --rollouts 128 --workers 4 --seed 93261102 \
+  --json runs/large-190k-v1/all-neural-vs-mc-128.json
+```
+
+If practical, compare at 1,024 challenger rollouts on independently seeded,
+matched-deal, seat-swapped games. To compare against the OLD rollout
+assumption, change `--opponent-policy neural` to `bid_aware_2`, keeping
+the remaining settings unchanged. Head-to-head wins, outright game wins,
+first-place share (tie-split) and margin over the strongest opponent are
+reported alongside mean score difference and paired-bootstrap confidence
+interval. **The real third player stays random** in the existing tournament;
+the `--opponent-policy` flag affects only simulated continuation.
+
+The new opponent model predicts what a strong self-interested neural player
+would do, not necessarily what a particular human or Monte Carlo player will
+do. Stronger simulated opponents are an empirical hypothesis, not an
+automatic playing-strength improvement.
+
 ## Evaluate the neural-guided Monte Carlo bot before labeling more data
 
 `NeuralRolloutMonteCarloPlayer` is an actual playable bot: it performs
