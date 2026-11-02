@@ -162,11 +162,12 @@ def _neural_batch(args, collect_histograms=False):
     round_events = None
     if opponent_policy == "neural":
         events = [json.loads(raw) for raw in snapshot.history_json]
-        start = next((i for i in range(len(events) - 1, -1, -1)
-                      if events[i]["type"] == "round_start"), None)
-        if start is None:
+        round_start_index = next(
+            (i for i in range(len(events) - 1, -1, -1)
+             if events[i]["type"] == "round_start"), None)
+        if round_start_index is None:
             raise ValueError("All-neural rollout needs a public round history")
-        round_events = tuple(events[start:])
+        round_events = tuple(events[round_start_index:])
 
     for first in range(start, stop, worlds_per_batch):
         branches = []
