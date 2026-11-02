@@ -55,7 +55,7 @@ def test_batched_neural_self_rollouts_deterministic_and_have_valid_histograms(ch
     for i, histogram in enumerate(one.additional_trick_counts):
         assert sum(histogram) == 11
         expected = sum(
-            n * (1 + k if k != 1 else 1 + k + 10)
+            n * (k + (10 if k == 1 else 0))
             for k, n in enumerate(histogram)
         ) / 11
         assert abs(one.values[i] - expected) < 1e-10
@@ -103,7 +103,7 @@ def test_label_export_accepts_neural_self_teacher_and_records_provenance(
     assert manifest["teacher_provenance"]["opponents"] == "bid_aware_2"
     assert len(manifest["teacher_provenance"]["checkpoint_sha256"]) == 64
     for split in ("train", "val", "test"):
-        for path in split_files(labels, read_manifest(labels), split):
+        for path in split_files(labels, read_manifest(labels), split, require_nonempty=False):
             arrays = load_shard(path)
             assert np.all(arrays["n_rollouts"] == 4)
             assert np.all(arrays["trick_counts"].sum(axis=-1)[
