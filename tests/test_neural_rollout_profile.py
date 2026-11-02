@@ -41,8 +41,8 @@ def test_one_real_round_writes_cpu_profile_and_hotspot_report(checkpoint, tmp_pa
     # The raw binary profile is standard pstats-compatible.
     assert pstats.Stats(str(tmp_path / "profile.prof")).total_calls > 0
     stages = {item["stage"]: item for item in report["hotspots"]}
-    for name in ("advance public observation", "public event reducer",
-                 "encode one observation", "neural inference",
+    for name in ("advance public observation", "fast public card",
+                 "fast feature encoding", "neural inference",
                  "simulate one legal card"):
         assert stages[name]["calls"] > 0
 
