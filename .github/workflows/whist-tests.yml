@@ -216,7 +216,7 @@ jobs:
 
   neural_training_end_to_end:
     name: Neural ML train/evaluate/tournament CPU smoke
-    if: github.event_name == 'pull_request' && (github.head_ref == 'feature/train-evaluate-neural-policy' || github.head_ref == 'perf/resume-and-fast-label-rollouts-20261102')
+    if: github.event_name == 'pull_request' && (github.head_ref == 'feature/train-evaluate-neural-policy' || github.head_ref == 'perf/resume-and-fast-label-rollouts-20261102' || github.head_ref == 'feature/neural-self-continuation-20261102')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
