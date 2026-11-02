@@ -1,0 +1,42 @@
+name: Bid-aware 2-card versus random
+on:
+  push:
+    branches: ['experiment/bid-aware-2-vs-random-20261102']
+  pull_request:
+
+jobs:
+  evaluate:
+    name: Compare standalone bid-aware 2-card player to random
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Test player, information safety and matching to rollout heuristic
+        run: python -m pytest -v tests/test_bid_aware_2_player.py
+      - name: 600 games 3P with 200 independent rotating deals
+        run: |
+          python -m benchmarks.bid_aware_2_vs_random \
+            --players 3 --games 600 --workers 4 --seed 20261116 \
+            --progress-every 60 \
+            --json bid-aware-2-results/three-player.json \
+            --csv bid-aware-2-results/three-player.csv
+      - name: 400 games 2P with 200 independent paired deals
+        run: |
+          python -m benchmarks.bid_aware_2_vs_random \
+            --players 2 --games 400 --workers 4 --seed 20261117 \
+            --progress-every 40 \
+            --json bid-aware-2-results/two-player.json \
+            --csv bid-aware-2-results/two-player.csv
+      - name: Archive outcome and per-match score tables
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bid-aware-2-vs-random
+          path: bid-aware-2-results/
+          retention-days: 30
+          if-no-files-found: warn
