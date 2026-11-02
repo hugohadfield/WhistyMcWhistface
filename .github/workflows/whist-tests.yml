@@ -266,3 +266,46 @@ jobs:
           path: ml-smoke/
           if-no-files-found: warn
           retention-days: 14
+
+  five_mc_game_review:
+    name: Record 5 full MC vs MC vs random games and analyze card plays
+    if: github.event_name == 'pull_request' && github.head_ref == 'experiment/five-mc-game-decision-review-20261102'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Syntax-check and smoke test recording and analysis
+        run: |
+          python -m py_compile benchmarks/review_mc_game_plays.py
+          python -m benchmarks.generate_training_games \
+            --games 1 --seed 20261103 --players 3 --workers 1 \
+            --agents mc_aware,mc_aware,random --rollouts 8 \
+            --output-dir mc-review-smoke/traces
+          python -m benchmarks.review_mc_game_plays \
+            --traces mc-review-smoke/traces --output-dir mc-review-smoke/analysis \
+            --audit-rollouts 32 --decisions-per-game 2
+      - name: Record five complete 13-round games with two 1024-rollout MC players
+        run: |
+          python -m benchmarks.generate_training_games \
+            --games 5 --seed 20261104 --players 3 --workers 4 \
+            --agents mc_aware,mc_aware,random --rollouts 1024 \
+            --output-dir mc-five-games/traces
+      - name: Replay every card and independently check 40 key MC decisions
+        run: |
+          python -m benchmarks.review_mc_game_plays \
+            --traces mc-five-games/traces --output-dir mc-five-games/analysis \
+            --audit-rollouts 4096 --decisions-per-game 8 \
+            --seed 20261105
+      - name: Preserve traces, all 780 plays, quantitative decision audit and summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: five-mc-games-card-by-card-review
+          path: mc-five-games/
+          if-no-files-found: warn
+          retention-days: 30
