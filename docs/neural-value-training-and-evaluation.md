@@ -100,6 +100,45 @@ This option cannot change the performance of a Python process that is
 already running; a source-code change only affects processes started after
 you update the repository.
 
+## Evaluate the neural-guided Monte Carlo bot before labeling more data
+
+`NeuralRolloutMonteCarloPlayer` is an actual playable bot: it performs
+Monte Carlo action selection, assumes the *frozen 190k neural net*
+controls its future simulated moves and `bid_aware_2` controls sampled
+opponents. It inherits the same bidding/trump selector as the direct
+neural and ordinary MC players. Its model never sees sampled private
+opponent hands.
+
+Compare it directly to the pure neural bot using full matched-deal,
+seat-swapped games:
+
+```bash
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+python -m benchmarks.neural_rollout_tournament \
+  --checkpoint runs/large-190k-v1/best.pt \
+  --baseline neural --games 20 --rollouts 32 \
+  --workers 4 --seed 90061101 \
+  --json runs/large-190k-v1/neural-mc-vs-neural.json
+```
+
+This is an initial *speed and correctness* tournament. It prints interim
+progress and final paired-bootstrap 95% intervals. Don't interpret just
+ten deal pairs as a reliable playing-strength estimate. Increase to
+100+ matched games, preserving new independent seeds, only if the
+32-rollout experiment is computationally practical.
+
+For an MC baseline rather than pure neural, specify `--baseline mc`
+and `--baseline-rollouts 128`. The `--rollouts` flag sets the
+**neural-guided searcher's** budget, not the baseline budget.
+Each candidate card uses the same hidden samples as other candidates,
+and all rollout policies are observer-safe.
+
+**Search budget and CPU time matter.** Even with batched neural forward
+passes, simulated observation updates are expensive, so do not
+start with 1024 neural-guided rollouts. Measure runtime and strength
+separately; a search policy that matches the net but costs much more
+does not yet justify replacing it.
+
 ## Neural self-continuation: first policy-iteration experiment
 
 After training a strong frozen model, use it **only for the original
