@@ -67,27 +67,47 @@ def _approx_future_bids(snapshot, candidate, previous_streaks):
     bids[own] = candidate
     streaks = list(previous_streaks)
     streaks[own] = streaks[own] + 1 if candidate == 0 else 0
+    # A greedy future prediction can dead-end the final bidder (notably
+    # in 1-card rounds when they cannot bid zero). Backtrack ONLY over
+    # hypothetical future bids, preserving actual announced bids.
+    future = []
     player = (own + 1) % snapshot.num_players
-    while player != (snapshot.dealer + 1) % snapshot.num_players:
+    first_bidder = (snapshot.dealer + 1) % snapshot.num_players
+    while player != first_bidder:
         if bids[player] is not None:
             raise AssertionError("Already-announced bid follows current bidder")
+        future.append(player)
+        player = (player + 1) % snapshot.num_players
+
+    def complete(position):
+        if position == len(future):
+            return True
+        player = future[position]
         options = legal_future_bids(
             player, bids, streaks, snapshot.cards_per_player, snapshot.dealer)
-        if not options:
-            raise ValueError("No legal opponent future bid")
-        # Matches RandomPlayer.makeAverageBid's modulo preference.
         natural = round(snapshot.cards_per_player / snapshot.num_players)
-        bids[player] = next(
-            value for delta in range(snapshot.cards_per_player + 1)
-            if (value := ((natural + delta) % (snapshot.cards_per_player + 1)))
-            in options
-        )
-        streaks[player] = streaks[player] + 1 if bids[player] == 0 else 0
-        player = (player + 1) % snapshot.num_players
+        # Original RandomPlayer.makeAverageBid's cyclic preference order.
+        preference = sorted(
+            options,
+            key=lambda b: ((b - natural) % (snapshot.cards_per_player + 1)))
+        original_streak = streaks[player]
+        for bid in preference:
+            bids[player] = bid
+            streaks[player] = original_streak + 1 if bid == 0 else 0
+            if complete(position + 1):
+                return True
+        bids[player] = None
+        streaks[player] = original_streak
+        return False
+
+    if not complete(0):
+        # The current bid may be individually legal but make it impossible
+        # for future bidders to complete the round legally under public
+        # zero-bid restrictions. Such a bid cannot be safely simulated.
+        return None
     if any(b is None for b in bids):
         raise AssertionError("Incomplete modelled bids")
     return tuple(bids)
-
 
 def evaluate_bids(snapshot, legal_bids, *, n_rollouts=1024, seed=0):
     """Score hypothetical bids by simulating complete rounds.
@@ -116,6 +136,8 @@ def evaluate_bids(snapshot, legal_bids, *, n_rollouts=1024, seed=0):
 
     modeled_bids = tuple(_approx_future_bids(snapshot, b, streaks)
                          for b in options)
+    if all(b is None for b in modeled_bids):
+        raise ValueError("No hypothetical bid permits a legal future bidding round")
     sums = [0] * len(options)
     made = [0] * len(options)
     tricks = [0] * len(options)
@@ -128,6 +150,8 @@ def evaluate_bids(snapshot, legal_bids, *, n_rollouts=1024, seed=0):
         masks = [hand_mask(hand) for hand in world]
         policy_seed = _mix(seed, 2 * index + 1)
         for j, bids in enumerate(modeled_bids):
+            if bids is None:
+                continue
             state = SimState(
                 hands=masks.copy(), pile=[], bids=bids,
                 tricks_won=[0] * snapshot.num_players,
@@ -141,7 +165,9 @@ def evaluate_bids(snapshot, legal_bids, *, n_rollouts=1024, seed=0):
             made[j] += state.tricks_won[me] == bids[me]
     return BidEvaluation(
         bids=options,
-        expected_round_scores=tuple(s / n_rollouts for s in sums),
+        expected_round_scores=tuple(
+            s / n_rollouts if bids is not None else float("-inf")
+            for s, bids in zip(sums, modeled_bids)),
         exact_bid_probabilities=tuple(m / n_rollouts for m in made),
         mean_tricks=tuple(t / n_rollouts for t in tricks),
         rollouts=n_rollouts,
