@@ -130,7 +130,7 @@ def test_paired_neural_vs_mc_game_tournament(trained, tmp_path):
 
 def test_dataset_guards_checkpoint_version_and_no_test_split(tmp_path, trained):
     _, labels, run, _ = trained
-    with pytest.raises(ValueError, match="empty"):
+    with pytest.raises(FileExistsError, match="empty"):
         train(labels, run, epochs=1)
     item = next(iter(split_files(labels, read_manifest(labels), "train")))
     arrays = load_shard(item)
