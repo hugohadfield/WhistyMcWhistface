@@ -97,3 +97,19 @@ def test_all_neural_playable_bot_with_config(checkpoint):
     with contextlib.redirect_stdout(io.StringIO()):
         game.playFullGame()
     assert game.roundnumber == 2
+
+
+def test_all_neural_direct_ablation_against_heuristic_opponent_neural_mc(
+        checkpoint):
+    with contextlib.redirect_stdout(io.StringIO()):
+        games, stats = tournament(
+            checkpoint, games=2, seed=882129, rollouts=2,
+            opponent_policy="neural", baseline="neural_mc",
+            baseline_rollouts=2, workers=1, progress_every=0, bootstrap=100,
+        )
+    assert len(games) == 2
+    assert stats["baseline"] == "neural_mc"
+    assert stats["baseline_rollouts"] == 2
+    assert stats["simulated_opponent_policy"] == "neural"
+    assert stats["challenger_outright_wins"] <= stats["games"]
+    assert stats["baseline_outright_wins"] <= stats["games"]
