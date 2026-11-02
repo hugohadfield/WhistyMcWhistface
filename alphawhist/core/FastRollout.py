@@ -10,7 +10,7 @@ import random
 from typing import Callable
 
 from alphawhist.core.WhistLib import all_cards_in_deck
-from alphawhist.core.EndgamePolicy import pick_bid_aware_two_card
+from alphawhist.core.EndgamePolicy import (pick_bid_aware_two_card, pick_bid_aware_three_card)
 
 CARDS = tuple(all_cards_in_deck)
 CARD_ID = {card: i for i, card in enumerate(CARDS)}
@@ -154,6 +154,8 @@ def _choose_card(state, legal, rng, policy):
         return legal.bit_length() - 1
     if policy == "bid_aware_2":
         return pick_bid_aware_two_card(state, legal, rng)
+    if policy == "bid_aware_3":
+        return pick_bid_aware_three_card(state, legal, rng)
     if callable(policy):
         card = policy(state, legal, rng)
         if not isinstance(card, int) or not (legal & (1 << card)):
@@ -170,12 +172,14 @@ def finish_round(state, rng, policy="random"):
     scoring path so existing seeded teacher labels remain bit-identical.
     """
     hands, pile, play = state.hands, state.pile, state._play_legal
-    if policy == "bid_aware_2":
+    if policy in ("bid_aware_2", "bid_aware_3"):
+        pick = (pick_bid_aware_two_card if policy == "bid_aware_2"
+                else pick_bid_aware_three_card)
         while pile or any(hands):
             mask = legal_mask(hands[state.turn], pile)
             if not mask:
                 raise ValueError("No legal move in an unfinished round")
-            play(pick_bid_aware_two_card(state, mask, rng))
+            play(pick(state, mask, rng))
     else:
         while pile or any(hands):
             mask = legal_mask(hands[state.turn], pile)
