@@ -3,8 +3,9 @@
 Both bidding and trump selection are inherited unchanged from MonteCarloPlayer.
 At a nonforced card decision, evaluate each legal card over sampled hidden
 worlds, then use the frozen neural policy for our own subsequent simulated
-turns. Opponents in each sampled future play the chosen cheap continuation
-policy; neither the real player nor the neural model sees their hidden hands.
+turns. Opponents use the selected continuation policy: bid_aware_2 (default) or
+the SAME neural checkpoint from each opponent's own sampled perspective.
+The neural policy never observes any other simulated player's private cards.
 """
 import random
 
@@ -28,7 +29,7 @@ class NeuralRolloutMonteCarloPlayer(MonteCarloPlayer):
             raise ValueError("NeuralRolloutMonteCarloPlayer needs a checkpoint")
         if self.rollouts < 1 or self.worlds_per_batch < 1:
             raise ValueError("Rollout budget and batch size must be positive")
-        if self.opponent_policy not in ("random", "highest", "bid_aware_2"):
+        if self.opponent_policy not in ("random", "highest", "bid_aware_2", "neural"):
             raise ValueError("Unknown opponent policy")
 
     def makeMove(self, pile, trumpsuit, fullGameObject=None):
