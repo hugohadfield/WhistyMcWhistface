@@ -217,11 +217,53 @@ def _write_shard(directory, split, index, rows):
     return path
 
 
+def _resume_shards(directory, rollouts, shard_size):
+    """Recover fully flushed shards from a stopped export.
+
+    Keep per-split decision seeds to verify that replaying the source records
+    uses the identical trace ordering, split seed and teacher configuration.
+    A partially filled in-memory shard is intentionally regenerated.
+    """
+    if (directory / "manifest.json").exists():
+        raise ValueError("Already finalized: manifest.json exists")
+    if list(directory.glob("*.part")):
+        raise ValueError("Remove an incomplete .part shard before resuming")
+    counts = dict.fromkeys(SPLITS, 0)
+    indices = dict.fromkeys(SPLITS, 0)
+    names = []
+    seeds = {}
+    for split in SPLITS:
+        paths = sorted(directory.glob(f"{split}-*.npz"))
+        pieces = []
+        for index, path in enumerate(paths):
+            if path.name != f"{split}-{index:05d}.npz":
+                raise ValueError(f"Noncontiguous or unexpected shard: {path}")
+            with np.load(path, allow_pickle=False) as data:
+                if not {"n_rollouts", "teacher_seed"}.issubset(data.files):
+                    raise ValueError(f"Cannot resume shard lacking seed/rollouts: {path}")
+                budgets = data["n_rollouts"]
+                row_seeds = data["teacher_seed"]
+                if (len(budgets) != shard_size or
+                        len(row_seeds) != shard_size or
+                        not np.all(budgets == rollouts)):
+                    raise ValueError(f"Wrong shard size or rollout budget: {path}")
+                pieces.append(row_seeds.astype(np.uint64))
+            counts[split] += shard_size
+            names.append(path.name)
+        indices[split] = len(paths)
+        seeds[split] = np.concatenate(pieces) if pieces else np.empty(0, dtype=np.uint64)
+    unexpected = [p.name for p in directory.iterdir()
+                  if p.is_file() and p.suffix != ".npz"]
+    if unexpected:
+        raise ValueError(f"Unrecognized files in resume directory: {unexpected}")
+    return counts, indices, names, seeds
+
+
 def label_traces(paths, output_dir, rollouts=1024, workers=1,
                  seed=20261102, policy="bid_aware_2", batch_size=256,
                  shard_size=256, max_states=None, include_forced=False,
                  state_batch_size=4, prefetch_batches=2,
-                 timings_json=None):
+                 timings_json=None, resume=False):
     if (rollouts < 1 or workers < 1 or batch_size < 1 or shard_size < 1
             or state_batch_size < 1 or prefetch_batches < 1):
         raise ValueError("Rollout, worker, shard and prefetch counts must be positive")
@@ -234,16 +276,24 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
         raise ValueError("No input traces")
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
-    if any(out.iterdir()):
-        raise FileExistsError("Output directory must be empty (never overwrite labels)")
+    if not resume and any(out.iterdir()):
+        raise FileExistsError("Output directory must be empty (use --resume for interrupted exports)")
 
     started = time.perf_counter()
     timings = TimingCounters() if timings_json is not None else None
     buffers = defaultdict(list)
-    counts = dict.fromkeys(SPLITS, 0)
-    indices = dict.fromkeys(SPLITS, 0)
-    processed = 0
-    shard_names = []
+    if resume:
+        counts, indices, shard_names, existing_seeds = _resume_shards(
+            out, rollouts, shard_size)
+        print(f"RESUME completed_shards={len(shard_names)} "
+              f"saved_states={sum(counts.values())}", flush=True)
+    else:
+        counts = dict.fromkeys(SPLITS, 0)
+        indices = dict.fromkeys(SPLITS, 0)
+        shard_names = []
+        existing_seeds = None
+    existing_counts = counts.copy()
+    processed = sum(counts.values())
     manifest_path = out / "manifest.json"
 
     def flush(split):
@@ -262,11 +312,31 @@ def label_traces(paths, output_dir, rollouts=1024, workers=1,
     if max_states is not None:
         source = islice(source, max_states)
 
-    # Attach the assigned split before handing records to the workers.
-    # Each worker returns its (split, label) pairs in exactly source order.
+    # The already-flushed shards form a prefix *within each split*. The
+    # three buffers are independent: skipping a global state count would
+    # silently lose decisions that were in memory when interrupted.
+    def missing_records():
+        skipped = dict.fromkeys(SPLITS, 0)
+        for rec in source:
+            split = _split_for_game(seed, rec)
+            if skipped[split] < existing_counts[split]:
+                expected = existing_seeds[split][skipped[split]]
+                if _seed_for_decision(seed, rec) != int(expected):
+                    raise ValueError(
+                        "Resume seed/trace mismatch: keep the original "
+                        "--seed, input traces and input order")
+                skipped[split] += 1
+            else:
+                yield split, rec
+        if skipped != existing_counts:
+            raise ValueError("Input traces ended before all saved shards were matched")
+
+    records = missing_records() if resume else (
+        (_split_for_game(seed, rec), rec) for rec in source
+    )
+    # Preserve original source order across workers.
     for split, row in _iter_labeled_states(
-            ((_split_for_game(seed, rec), rec) for rec in source),
-            rollouts, workers, seed, policy, batch_size,
+            records, rollouts, workers, seed, policy, batch_size,
             state_batch_size, prefetch_batches,
             timings is not None):
         if timings is not None:
@@ -334,6 +404,8 @@ def main():
                         help="States per worker task, amortizing IPC")
     parser.add_argument("--prefetch-batches", type=int, default=2,
                         help="Outstanding tasks per worker (bounded streaming)")
+    parser.add_argument("--resume", action="store_true",
+                        help="Continue from complete shards in an interrupted export")
     parser.add_argument("--timings-json", type=Path,
                         help="Opt-in per-stage timing summary, no per-row timing storage")
     args = parser.parse_args()
@@ -342,7 +414,7 @@ def main():
                  args.seed, args.policy, args.batch_size, args.shard_size,
                  args.max_states, args.include_forced,
                  args.state_batch_size, args.prefetch_batches,
-                 args.timings_json)
+                 args.timings_json, args.resume)
 
 
 if __name__ == "__main__":
