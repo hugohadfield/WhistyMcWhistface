@@ -1,8 +1,9 @@
 """Matched-deal tournament: neural-guided Monte Carlo versus a frozen baseline.
 
-The challenger searches over legal cards using a neural policy for its own
-subsequent simulated turns. Opponents *inside* those rollouts use
-bid_aware_2. The actual third player in each full game is random.
+The challenger uses neural future play for itself. With --opponent-policy
+neural it also uses the same model for each simulated opponent, independently
+observing only that opponent's private sampled cards and public information.
+Default simulated opponents use bid_aware_2. The real third player is random.
 
 Baseline options:
   neural: direct greedy neural card play from the SAME checkpoint (default)
@@ -51,11 +52,14 @@ class Result:
 
 
 def play_match(index, checkpoint, seed=90061101, rollouts=32,
-               baseline="neural", baseline_rollouts=128):
+               baseline="neural", baseline_rollouts=128,
+               opponent_policy="bid_aware_2"):
     if index < 0 or rollouts < 1 or baseline_rollouts < 1:
         raise ValueError("Invalid game index or rollout count")
     if baseline not in ("neural", "mc"):
         raise ValueError("Unknown baseline")
+    if opponent_policy not in ("random", "highest", "bid_aware_2", "neural"):
+        raise ValueError("Unknown simulated opponent policy")
     pair = index // 2
     a, b = SEAT_PAIRS[pair % len(SEAT_PAIRS)]
     challenger, opponent = (a, b) if index % 2 == 0 else (b, a)
@@ -65,7 +69,7 @@ def play_match(index, checkpoint, seed=90061101, rollouts=32,
     game = Game("testConfigFiles/ThreePlayerRandom.json")
     game.players[challenger] = NeuralRolloutMonteCarloPlayer(
         challenger, checkpoint=checkpoint, rollouts=rollouts,
-        opponent_policy="bid_aware_2",
+        opponent_policy=opponent_policy,
     )
     if baseline == "neural":
         game.players[opponent] = NeuralValuePlayer(
@@ -137,15 +141,45 @@ def summarize(results, seed=90061101, bootstrap=5000):
         "challenger_paired_wins": sum(x > 0 for x in paired),
         "baseline_paired_wins": sum(x < 0 for x in paired),
         "paired_ties": sum(x == 0 for x in paired),
+        # Stronger tournament objectives than mean own score alone.
+        "challenger_outright_wins": sum(
+            r.challenger_score > max(r.baseline_score, r.random_score)
+            for r in results),
+        "baseline_outright_wins": sum(
+            r.baseline_score > max(r.challenger_score, r.random_score)
+            for r in results),
+        "random_outright_wins": sum(
+            r.random_score > max(r.challenger_score, r.baseline_score)
+            for r in results),
+        "challenger_first_place_share": statistics.mean(
+            (1.0 / sum(score == high for score in (
+                r.challenger_score, r.baseline_score, r.random_score))
+             if r.challenger_score == high else 0.0)
+            for r in results
+            for high in [max(r.challenger_score, r.baseline_score, r.random_score)]
+        ),
+        "baseline_first_place_share": statistics.mean(
+            (1.0 / sum(score == high for score in (
+                r.challenger_score, r.baseline_score, r.random_score))
+             if r.baseline_score == high else 0.0)
+            for r in results
+            for high in [max(r.challenger_score, r.baseline_score, r.random_score)]
+        ),
+        "mean_challenger_minus_best_opponent": statistics.mean(
+            r.challenger_score - max(r.baseline_score, r.random_score)
+            for r in results
+        ),
     }
 
 
 def tournament(checkpoint, games=20, seed=90061101, rollouts=32,
                workers=4, baseline="neural", baseline_rollouts=128,
                csv_path=None, json_path=None, bootstrap=5000,
-               progress_every=2):
+               progress_every=2, opponent_policy="bid_aware_2"):
     if games < 2 or games % 2 or workers < 1:
         raise ValueError("Games must be positive even, with workers >= 1")
+    if opponent_policy not in ("random", "highest", "bid_aware_2", "neural"):
+        raise ValueError("Unknown simulated opponent policy")
     from alphawhist.learning.checkpoint import load_checkpoint
     load_checkpoint(checkpoint, device="cpu")
     checkpoint = str(Path(checkpoint).resolve())
@@ -153,7 +187,8 @@ def tournament(checkpoint, games=20, seed=90061101, rollouts=32,
     results = []
     if workers == 1:
         iterator = (play_match(i, checkpoint, seed, rollouts,
-                               baseline, baseline_rollouts) for i in range(games))
+                               baseline, baseline_rollouts, opponent_policy)
+                    for i in range(games))
         pool = None
     else:
         pool = ProcessPoolExecutor(
@@ -161,7 +196,7 @@ def tournament(checkpoint, games=20, seed=90061101, rollouts=32,
         iterator = pool.map(
             play_match, range(games), repeat(checkpoint), repeat(seed),
             repeat(rollouts), repeat(baseline), repeat(baseline_rollouts),
-            chunksize=1,
+            repeat(opponent_policy), chunksize=1,
         )
     try:
         for result in iterator:
@@ -182,7 +217,7 @@ def tournament(checkpoint, games=20, seed=90061101, rollouts=32,
         "challenger": "neural_guided_monte_carlo",
         "challenger_rollouts": rollouts,
         "self_policy": "frozen_neural",
-        "simulated_opponent_policy": "bid_aware_2",
+        "simulated_opponent_policy": opponent_policy,
         "baseline": baseline,
         "baseline_rollouts": baseline_rollouts if baseline == "mc" else None,
         "seed": seed, "workers": workers,
@@ -213,6 +248,10 @@ def main():
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--baseline", choices=("neural", "mc"), default="neural")
     parser.add_argument("--baseline-rollouts", type=int, default=128)
+    parser.add_argument("--opponent-policy",
+                        choices=("random", "highest", "bid_aware_2", "neural"),
+                        default="bid_aware_2",
+                        help="Simulated opponents inside challenger MC rollouts")
     parser.add_argument("--csv", type=Path)
     parser.add_argument("--json", type=Path)
     parser.add_argument("--bootstrap", type=int, default=5000)
@@ -222,6 +261,7 @@ def main():
         args.checkpoint, args.games, args.seed, args.rollouts,
         args.workers, args.baseline, args.baseline_rollouts,
         args.csv, args.json, args.bootstrap, args.progress_every,
+        args.opponent_policy,
     )
 
 
