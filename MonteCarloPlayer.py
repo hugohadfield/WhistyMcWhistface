@@ -18,7 +18,7 @@ class MonteCarloPlayer(Player):
         self.monteCarloPolicy = parameters.get("monteCarloPolicy", "random")
         if self.monteCarloNumber < 1 or self.monteCarloWorkers < 1:
             raise ValueError("Monte Carlo rollouts and workers must be positive")
-        if self.monteCarloPolicy not in ("random", "highest", "bid_aware_2"):
+        if self.monteCarloPolicy not in ("random", "highest", "bid_aware_2", "bid_aware_3"):
             raise ValueError("Unknown Monte Carlo rollout policy")
         return True
 
