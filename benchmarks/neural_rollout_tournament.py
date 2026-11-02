@@ -6,8 +6,9 @@ observing only that opponent's private sampled cards and public information.
 Default simulated opponents use bid_aware_2. The real third player is random.
 
 Baseline options:
-  neural: direct greedy neural card play from the SAME checkpoint (default)
-  mc:     classic Monte Carlo card play with bid_aware_2 continuations
+  neural:    direct greedy neural card play from the SAME checkpoint (default)
+  mc:        classic Monte Carlo with bid_aware_2 continuations
+  neural_mc: neural-self MC with bid_aware_2 simulated opponents (ablation)
 
 Each independent deal seed produces two full 13-round games with the
 challenger and baseline switching seats. Report pair-bootstrap confidence
@@ -56,7 +57,7 @@ def play_match(index, checkpoint, seed=90061101, rollouts=32,
                opponent_policy="bid_aware_2"):
     if index < 0 or rollouts < 1 or baseline_rollouts < 1:
         raise ValueError("Invalid game index or rollout count")
-    if baseline not in ("neural", "mc"):
+    if baseline not in ("neural", "mc", "neural_mc"):
         raise ValueError("Unknown baseline")
     if opponent_policy not in ("random", "highest", "bid_aware_2", "neural"):
         raise ValueError("Unknown simulated opponent policy")
@@ -75,13 +76,20 @@ def play_match(index, checkpoint, seed=90061101, rollouts=32,
         game.players[opponent] = NeuralValuePlayer(
             opponent, checkpoint=checkpoint, device="cpu",
         )
-    else:
+    elif baseline == "mc":
         game.players[opponent] = MonteCarloPlayer(
             opponent, additionalParameters={
                 "monteCarloNumber": str(baseline_rollouts),
                 "monteCarloWorkers": "1",
                 "monteCarloPolicy": "bid_aware_2",
             },
+        )
+    else:
+        # The direct ablation: same frozen neural policy and sampled-search
+        # budget, but cheap bid_aware_2 simulated opponents.
+        game.players[opponent] = NeuralRolloutMonteCarloPlayer(
+            opponent, checkpoint=checkpoint, rollouts=baseline_rollouts,
+            opponent_policy="bid_aware_2",
         )
     assert type(game.players[third]) is RandomPlayer
     original_deal = game.randomDeal
@@ -219,7 +227,8 @@ def tournament(checkpoint, games=20, seed=90061101, rollouts=32,
         "self_policy": "frozen_neural",
         "simulated_opponent_policy": opponent_policy,
         "baseline": baseline,
-        "baseline_rollouts": baseline_rollouts if baseline == "mc" else None,
+        "baseline_rollouts": (baseline_rollouts
+                              if baseline in ("mc", "neural_mc") else None),
         "seed": seed, "workers": workers,
         "wall_seconds": time.perf_counter() - started,
     })
@@ -246,7 +255,8 @@ def main():
     parser.add_argument("--rollouts", type=int, default=32)
     parser.add_argument("--seed", type=int, default=90061101)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--baseline", choices=("neural", "mc"), default="neural")
+    parser.add_argument("--baseline", choices=("neural", "mc", "neural_mc"),
+                        default="neural")
     parser.add_argument("--baseline-rollouts", type=int, default=128)
     parser.add_argument("--opponent-policy",
                         choices=("random", "highest", "bid_aware_2", "neural"),
