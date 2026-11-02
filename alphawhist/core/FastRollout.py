@@ -269,7 +269,7 @@ def evaluate_actions(snapshot, actions=None, n_rollouts=DEFAULT_ROLLOUTS, seed=0
         raise ValueError("Rollouts, workers and batch size must be positive")
     if objective not in ("score", "margin"):
         raise ValueError("Objective must be 'score' or 'margin'")
-    if not (policy in ("random", "highest", "bid_aware_2")
+    if not (policy in ("random", "highest", "bid_aware_2", "bid_aware_3")
             if isinstance(policy, str) else callable(policy)):
         raise ValueError("Unknown rollout policy")
     own_id = snapshot.observer_id
