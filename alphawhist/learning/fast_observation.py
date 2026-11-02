@@ -123,6 +123,7 @@ class FastObserver:
             ):
                 raise ValueError("Observer must follow suit")
             self.own_hand ^= bit
+            self.remaining_counts[player] -= 1
         else:
             if self.own_hand & bit or not self.possible[player] & bit:
                 raise ValueError("Opponent played a card unavailable to them")
