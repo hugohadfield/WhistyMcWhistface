@@ -149,9 +149,31 @@ def test_seat_swapped_tournament_real_games(tmp_path):
     assert (tmp_path/"tournament.csv").exists()
 
 
-def test_future_bid_backtracks_to_keep_dealer_legal():
-    # Dealer P0 cannot bid zero because the previous two bids were zero.
-    # With one card and P1=0, choosing P2=0 would leave P0 no legal bid.
+
+def test_forced_zero_dealer_when_otherwise_no_legal_bid():
+    # If the dealer has two consecutive zero bids and the other players
+    # bid zero in a one-card round, dealer=0 is the only possible legal
+    # action that still preserves the sum constraint.
+    history = tuple(json.dumps({"type": "bid", "player": 0, "bid": 0})
+                    for _ in range(2))
+    state = InformationState.new_round(
+        own_hand=["14h"], num_players=3, round_index=2,
+        dealer=0, leader=1, cards_per_player=1,
+        observer_id=0, previous_history=history)
+    state = state.apply_public_event(
+        {"type": "trump", "player": 0, "suit": "s"})
+    state = state.apply_public_event({"type":"bid","player":1,"bid":0})
+    state = state.apply_public_event({"type":"bid","player":2,"bid":0})
+    assert public_zero_streaks(state)[0] == 2
+    assert legal_future_bids(0, state.bids, public_zero_streaks(state), 1, 0) == (0,)
+    player = MonteCarloBidPlayer(0)
+    player.resetZeroCounter(2)
+    assert player.getValidBidOptions(3, 1, [0, 0]) == [0]
+    estimate = evaluate_bids(state, (0,), n_rollouts=16, seed=23)
+    assert estimate.best_bid() == 0
+
+
+def test_future_bids_preserve_forced_dealer_exception():
     history = tuple(json.dumps({"type": "bid", "player": 0, "bid": 0})
                     for _ in range(2))
     state = InformationState.new_round(
@@ -159,26 +181,8 @@ def test_future_bid_backtracks_to_keep_dealer_legal():
         dealer=0, leader=1, cards_per_player=1,
         observer_id=1, previous_history=history)
     state = state.apply_public_event(
-        {"type": "trump", "player": 0, "suit": "s"})
+        {"type":"trump","player":0,"suit":"s"})
     predicted = _approx_future_bids(state, 0, public_zero_streaks(state))
-    assert predicted == (1, 0, 1)  # P2 adjusted away from natural 0.
+    assert predicted == (0, 0, 0)
     assert sum(predicted) != 1
     assert evaluate_bids(state, (0, 1), n_rollouts=16).best_bid() in (0, 1)
-
-
-def test_individually_legal_bid_with_no_future_completion_is_excluded():
-    history = tuple(json.dumps({"type": "bid", "player": 0, "bid": 0})
-                    for _ in range(2))
-    state = InformationState.new_round(
-        own_hand=["14h"], num_players=3, round_index=2,
-        dealer=0, leader=1, cards_per_player=1,
-        observer_id=2, previous_history=history)
-    state = state.apply_public_event(
-        {"type": "trump", "player": 0, "suit": "s"})
-    state = state.apply_public_event(
-        {"type": "bid", "player": 1, "bid": 0})
-    assert _approx_future_bids(state, 0, public_zero_streaks(state)) is None
-    assert _approx_future_bids(state, 1, public_zero_streaks(state)) == (1,0,1)
-    evaluation = evaluate_bids(state, (0, 1), n_rollouts=16)
-    assert evaluation.expected_round_scores[0] == float("-inf")
-    assert evaluation.best_bid() == 1
