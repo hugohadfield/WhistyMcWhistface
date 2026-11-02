@@ -11,8 +11,11 @@ Baseline options:
   neural_mc: neural-self MC with bid_aware_2 simulated opponents (ablation)
 
 Each independent deal seed produces two full 13-round games with the
-challenger and baseline switching seats. Report pair-bootstrap confidence
-intervals, not standard errors over individual games.
+challenger and baseline switching seats. Live progress reports head-to-head
+and outright wins, tie-split first-place rates, completed paired-deal wins,
+margin to the strongest opponent, approximate ETA, and an interim paired
+bootstrap interval every 20 games. Final intervals bootstrap paired deals,
+not individual games.
 """
 import argparse
 from concurrent.futures import ProcessPoolExecutor
@@ -180,6 +183,71 @@ def summarize(results, seed=90061101, bootstrap=5000):
     }
 
 
+def progress_report(results, total_games, elapsed_seconds, *, seed=90061101,
+                    bootstrap=500):
+    """Human-readable live tournament results, including actual win rates.
+
+    Game-level rates count only finished games. Paired wins use completed
+    seat-swapped deals, excluding an unpaired trailing game if present.
+    The optional interim confidence interval is based on complete pairs.
+    """
+    if not results or total_games < len(results):
+        raise ValueError("Invalid progress sample or tournament size")
+    n = len(results)
+    challenger_h2h = sum(r.margin > 0 for r in results)
+    baseline_h2h = sum(r.margin < 0 for r in results)
+    h2h_ties = n - challenger_h2h - baseline_h2h
+
+    challenger_first = baseline_first = 0.0
+    challenger_outright = baseline_outright = random_outright = 0
+    for r in results:
+        scores = (r.challenger_score, r.baseline_score, r.random_score)
+        best = max(scores)
+        tied_first = scores.count(best)
+        challenger_first += (1.0 / tied_first if scores[0] == best else 0.0)
+        baseline_first += (1.0 / tied_first if scores[1] == best else 0.0)
+        challenger_outright += scores[0] > max(scores[1:])
+        baseline_outright += scores[1] > max(scores[0], scores[2])
+        random_outright += scores[2] > max(scores[:2])
+
+    pairs = []
+    for first, second in zip(results[::2], results[1::2]):
+        if (first.pair != second.pair or first.deal_seed != second.deal_seed
+                or first.challenger_seat != second.baseline_seat
+                or first.baseline_seat != second.challenger_seat):
+            raise ValueError("Inconsistent seat-swapped pair in progress results")
+        pairs.append((first.margin + second.margin) / 2)
+    paired_challenger = sum(x > 0 for x in pairs)
+    paired_baseline = sum(x < 0 for x in pairs)
+    paired_ties = len(pairs) - paired_challenger - paired_baseline
+
+    margin = statistics.mean(r.margin for r in results)
+    best_margin = statistics.mean(
+        r.challenger_score - max(r.baseline_score, r.random_score)
+        for r in results
+    )
+    estimated_remaining = elapsed_seconds / n * (total_games - n)
+    line = (
+        f"PROGRESS {n}/{total_games} "
+        f"h2h={challenger_h2h}-{baseline_h2h}-{h2h_ties} "
+        f"h2h_win={100 * (challenger_h2h + h2h_ties / 2) / n:.1f}% "
+        f"first_share={100 * challenger_first / n:.1f}%/"
+        f"{100 * baseline_first / n:.1f}% "
+        f"outright={challenger_outright}-{baseline_outright}-"
+        f"{random_outright} "
+        f"paired={paired_challenger}-{paired_baseline}-{paired_ties} "
+        f"margin={margin:+.2f} "
+        f"vs_best={best_margin:+.2f} "
+        f"elapsed={elapsed_seconds:.1f}s "
+        f"eta~{estimated_remaining:.0f}s"
+    )
+    if n >= 20 and n % 20 == 0:
+        summary = summarize(results, seed=seed, bootstrap=max(100, bootstrap))
+        low, high = summary["paired_bootstrap_95_ci"]
+        line += f" interim_ci95=[{low:+.2f},{high:+.2f}]"
+    return line
+
+
 def tournament(checkpoint, games=20, seed=90061101, rollouts=32,
                workers=4, baseline="neural", baseline_rollouts=128,
                csv_path=None, json_path=None, bootstrap=5000,
@@ -210,11 +278,10 @@ def tournament(checkpoint, games=20, seed=90061101, rollouts=32,
         for result in iterator:
             results.append(result)
             if progress_every and len(results) % progress_every == 0:
-                margin = statistics.mean(x.margin for x in results)
-                print(f"PROGRESS {len(results)}/{games} "
-                      f"running_margin={margin:+.2f} "
-                      f"elapsed={time.perf_counter() - started:.1f}s",
-                      flush=True)
+                print(progress_report(
+                    results, games, time.perf_counter() - started,
+                    seed=seed, bootstrap=min(bootstrap, 500)),
+                    flush=True)
     finally:
         if pool is not None:
             pool.shutdown()
