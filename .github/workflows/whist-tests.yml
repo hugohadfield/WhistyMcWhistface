@@ -213,3 +213,56 @@ jobs:
           path: training-profile/
           if-no-files-found: warn
           retention-days: 14
+
+  neural_training_end_to_end:
+    name: Neural ML train/evaluate/tournament CPU smoke
+    if: github.event_name == 'pull_request' && github.head_ref == 'feature/train-evaluate-neural-policy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Install CPU PyTorch
+        run: python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Run real-simulator neural learning integration tests
+        run: python -m pytest -q tests/test_neural_train_evaluate.py tests/test_learning_model.py
+      - name: Generate real independent game trajectories
+        run: |
+          python -m benchmarks.generate_training_games \
+            --games 8 --seed 20262001 --players 3 --workers 2 \
+            --agents random --output-dir ml-smoke/traces
+      - name: Label every non-forced state using Monte Carlo
+        run: |
+          python -m benchmarks.export_training_labels \
+            --traces 'ml-smoke/traces/*.jsonl' \
+            --output-dir ml-smoke/labels --rollouts 16 \
+            --policy random --seed 20262001 --workers 2 --shard-size 64
+      - name: Train MLP with held-out early stopping
+        run: |
+          python -m benchmarks.train_value_model \
+            --dataset ml-smoke/labels --output-dir ml-smoke/run \
+            --device cpu --cpu-threads 2 --epochs 3 --patience 2 \
+            --hidden-size 32 --residual-blocks 1 --batch-size 64
+      - name: Report genuine held-out test metrics
+        run: |
+          python -m benchmarks.evaluate_value_model \
+            --dataset ml-smoke/labels --checkpoint ml-smoke/run/best.pt \
+            --split test --device cpu --output ml-smoke/test-metrics.json
+      - name: Run neural vs MC complete same-deal seat-swap games
+        run: |
+          python -m benchmarks.neural_vs_monte_carlo \
+            --checkpoint ml-smoke/run/best.pt --games 2 --rollouts 8 \
+            --workers 2 --bootstrap 100 --device cpu \
+            --csv ml-smoke/tournament.csv --json ml-smoke/tournament.json
+      - name: Archive model checkpoints, metrics, traces and tournament
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whist-neural-end-to-end-smoke
+          path: ml-smoke/
+          if-no-files-found: warn
+          retention-days: 14
