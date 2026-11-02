@@ -42,7 +42,7 @@ def test_neural_guided_player_rejects_bad_configuration(checkpoint):
         NeuralRolloutMonteCarloPlayer(0, checkpoint=checkpoint, rollouts=0)
     with pytest.raises(ValueError, match="opponent"):
         NeuralRolloutMonteCarloPlayer(
-            0, checkpoint=checkpoint, opponent_policy="neural")
+            0, checkpoint=checkpoint, opponent_policy="imaginary")
 
 
 def test_matched_seat_swapped_tournament_completes_and_writes_results(
@@ -66,3 +66,34 @@ def test_matched_seat_swapped_tournament_completes_and_writes_results(
     assert report["simulated_opponent_policy"] == "bid_aware_2"
     assert (tmp_path / "games.csv").exists()
     assert (tmp_path / "results.json").exists()
+
+
+def test_all_neural_opponent_tournament_and_outcomes(checkpoint, tmp_path):
+    with contextlib.redirect_stdout(io.StringIO()):
+        matches, report = tournament(
+            checkpoint, games=2, seed=910171, rollouts=2,
+            workers=1, baseline="mc", baseline_rollouts=2,
+            opponent_policy="neural", progress_every=0, bootstrap=100,
+            json_path=tmp_path / "all-neural.json",
+        )
+    assert report["simulated_opponent_policy"] == "neural"
+    assert report["paired_deals"] == 1
+    assert len(matches) == 2
+    assert matches[0].challenger_seat == matches[1].baseline_seat
+    assert report["challenger_outright_wins"] <= 2
+    assert 0 <= report["challenger_first_place_share"] <= 1
+    assert report["mean_challenger_minus_best_opponent"] <= (
+        report["mean_challenger_minus_baseline"])
+    assert (tmp_path / "all-neural.json").exists()
+
+
+def test_all_neural_playable_bot_with_config(checkpoint):
+    game = Game("testConfigFiles/ThreePlayerRandom.json")
+    game.cardnumbers = [3, 2]
+    game.players[0] = NeuralRolloutMonteCarloPlayer(
+        0, additionalParameters={
+            "checkpoint": str(checkpoint), "rollouts": "3",
+            "opponent_policy": "neural"})
+    with contextlib.redirect_stdout(io.StringIO()):
+        game.playFullGame()
+    assert game.roundnumber == 2
