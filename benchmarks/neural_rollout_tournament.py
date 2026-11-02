@@ -236,6 +236,8 @@ def progress_report(results, total_games, elapsed_seconds, *, seed=90061101,
         f"outright={challenger_outright}-{baseline_outright}-"
         f"{random_outright} "
         f"paired={paired_challenger}-{paired_baseline}-{paired_ties} "
+        f"scores={statistics.mean(r.challenger_score for r in results):.2f}/"
+        f"{statistics.mean(r.baseline_score for r in results):.2f} "
         f"margin={margin:+.2f} "
         f"vs_best={best_margin:+.2f} "
         f"elapsed={elapsed_seconds:.1f}s "
