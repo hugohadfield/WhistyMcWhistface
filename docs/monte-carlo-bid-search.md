@@ -59,6 +59,12 @@ a paired-deal bootstrap interval. The original MC bidder remains the baseline.
 - Before all opponents have bid, their future bids are **estimated using
   a simple average-bid heuristic**, not predicted from their sampled hands.
   The model does not use the bids already observed to reweight hidden deals.
+- One pre-existing rule conflict needed a narrow clarification: in a
+  **one-card** round, if both earlier players bid zero and the dealer has
+  already bid zero twice consecutively, the dealer would otherwise have
+  no legal bid. The game now permits the dealer's *forced third zero*
+  in exactly that case, preserving the no-exact-sum restriction. This
+  exception applies equally to all players and to simulated bids.
 - Optimizes **expected own round points**, not the chance of winning the
   complete 13-round match. Both are worth testing separately.
 - This change makes no claim of improved playing strength without
