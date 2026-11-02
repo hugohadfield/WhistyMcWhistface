@@ -75,6 +75,27 @@ important because each split has its own incomplete in-memory buffer.
 Unflushed work is recomputed, but completed shards are neither overwritten
 nor relabeled. A finalized dataset with `manifest.json` needs no resume.
 
+For faster *remaining* labels, explicitly opt into a mixed sampling budget:
+
+```bash
+# Example: resume existing 1024-rollout shards, use 256 for new decisions.
+python -m benchmarks.export_training_labels \
+  --traces 'data/played-games/*.jsonl' \
+  --output-dir data/whist-mc-1024 \
+  --rollouts 256 --workers 4 --policy bid_aware_2 \
+  --seed 20262001 --state-batch-size 4 --shard-size 256 \
+  --resume --allow-mixed-rollouts
+```
+
+Existing completed shards retain their original 1024 sampled futures,
+new shards record 256 per action. The manifest reports `"mixed"` and lists
+the distinct budgets; per-row `n_rollouts` controls target normalization.
+This reduces the rollout work **per remaining state** by a factor of four,
+but the new distributional labels have roughly twice the Monte Carlo
+standard error. Run a held-out evaluation before treating mixed-budget
+training as equivalent to 1024-future labels. Without the explicit
+`--allow-mixed-rollouts` flag, a changed budget is rejected.
+
 This option cannot change the performance of a Python process that is
 already running; a source-code change only affects processes started after
 you update the repository.
