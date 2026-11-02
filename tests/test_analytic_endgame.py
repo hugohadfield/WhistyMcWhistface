@@ -114,12 +114,17 @@ def test_three_player_independence_approximation_finite():
 
 
 def test_legal_restriction_for_current_trick():
-    state=_snapshot()
+    state=InformationState.new_round(
+        own_hand=("14h","8s","4d"),num_players=3,round_index=0,
+        dealer=2,leader=0,cards_per_player=3,observer_id=1)
+    state=state.apply_public_event(
+        {"type":"trump","player":2,"suit":"h"})
+    for pid in range(3):
+        state=state.apply_public_event({"type":"bid","player":pid,"bid":1})
+    state=state.apply_public_event({"type":"card","player":0,"card":"9h"})
+    assert state.turn==1
     with pytest.raises(ValueError,match="follow-suit"):
-        # Our three-card hand has heart; heart already led.
-        from dataclasses import replace
-        other=state.apply_public_event({"type":"card","player":0,"card":"8s"})
-        analytical_three_card_values(other,("14h","8s"))
+        analytical_three_card_values(state,("14h","8s"))
 
 
 def test_does_not_use_other_players_real_hands():
