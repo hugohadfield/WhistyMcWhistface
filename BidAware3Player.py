@@ -42,6 +42,7 @@ class BidAware3Player(BidAware2Player):
             tricks_won=tuple(observation.tricks_won),
             trump=SUITS.index(trumpsuit),
         )
+        self.three_card_choices = getattr(self, "three_card_choices", 0) + 1
         chosen_id = pick_bid_aware_three_card(
             state, hand_mask(legal_cards), random)
         card = CARDS[chosen_id]
