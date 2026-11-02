@@ -100,6 +100,55 @@ This option cannot change the performance of a Python process that is
 already running; a source-code change only affects processes started after
 you update the repository.
 
+## Neural self-continuation: first policy-iteration experiment
+
+After training a strong frozen model, use it **only for the original
+observer's future decisions** in the counterfactual rollouts. Opponent
+moves remain `bid_aware_2`, so changing teacher targets tests a single
+hypothesis: the original MC teacher underestimated actions requiring
+intelligent future self-play.
+
+```bash
+# First run a small, independent experiment: source trajectories may be
+# random, but choose new game seeds for later meaningful evaluation.
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+python -m benchmarks.export_training_labels \
+  --traces 'data/large-traces/*.jsonl' \
+  --output-dir data/neural-self-smoke \
+  --max-states 64 --rollouts 128 --workers 4 \
+  --policy self_neural --self-checkpoint runs/large-190k-v1/best.pt \
+  --seed 80116102
+```
+
+At each simulated card, the complete sampled hands are used **only by the
+fast game simulator** to enforce legal moves and outcomes. The observer's
+information snapshot is advanced separately with public `card` and
+`trick_end` events, and its own remaining hand. **The neural network
+never sees a simulated opponent's private cards.** A forced self move
+requires no network call; nonforced self decisions are batched over a
+group of simulated futures. The model is cached per labeling worker.
+
+The resulting labels are tagged `teacher_policy=self_neural`, with
+the checkpoint SHA-256 and `bid_aware_2` opponent continuation stored
+in `manifest.json` and `teacher-policy.json`. Resuming a stopped
+export verifies this provenance, so different frozen models cannot be
+silently mixed. This is a new teacher-policy dataset: don't compare its
+raw supervised losses to `bid_aware_2` test losses as though they
+measured the same target.
+
+**Cost caution:** Even with batched neural calls, reconstructing the
+observer's knowledge and encoding it adds significant cost compared to
+fast integer-only `bid_aware_2` rollouts. Benchmark the 64-state
+smoke run before scaling up to thousands of examples. A full 190k-state
+neural-continuation re-label is not a sensible first experiment.
+
+For a clean next iteration, generate new game trajectories with new seeds,
+keep whole-game train/val/test splits disjoint from original held-out
+evaluation, train on the new neural-self targets, and compare complete
+gameplay against the frozen 190k policy and Monte Carlo. **Policy iteration
+is not guaranteed to improve** in an imperfect-information game with
+approximate values.
+
 ## Training
 
 `benchmarks.train_value_model` reads one compressed `.npz` shard at a
