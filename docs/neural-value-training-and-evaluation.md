@@ -100,6 +100,48 @@ This option cannot change the performance of a Python process that is
 already running; a source-code change only affects processes started after
 you update the repository.
 
+## Profile neural-guided search before scaling rollouts
+
+The main tournament runs separate game worker processes, so simply
+invoking `python -m cProfile -m benchmarks.neural_rollout_tournament
+--workers 4 ...` profiles mostly the **parent process**. Instead use
+the dedicated single-process, real-game profiler:
+
+```bash
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+python -m benchmarks.profile_neural_rollout \
+  --checkpoint runs/large-190k-v1/best.pt \
+  --rollouts 32 --rounds 3 --seed 90061101 \
+  --output-prefix runs/large-190k-v1/profile-neural-mc-32
+```
+
+The profiler runs the first three rounds (7, 6 and 5 cards), with
+neural-guided MC in seat 0, the **same frozen model without MC** in seat
+1, and a random player in seat 2. It uses the tournament's deterministic
+deal seeds. **Only nonforced neural-guided move selection is profiled:**
+bidding, trump selection, and the opponents' ordinary moves are excluded.
+
+Outputs:
+
+- `profile-neural-mc-32.prof`: full standard `cProfile` binary;
+  inspect interactively with `python -m pstats <path>`, or SnakeViz.
+- `profile-neural-mc-32.txt`: top 75 functions by cumulative time and
+  top 75 by self time.
+- `profile-neural-mc-32.json`: aggregate timings for
+  `InformationState.apply_public_event`, observation validation,
+  `encode_decision`, neural inference, hidden-hand sampling, card
+  simulation and related stages.
+
+For a full 13-round profile, set `--rounds 13`. For a quick repeated
+A/B experiment, keep `--rollouts`, `--rounds`, and `--seed` fixed,
+and profile before/after the code change.
+
+**Interpretation:** Cumulative times include callees and therefore
+overlap; don't add them together. `cProfile` itself slows Python calls,
+especially frequent small methods, so use the normal **unprofiled**
+tournament to measure real end-to-end throughput. Use this diagnostic
+profile primarily to identify the highest-impact optimization.
+
 ## Evaluate the neural-guided Monte Carlo bot before labeling more data
 
 `NeuralRolloutMonteCarloPlayer` is an actual playable bot: it performs
