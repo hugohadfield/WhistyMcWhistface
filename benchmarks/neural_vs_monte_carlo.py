@@ -17,6 +17,7 @@ from dataclasses import asdict, dataclass
 from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
 import json
+import multiprocessing as mp
 import os
 from pathlib import Path
 import random
@@ -141,7 +142,9 @@ def tournament(checkpoint, games=100, seed=20261101, rollouts=1024,
                                mc_policy, device) for i in range(games))
         matches = list(iterator)
     else:
-        with ProcessPoolExecutor(max_workers=workers) as pool:
+        with ProcessPoolExecutor(
+                max_workers=workers, mp_context=mp.get_context("spawn"),
+        ) as pool:
             matches = list(pool.map(
                 play_match, range(games),
                 repeat(str(checkpoint)), repeat(seed), repeat(rollouts),
