@@ -163,12 +163,25 @@ def _choose_card(state, legal, rng, policy):
 
 
 def finish_round(state, rng, policy="random"):
-    """Finish a branch by running a non-interactive policy."""
-    while state.pile or any(state.hands):
-        mask = legal_mask(state.hands[state.turn], state.pile)
-        if not mask:
-            raise ValueError("No legal move in an unfinished round")
-        state._play_legal(_choose_card(state, mask, rng, policy))
+    """Finish a branch by running a non-interactive policy.
+
+    Dispatch the common two-card continuation policy once per rollout rather
+    than once per simulated card.  Preserve the exact RNG draw sequence and
+    scoring path so existing seeded teacher labels remain bit-identical.
+    """
+    hands, pile, play = state.hands, state.pile, state._play_legal
+    if policy == "bid_aware_2":
+        while pile or any(hands):
+            mask = legal_mask(hands[state.turn], pile)
+            if not mask:
+                raise ValueError("No legal move in an unfinished round")
+            play(pick_bid_aware_two_card(state, mask, rng))
+    else:
+        while pile or any(hands):
+            mask = legal_mask(hands[state.turn], pile)
+            if not mask:
+                raise ValueError("No legal move in an unfinished round")
+            play(_choose_card(state, mask, rng, policy))
     return state.round_scores()
 
 
