@@ -95,6 +95,7 @@ def test_player_legality_and_no_model_for_forced_moves(trained):
     game._record_public_event({"type": "trump", "player": game.dealer,
                                "suit": game.trumpsuit})
     game.getPlayerBids()
+    game.turn = game.leader
     # Play the whole round, checking all 3 players use legal actions
     # through the authoritative Game engine.
     with contextlib.redirect_stdout(io.StringIO()):
