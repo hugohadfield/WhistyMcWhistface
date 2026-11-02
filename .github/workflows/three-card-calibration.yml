@@ -1,0 +1,43 @@
+name: Three-card calibration and action-regret diagnostic
+
+on:
+  push:
+    branches: ['experiment/three-card-calibration-audit-20261102']
+  pull_request:
+
+jobs:
+  calibration:
+    name: Measure actual trick calibration vs MC action ranking
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Verify trace reader and regression examples
+        run: python -m pytest -q tests/test_three_card_calibration.py
+      - name: Collect 600 real games and compare 480 three-card decisions to MC
+        run: |
+          python -m benchmarks.three_card_calibration \
+            --output-dir three-card-audit \
+            --games-per-players 300 \
+            --max-states-per-player 240 \
+            --rollouts 1024 \
+            --confirm-top 12 \
+            --confirm-rollouts 8192 \
+            --workers 4 \
+            --seed 20261131
+      - name: Preserve numerical summary and examples
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: three-card-calibration-audit
+          path: |
+            three-card-audit/summary.json
+            three-card-audit/analysis.md
+            three-card-audit/decision-comparisons.jsonl
+          if-no-files-found: warn
+          retention-days: 30
