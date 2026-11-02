@@ -96,6 +96,77 @@ class FastObserver:
             remaining_counts=remaining,
         )
 
+    @classmethod
+    def from_sampled_perspective(cls, snapshot: InformationState, observer_id: int,
+                                 remaining_hand, round_events):
+        """Reconstruct ONE simulated player's private perspective, not the world.
+
+        `remaining_hand` contains only this player's own cards in the sampled
+        world. Cards they have already played are public. Reassemble their
+        original private hand, then replay ONLY this round's public actions.
+
+        In particular, opponent possibility sets start as the entire deck
+        excluding this observer's original cards; no other sampled hands or
+        sampled identities are passed to this function.
+        """
+        if not isinstance(snapshot, InformationState) or snapshot.phase != "playing":
+            raise ValueError("Expected a genuine playing-phase InformationState")
+        n = snapshot.num_players
+        if not 0 <= observer_id < n:
+            raise ValueError("Unknown perspective")
+        if not round_events or round_events[0].get("type") != "round_start":
+            raise ValueError("Current round_start event required")
+        start = round_events[0]
+        if (start["round"] != snapshot.round_index or
+                start["cards_per_player"] != snapshot.cards_per_player or
+                start["dealer"] != snapshot.dealer):
+            raise ValueError("Public round setup does not match snapshot")
+        prior_own = 0
+        for event in round_events[1:]:
+            if event["type"] == "card" and event["player"] == observer_id:
+                prior_own |= 1 << CARD_ID[event["card"]]
+        current_own = _mask(remaining_hand)
+        if current_own & _mask(snapshot.played_cards):
+            raise ValueError("Sampled remaining hand overlaps public cards")
+        original_own = current_own | prior_own
+        if original_own.bit_count() != snapshot.cards_per_player:
+            raise ValueError("Sampled own hand contradicts publicly played cards")
+        deck = (1 << 52) - 1
+        possible = [deck & ~original_own for _ in range(n)]
+        possible[observer_id] = 0
+        obs = cls(
+            observer_id=observer_id, num_players=n,
+            round_index=snapshot.round_index,
+            cards_per_player=snapshot.cards_per_player,
+            dealer=snapshot.dealer, leader=start["leader"],
+            turn=start["leader"], trick_number=0,
+            trump=SUITS.index(snapshot.trump),
+            own_hand=original_own, played=0, pile=[],
+            bids=tuple(snapshot.bids), tricks_won=[0] * n,
+            scores=tuple(snapshot.scores),
+            played_by=[0] * n, possible=possible,
+            void_suits=[0] * n,
+            remaining_counts=[snapshot.cards_per_player] * n,
+        )
+        for event in round_events[1:]:
+            kind = event["type"]
+            if kind == "card":
+                obs.play_card(event["player"], CARD_ID[event["card"]])
+            elif kind == "trick_end":
+                obs.end_trick(event["winner"])
+            elif kind not in ("trump", "bid"):
+                raise ValueError("Unexpected current-round event")
+        # These checks ensure that reconstruction matches the *public* game,
+        # without comparing with (or exposing) the other sampled hands.
+        if (obs.turn != snapshot.turn or obs.leader != snapshot.leader or
+                obs.trick_number != snapshot.trick_number or
+                obs.tricks_won != list(snapshot.tricks_won) or
+                obs.played != _mask(snapshot.played_cards) or
+                obs.pile != [(p, CARD_ID[c]) for p, c in snapshot.pile] or
+                obs.own_hand != current_own):
+            raise AssertionError("Reconstructed public perspective diverged")
+        return obs
+
     def fork(self):
         """Independent action branch; never alias another candidate's knowledge."""
         return FastObserver(

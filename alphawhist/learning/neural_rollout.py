@@ -1,18 +1,16 @@
-"""Information-safe, batched rollouts with neural play for the observer only.
+"""Information-safe, batched neural continuation for self and (optionally) opponents.
 
-The observer's future cards are chosen by a frozen DistributionalWhistMLP.
-Other simulated players keep a specified cheap continuation policy. Crucially,
-the model sees only the initial observer InformationState advanced by PUBLIC
-events, never sampled opponents' hands. All full hands stay inside SimState.
-
-The same hidden world and continuation RNG seed are reused across candidate
-actions, as in FastRollout. Each checkpoint is loaded once per worker process.
-No nested Monte Carlo search is performed during continuation.
+The acting neural policy sees only its own sampled hand and the public card
+history. Sampled other players' hands never enter the actor's features.
+Heuristic-opponent mode remains unchanged. Opponent policy `neural` uses the
+same frozen model in ALL simulated seats, each with independently reconstructed
+private knowledge. Candidate actions share sampled worlds and continuation RNG.
 """
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+import json
 import random
 
 from alphawhist.core.FastRollout import (
@@ -22,7 +20,7 @@ from alphawhist.core.FastRollout import (
 from alphawhist.core.InformationState import InformationState
 from alphawhist.learning.fast_observation import FastObserver, encode_fast_batch
 
-_OPPONENT_POLICIES = ("random", "highest", "bid_aware_2")
+_OPPONENT_POLICIES = ("random", "highest", "bid_aware_2", "neural")
 
 
 @dataclass
@@ -31,6 +29,7 @@ class _Branch:
     observation: InformationState | FastObserver
     rng: random.Random
     action_index: int
+    all_observations: tuple[FastObserver, ...] | None = None
 
 
 @lru_cache(maxsize=2)
@@ -53,9 +52,19 @@ def _advance(branch, card):
         raise ValueError("Continuation selected an illegal card")
     actor = state.turn
     observation = branch.observation
-    if isinstance(observation, FastObserver):
-        # The hot rollout path maintains only observable information.
-        # No simulated opponent hand ever enters the neural feature encoder.
+    if branch.all_observations is not None:
+        # All neural actors observe the same PUBLIC play, each in their own
+        # perspective. No actor reads another sampled private hand.
+        for pov in branch.all_observations:
+            pov.play_card(actor, card)
+        state._play_legal(card)
+        if not state.pile:
+            for pov in branch.all_observations:
+                pov.end_trick(state.leader)
+        if any(pov.turn != state.turn or pov.leader != state.leader
+               for pov in branch.all_observations):
+            raise AssertionError("Neural perspectives diverged from public state")
+    elif isinstance(observation, FastObserver):
         observation.play_card(actor, card)
         state._play_legal(card)
         if not state.pile:
@@ -77,11 +86,12 @@ def _until_neural_turn(branch):
     """Advance opponents/forced plays until a nonforced observer decision."""
     state = branch.state
     me = branch.observation.observer_id
+    all_neural = branch.all_observations is not None
     while state.pile or any(state.hands):
         legal = legal_mask(state.hands[state.turn], state.pile)
         if not legal:
             raise AssertionError("Unfinished simulation has no legal card")
-        if state.turn == me:
+        if state.turn == me or all_neural:
             if legal.bit_count() > 1:
                 return True
             choice = next(card_ids(legal))
@@ -116,7 +126,11 @@ def _finish_group(branches, model, opponent_policy, sums, counts, previous_won):
                     counts[i][additional] += 1
         if not waiting:
             break
-        observations = [b.observation for b in waiting]
+        observations = [
+            (b.all_observations[b.state.turn] if b.all_observations is not None
+             else b.observation)
+            for b in waiting
+        ]
         encoded = (encode_fast_batch(observations)
                    if isinstance(observations[0], FastObserver)
                    else encode_batch(observations))
@@ -143,6 +157,17 @@ def _neural_batch(args, collect_histograms=False):
     deal_rng = random.Random()
     previous_won = snapshot.tricks_won[own]
     observer_template = FastObserver.from_snapshot(snapshot)
+    # Parse public round history ONCE per batch. Last round_start excludes
+    # earlier-round events (including previously played duplicate card IDs).
+    round_events = None
+    if opponent_policy == "neural":
+        events = [json.loads(raw) for raw in snapshot.history_json]
+        round_start_index = next(
+            (i for i in range(len(events) - 1, -1, -1)
+             if events[i]["type"] == "round_start"), None)
+        if round_start_index is None:
+            raise ValueError("All-neural rollout needs a public round history")
+        round_events = tuple(events[round_start_index:])
 
     for first in range(start, stop, worlds_per_batch):
         branches = []
@@ -151,14 +176,28 @@ def _neural_batch(args, collect_histograms=False):
             hands = snapshot.sample_hands(deal_rng)
             base = SimState.from_snapshot(snapshot, hands)
             policy_seed = _mix(seed, 2 * index + 1)
+            all_templates = None
+            if opponent_policy == "neural":
+                # Each perspective gets its OWN sampled remaining cards only.
+                # The other sampled hands never enter this perspective.
+                all_templates = tuple(
+                    observer_template if pid == own else
+                    FastObserver.from_sampled_perspective(
+                        snapshot, pid, hands[pid], round_events)
+                    for pid in range(snapshot.num_players)
+                )
             for action_index, action in enumerate(action_ids):
+                observers = (tuple(pov.fork() for pov in all_templates)
+                             if all_templates is not None else None)
                 branch = _Branch(
                     state=SimState(base.hands.copy(), base.pile.copy(),
                                    base.bids, base.tricks_won.copy(),
                                    base.leader, base.turn, base.trump),
-                    observation=observer_template.fork(),
+                    observation=(observers[own] if observers is not None
+                                 else observer_template.fork()),
                     rng=random.Random(policy_seed),
                     action_index=action_index,
+                    all_observations=observers,
                 )
                 _advance(branch, action)
                 branches.append(branch)
@@ -170,9 +209,11 @@ def evaluate_neural_self(snapshot, actions=None, *, checkpoint,
                          n_rollouts=128, seed=0, workers=1, batch_size=128,
                          worlds_per_batch=16, opponent_policy="bid_aware_2",
                          collect_trick_histograms=False):
-    """Evaluate actions with the frozen net controlling OUR future turns only.
+    """Evaluate actions using frozen neural future play for our own turns.
 
-    Opponents continue according to opponent_policy, without nested search.
+    Set opponent_policy="neural" for same-model opponents, each with only
+    their own sampled hand and public knowledge. Otherwise opponents use
+    the specified cheap heuristic. No nested search is performed.
     Returns the standard FastRollout.Evaluation object, including optional
     eight-bin *additional* observer trick counts for supervised training.
     """
