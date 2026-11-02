@@ -112,7 +112,7 @@ jobs:
 
   parallel_training_labels:
     name: Parallel teacher labeling throughput and equivalence
-    if: github.event_name == 'pull_request' && (github.head_ref == 'perf/persistent-parallel-label-export' || github.head_ref == 'perf/resume-and-fast-label-rollouts-20261102')
+    if: github.event_name == 'pull_request' && (github.head_ref == 'perf/persistent-parallel-label-export' || github.head_ref == 'perf/resume-and-fast-label-rollouts-20261102' || github.head_ref == 'feature/neural-self-continuation-20261102')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
