@@ -49,7 +49,9 @@ def legal_future_bids(player, bids, streaks, cards, dealer):
     last_bidder = player == dealer
     return tuple(
         bid for bid in range(cards + 1)
-        if (bid != 0 or streaks[player] < 2)
+        if (bid != 0 or streaks[player] < 2
+            or (last_bidder and cards == 1
+                and sum(b for b in bids if b is not None) == 0))
         and (not last_bidder or sum(b for b in bids if b is not None) + bid != cards)
     )
 
