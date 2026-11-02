@@ -1,0 +1,56 @@
+name: Analytical two-trick continuation evaluation
+on:
+  push:
+    branches: ['experiment/analytic-two-trick-continuation-20261102']
+  pull_request:
+
+jobs:
+  verify:
+    name: Analytical tests and paired policy evaluation
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Unit tests and complete-game integration
+        run: python -m pytest -v tests/test_analytic_endgame.py
+      - name: Compare old and new 3-card action values against MC on held-out traces
+        run: |
+          python -m benchmarks.analytic_endgame_audit \
+            --output-dir analytic-audit --games-per-player 80 \
+            --max-states 120 --mc-rollouts 1024 \
+            --seed 20261132 --workers 4
+      - name: 3P analytical vs original three-card heuristic, matched independent deals
+        run: |
+          python -m benchmarks.bid_aware_3_tournament \
+            --challenger analytic3 --baseline aware3 --players 3 \
+            --games 600 --workers 4 --seed 20261133 \
+            --progress-every 60 \
+            --json analytic-audit/three-vs-three-3p.json \
+            --csv analytic-audit/three-vs-three-3p.csv
+      - name: 2P analytical vs original three-card heuristic, matched independent deals
+        run: |
+          python -m benchmarks.bid_aware_3_tournament \
+            --challenger analytic3 --baseline aware3 --players 2 \
+            --games 400 --workers 4 --seed 20261134 \
+            --progress-every 40 \
+            --json analytic-audit/three-vs-three-2p.json \
+            --csv analytic-audit/three-vs-three-2p.csv
+      - name: Archive numeric diagnostic and game scores
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analytical-two-trick-evaluation
+          path: |
+            analytic-audit/results.json
+            analytic-audit/decisions.jsonl
+            analytic-audit/three-vs-three-3p.json
+            analytic-audit/three-vs-three-2p.json
+            analytic-audit/three-vs-three-3p.csv
+            analytic-audit/three-vs-three-2p.csv
+          retention-days: 30
+          if-no-files-found: warn
