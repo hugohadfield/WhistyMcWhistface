@@ -100,6 +100,44 @@ This option cannot change the performance of a Python process that is
 already running; a source-code change only affects processes started after
 you update the repository.
 
+## Fast observer: reduce speculative public-event overhead
+
+The first cProfile run on a 32-rollout neural-guided game found **6.71 s of
+7.41 s cumulative search time in public observation advancement**, including
+**5.74 s in immutable InformationState validation**. The neural model itself
+took just 0.098 s. These nested cumulative figures must not be added.
+
+For rollouts only, a `FastObserver` now stores observer-only card masks,
+possible opponent cards, public played-by masks, known void suits, and
+bid/trick data. The original `InformationState` is still validated
+once at the entry boundary. The fast branch copies only the compact
+observer-visible state, updates it with public plays and trick winners,
+then constructs **exactly the same version-1 input features** without
+replaying/validating the complete public event history every time.
+The sampled complete hands remain in `SimState` and are never passed
+to `FastObserver` or the neural feature encoder.
+
+Tests compare encoded inputs after every simulated move (2–7 players,
+multiple round sizes and seat positions) to the original reducer and
+check identical rollout trick histograms for a frozen neural checkpoint
+and deterministic sampled worlds. The old reducer remains available as
+a reference test path. See `tests/test_fast_observation.py`.
+
+Repeat the **same** profiler invocation to compare time distribution:
+
+```bash
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+python -m benchmarks.profile_neural_rollout \
+  --checkpoint runs/large-190k-v1/best.pt \
+  --rollouts 32 --rounds 3 --seed 90061101 \
+  --output-prefix runs/large-190k-v1/profile-neural-mc-fast-32
+```
+
+Then repeat the original `20`-game tournament with the original seed
+to measure *uninstrumented* wall time (the original result was 110.34 s).
+The neural rollouts should be behaviorally identical for identical
+sampling seeds; actual performance gains need local measurement.
+
 ## Profile neural-guided search before scaling rollouts
 
 The main tournament runs separate game worker processes, so simply
