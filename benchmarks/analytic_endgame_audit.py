@@ -13,8 +13,13 @@ import statistics
 
 from alphawhist.core.AnalyticEndgame import (
     analytical_three_card_values, current_trick_win_probability,
+    two_card_joint_value,
 )
-from alphawhist.core.EndgamePolicy import three_card_values, _TEMPERATURE
+from alphawhist.core.EndgamePolicy import (
+    three_card_values, _TEMPERATURE, _two_card_continuation_value,
+    _THREE_CARD_WIN, _current_win_probability,
+)
+from alphawhist.core.FastRollout import SUITS
 from alphawhist.core.FastRollout import CARD_ID, CARDS, evaluate_actions, hand_mask
 from benchmarks.generate_training_games import generate
 from benchmarks.three_card_calibration import read_decisions, reconstructed_state
@@ -44,6 +49,33 @@ def compare(states, *, count=120, mc_rollouts=1024, seed=20261102):
             new=dict(analytical_three_card_values(obs,actions))
             if set(new)!=set(old):
                 raise AssertionError("Analytical and old actions differ")
+            # Ablate the two changes independently on identical observations:
+            # HG-only = combinatorial P(win now) + old rank continuation.
+            # Joint-only = old P(win now) + analytic joint two-trick continuation.
+            hypergeom_only={}
+            joint_only={}
+            me=obs.observer_id
+            needed=obs.bids[me]-obs.tricks_won[me]
+            nopp=obs.num_players-1
+            trump=SUITS.index(obs.trump)
+            pools=tuple(tuple(sorted(CARD_ID[x] for x in opp.possible_cards))
+                        for opp in obs.opponents)
+            for action in actions:
+                remaining=[CARD_ID[x] for x in obs.own_hand if x!=action]
+                a,b=remaining
+                old_win=_two_card_continuation_value(
+                    a,b,needed-1,True,trump,nopp)
+                old_loss=_two_card_continuation_value(
+                    a,b,needed,False,trump,nopp)
+                joint_win=two_card_joint_value(
+                    a,b,needed-1,True,pools,trump)
+                joint_loss=two_card_joint_value(
+                    a,b,needed,False,pools,trump)
+                p_hg=current_trick_win_probability(obs,CARD_ID[action])
+                p_old=_current_win_probability(
+                    masked,CARD_ID[action],_THREE_CARD_WIN)
+                hypergeom_only[action]=p_hg*(1+old_win)+(1-p_hg)*old_loss
+                joint_only[action]=p_old*(1+joint_win)+(1-p_old)*joint_loss
             reference=evaluate_actions(
                 obs,actions,n_rollouts=mc_rollouts,
                 seed=seed+players*1000003+idx*16381,
@@ -54,8 +86,12 @@ def compare(states, *, count=120, mc_rollouts=1024, seed=20261102):
             new_best=max(new,key=new.get)
             old_policy=_softmax(old)
             new_policy=_softmax(new)
+            hg_policy=_softmax(hypergeom_only)
+            joint_policy=_softmax(joint_only)
             old_regret=q[best]-sum(old_policy[a]*q[a] for a in actions)
             new_regret=q[best]-sum(new_policy[a]*q[a] for a in actions)
+            hg_regret=q[best]-sum(hg_policy[a]*q[a] for a in actions)
+            joint_regret=q[best]-sum(joint_policy[a]*q[a] for a in actions)
             rows.append({
                 "game":item["game"],"players":players,
                 "position":item["position"],
@@ -65,13 +101,19 @@ def compare(states, *, count=120, mc_rollouts=1024, seed=20261102):
                 "won_before":obs.tricks_won[obs.observer_id],
                 "actions":list(actions),
                 "old_best":old_best,"new_best":new_best,
+                "hypergeom_only_best":max(hypergeom_only,key=hypergeom_only.get),
+                "joint_only_best":max(joint_only,key=joint_only.get),
                 "mc_best":best,
                 "old_best_agrees":int(old_best==best),
                 "new_best_agrees":int(new_best==best),
                 "old_regret":old_regret,
                 "new_regret":new_regret,
+                "hypergeom_only_regret":hg_regret,
+                "joint_only_regret":joint_regret,
                 "regret_improvement":old_regret-new_regret,
-                "old_q":old,"new_q":new,"mc_q":q,
+                "old_q":old,"new_q":new,
+                "hypergeom_only_q":hypergeom_only,
+                "joint_only_q":joint_only,"mc_q":q,
             })
         print(f"MC_AUDIT players={players} n={len(chosen)}",flush=True)
     return rows
@@ -87,6 +129,14 @@ def summarize(rows):
             "analytic_best_agreement":statistics.mean(x["new_best_agrees"] for x in subset),
             "old_softmax_regret":statistics.mean(x["old_regret"] for x in subset),
             "analytic_softmax_regret":statistics.mean(x["new_regret"] for x in subset),
+            "hypergeom_only_softmax_regret":statistics.mean(
+                x["hypergeom_only_regret"] for x in subset),
+            "joint_only_softmax_regret":statistics.mean(
+                x["joint_only_regret"] for x in subset),
+            "hypergeom_only_best_agreement":statistics.mean(
+                x["hypergeom_only_best"]==x["mc_best"] for x in subset),
+            "joint_only_best_agreement":statistics.mean(
+                x["joint_only_best"]==x["mc_best"] for x in subset),
             "mean_regret_improvement":statistics.mean(x["regret_improvement"] for x in subset),
             "fraction_analytic_better":statistics.mean(x["regret_improvement"]>0
                                                       for x in subset),
